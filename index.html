@@ -100,7 +100,6 @@ button { font-family: inherit; cursor: pointer; }
 select, input[type=text] { font-family: inherit; font-size: 12.5px; font-weight: 500; color: var(--k-text); background: #fff; border: 1px solid var(--k-border); border-radius: 6px; padding: 5px 8px; min-width: 125px; }
 select:focus, input:focus { outline: 2px solid rgba(255,70,45,0.4); outline-offset: 1px; border-color: var(--k-red); }
 
-/* CONTENEDORES DROPDOWNS MULTISELECCIÓN */
 .ms-container { position: relative; min-width: 160px; }
 .ms-button { border: 1px solid var(--k-border); background: #fff; border-radius: 6px; padding: 5px 10px; font-size: 12.5px; font-weight: 600; color: var(--k-text); text-align: left; display: flex; justify-content: space-between; align-items: center; width: 100%; cursor: pointer; }
 .ms-dropdown { position: absolute; top: calc(100% + 4px); left: 0; width: 220px; max-height: 280px; overflow-y: auto; background: #fff; border: 1px solid var(--k-border); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 50; padding: 8px; display: none; }
@@ -123,7 +122,6 @@ select:focus, input:focus { outline: 2px solid rgba(255,70,45,0.4); outline-offs
 .kpi.amber { border-left-color: var(--k-amber); }
 .kpi.blue { border-left-color: var(--k-blue); }
 
-/* TARJETAS CLICKEABLES */
 .kpi-clickable {
   cursor: pointer;
   transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
@@ -328,7 +326,7 @@ table.dt tbody tr:hover { background: #F8FAFC; cursor: pointer; }
         <div class="sl"><label>Estado de OC</label><select id="sEstadoOC"><option value="__ALL__">Todos</option></select></div>
         <div class="sl"><label>Ambiente</label><select id="sAmb"><option value="__ALL__">Todos</option></select></div>
         
-        <!-- SELECTOR MULTISELECCIÓN ESTATUS MIGRACIÓN (COLUMNA EC) -->
+        <!-- SELECTOR MULTISELECCIÓN ESTATUS MIGRACIÓN -->
         <div class="sl">
           <label>Estatus Migración</label>
           <div class="ms-container" id="msEstatusContainer">
@@ -486,7 +484,6 @@ function formatSemanaMatriz(d, incluirAnio = false) {
   return `${diaNum} - ${mesCorto}`;
 }
 
-// NORMALIZACIÓN DE ESTATUS BASADA ESTRICTAMENTE EN COLUMNA EC (Forecast - Estado)
 function normalizeEstatus(raw) {
   const s = norm(raw);
   if (!s) return 'Por Definir';
@@ -565,7 +562,6 @@ async function processWorkbook(file) {
     const qVal = String(getVal('Q - IBK', 'Trimestre') || 'Sin Q').trim();
     let anioVal = fechaRef ? fechaRef.getFullYear() : (qVal.startsWith('2025') ? 2025 : 2026);
     
-    // Asignación de mes por columna MES
     let mesNom = normalizeNombreMes(getVal('MES', 'Mes'));
     let mesIdx = -1;
     if (mesNom !== 'Sin Mes' && mesNom !== '') {
@@ -619,7 +615,7 @@ async function processWorkbook(file) {
     
     const esEntregado = ['entregado', 'aceptado'].includes(etiquetaCategoria.toLowerCase()) || fechaEntregaIBK !== null;
 
-    // LECTURA PRIORITARIA Y ESTRICTA DE LA COLUMNA EC (Forecast - Estado)
+    // Lectura de Estatus desde Columna EC (Forecast - Estado)
     const valForecastEC = getVal('Forecast - Estado', 'Forecast Estado', 'Forecast');
     const estatusFinal = normalizeEstatus(valForecastEC != null && String(valForecastEC).trim() !== '' ? valForecastEC : getVal('ETIQUETA - Estado', 'Estatus'));
 
@@ -923,7 +919,7 @@ function destroyCharts() {
 }
 
 /* -------------------------------------------------------------
-   VISTA 1: NIVEL DE CUMPLIMIENTO CON METAS INTERACTIVAS Y ENTREGAS CORRECTAS
+   VISTA 1: NIVEL DE CUMPLIMIENTO CON METAS INTERACTIVAS
 ------------------------------------------------------------- */
 function renderCumplimientoPage() {
   const rows = state.view;
@@ -1619,7 +1615,7 @@ function renderEntregasPage() {
 }
 
 /* -------------------------------------------------------------
-   VISTA 4: CONTROL DE OC POR SEMANA
+   VISTA 4: CONTROL DE OC POR SEMANA (SOLO COLUMNA COMPONENTES)
 ------------------------------------------------------------- */
 function renderControlOCPage() {
   const rows = state.view;
@@ -1722,7 +1718,6 @@ function renderControlOCPage() {
                   <th class="l">OC Migración</th>
                   <th class="l">Estado de la OC</th>
                   <th class="l">Owner Kyndryl</th>
-                  <th>Servidores</th>
                   <th>Componentes</th>
                   <th class="l">Aplicaciones Involucradas</th>
                   <th class="l">Acción</th>
@@ -1730,7 +1725,6 @@ function renderControlOCPage() {
               </thead>
               <tbody>
                 ${ocList.map((item) => {
-                  const srvs = Array.from(new Set(item.rows.map(r => r.servidor)));
                   const cCount = item.rows.reduce((a, b) => a + b.nComp, 0);
                   const apps = Array.from(new Set(item.rows.map(r => r.siglas))).join(', ');
                   const tagClass = getEstadoOCClass(item.estadoOC);
@@ -1739,9 +1733,8 @@ function renderControlOCPage() {
                       <td class="l mono"><b>${esc(item.oc)}</b></td>
                       <td class="l"><span class="tag ${tagClass}">${esc(item.estadoOC)}</span></td>
                       <td class="l"><b>${esc(item.owner)}</b></td>
-                      <td class="num">${srvs.length}</td>
-                      <td class="num" style="color:var(--k-red);font-weight:700;">${fmt(cCount)}</td>
-                      <td class="l mono" style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(apps)}</td>
+                      <td class="num" style="color:var(--k-red);font-weight:700;font-size:13.5px;">${fmt(cCount)}</td>
+                      <td class="l mono" style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(apps)}</td>
                       <td class="l"><button class="btn sm ghost" onclick="drillOC('${esc(item.oc)}', '${esc(s.completa)}')">Ver detalle</button></td>
                     </tr>
                   `;
@@ -1985,7 +1978,7 @@ function openModal(title, sub, bodyHtml, exportData) {
       'S.O Destino': r.soDestino, 'Subsistema Destino': r.subDestino,
       'Estatus': r.estatus, 'Comentarios': r.comentarios
     })));
-    XLSX.utils.book_append_sheet(wb, ws, 'Seleccion');
+    XLSX.utils.book_append_sheet(wb, ws, 'Plan_Kyndryl');
     XLSX.writeFile(wb, `Kyndryl_Detalle_${norm(title).slice(0, 20)}.xlsx`);
   };
 }
