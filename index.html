@@ -28,7 +28,7 @@
   --k-navy: #0F3A70;
   --k-gray: #94A3B8;
   --k-alert: #E11D48;
-  --nav-w: 260px;
+  --nav-w: 265px;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; height: 100%; }
@@ -97,10 +97,10 @@ button { font-family: inherit; cursor: pointer; }
 .slicers { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; padding: 10px 24px; border-top: 1px solid var(--k-border-subtle); background: #FAFBFD; }
 .sl { display: flex; flex-direction: column; gap: 4px; position: relative; }
 .sl label { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--k-text-muted); }
-select, input[type=text] { font-family: inherit; font-size: 12.5px; font-weight: 500; color: var(--k-text); background: #fff; border: 1px solid var(--k-border); border-radius: 6px; padding: 5px 8px; min-width: 125px; }
+select, input[type=text] { font-family: inherit; font-size: 12.5px; font-weight: 500; color: var(--k-text); background: #fff; border: 1px solid var(--k-border); border-radius: 6px; padding: 5px 8px; min-width: 110px; }
 select:focus, input:focus { outline: 2px solid rgba(255,70,45,0.4); outline-offset: 1px; border-color: var(--k-red); }
 
-.ms-container { position: relative; min-width: 160px; }
+.ms-container { position: relative; min-width: 150px; }
 .ms-button { border: 1px solid var(--k-border); background: #fff; border-radius: 6px; padding: 5px 10px; font-size: 12.5px; font-weight: 600; color: var(--k-text); text-align: left; display: flex; justify-content: space-between; align-items: center; width: 100%; cursor: pointer; }
 .ms-dropdown { position: absolute; top: calc(100% + 4px); left: 0; width: 220px; max-height: 280px; overflow-y: auto; background: #fff; border: 1px solid var(--k-border); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 50; padding: 8px; display: none; }
 .ms-dropdown.open { display: block; }
@@ -203,6 +203,12 @@ table.dt tbody tr:hover { background: #F8FAFC; cursor: pointer; }
 .stat-pill.active.des { background: #475569 !important; color: #fff !important; }
 .stat-pill.active.all { background: var(--k-charcoal) !important; color: #fff !important; }
 
+.alerta-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 5px; font-size: 11px; font-weight: 800; border: 1px solid; white-space: nowrap; }
+.alerta-badge.rojo { border-color: #E11D48; background: #FFE4E6; color: #BE123C; }
+.alerta-badge.naranja { border-color: #EA580C; background: #FFEDD5; color: #C2410C; }
+.alerta-badge.amarillo { border-color: #CA8A04; background: #FEF9C3; color: #854D0E; }
+.alerta-badge.verde { border-color: #059669; background: #ECFDF5; color: #047857; }
+
 .team-badge { display: inline-flex; align-items: center; gap: 3px; padding: 1.5px 6px; border-radius: 4px; font-size: 10.5px; font-weight: 800; border: 1px solid; }
 .team-badge.windows { background: rgba(2, 132, 199, 0.12); color: #0284C7; border-color: rgba(2, 132, 199, 0.3); }
 .team-badge.linux { background: rgba(217, 119, 6, 0.12); color: #B45309; border-color: rgba(217, 119, 6, 0.3); }
@@ -300,13 +306,22 @@ table.dt tbody tr:hover { background: #F8FAFC; cursor: pointer; }
       <div class="tb1">
         <div>
           <h2 id="pgTitle">📊 Nivel de Cumplimiento de Componentes</h2>
-          <div class="sub" id="pgSub">Gestión por Trimestre (Q) · Metas mensuales y KPIs de salud del servicio</div>
+          <div class="sub" id="pgSub">Gestión y control de metas mensuales y KPIs de salud del servicio</div>
         </div>
         <div class="grow"></div>
         <button class="btn ghost sm" id="btnChangeFile">Cambiar Archivo</button>
         <button class="btn ghost sm" id="btnExportXls">Exportar Excel</button>
       </div>
       <div class="slicers">
+        <!-- 1. SLICER GLOBAL DE AÑO -->
+        <div class="sl">
+          <label>Año</label>
+          <select id="sAnioGlobal">
+            <option value="__ALL__">Todos</option>
+          </select>
+        </div>
+
+        <!-- 2. SLICER GLOBAL DE TRIMESTRE (Q) -->
         <div class="sl">
           <label>Trimestre (Q)</label>
           <div class="ms-container" id="msQContainer">
@@ -318,6 +333,7 @@ table.dt tbody tr:hover { background: #F8FAFC; cursor: pointer; }
           </div>
         </div>
 
+        <!-- 3. SLICER GLOBAL DE MES -->
         <div class="sl">
           <label>Mes</label>
           <div class="ms-container" id="msMesContainer">
@@ -368,11 +384,12 @@ const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Se
 const MESES_CORTO_LOWER = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
 const ESTATUS_MIGRACION_LIST = ['Migrado', 'Planificado', 'Por Definir', 'Reprogramado', 'Rollback', 'Desestimado'];
 
+// META MENSUAL: 50 en Julio, 120 de Agosto en adelante
 function getMetaMensual(anio, mesIdx0) {
-  if (anio < 2026 || (anio === 2026 && mesIdx0 <= 6)) {
+  if (anio < 2026 || (anio === 2026 && mesIdx0 <= 6)) { // 6 = Julio
     return 50;
   }
-  return 120;
+  return 120; // 7 = Agosto en adelante
 }
 
 function getEstadoOCClass(raw) {
@@ -408,6 +425,7 @@ function normalizarTextoMotivo(str) {
 
 const state = {
   raw: [], view: [], page: 'cumplimiento', charts: {},
+  selectedAnio: '2026',
   selectedQs: new Set(),
   selectedMeses: new Set(),
   selectedEstatus: new Set(),
@@ -417,7 +435,6 @@ const state = {
   filtroSemanaEntregas: '__ALL__',
   filtroEstadoCierreAprov: '__ALL__',
   searchAprovQuery: '',
-  // Plan de Ejecución y Control OC inferior
   calFiltroAnio: '__ALL__',
   calFiltroMes: '__ALL__',
   calFiltroSemana: '__ALL__',
@@ -578,19 +595,20 @@ async function processWorkbook(file) {
     const o = {};
     headerCols.forEach((colName, idx) => { if (colName) o[colName] = row[idx]; });
 
-    const getVal = (...keys) => {
-      const searchKeys = keys.map(cleanKey);
+    // BUSCADOR SEMÁNTICO
+    const getVal = (...patterns) => {
+      const pClean = patterns.map(cleanKey);
       for (const col of Object.keys(o)) {
-        const cleanedCol = cleanKey(col);
-        if (searchKeys.includes(cleanedCol) && o[col] != null) {
+        const cClean = cleanKey(col);
+        if (pClean.some(p => cClean === p || cClean.includes(p) || p.includes(cClean)) && o[col] != null) {
           return o[col];
         }
       }
       return null;
     };
 
-    const getNumStrict = (...keys) => {
-      const v = getVal(...keys);
+    const getNumStrict = (...patterns) => {
+      const v = getVal(...patterns);
       if (v == null) return 0;
       if (typeof v === 'number') return isFinite(v) ? v : 0;
       const t = String(v).replace(/\u00a0/g, ' ').trim().replace(/\s/g, '').replace(',', '.');
@@ -599,8 +617,8 @@ async function processWorkbook(file) {
       return isFinite(n) ? n : 0;
     };
 
-    const fechaExacta = parseFecha(getVal('Fecha de Inicio Migracion', 'Fecha Planificada', 'Fecha de Ejecucion'));
-    let semanaDate = parseFecha(getVal('Semana de Planificacion', 'Semana'));
+    const fechaExacta = parseFecha(getVal('fechainiciomigracion', 'fechaplanificada', 'fechaejecucion', 'fecha'));
+    let semanaDate = parseFecha(getVal('semanaplanificacion', 'semana'));
     
     if (!semanaDate && fechaExacta) {
       const d = new Date(fechaExacta.getFullYear(), fechaExacta.getMonth(), fechaExacta.getDate());
@@ -611,9 +629,9 @@ async function processWorkbook(file) {
     const fechaRef = fechaExacta || semanaDate;
 
     // HORARIOS
-    const horaIniRaw = getVal('Hora de Inicio Migracion', 'Hora Inicio Migracion', 'Hora Inicio');
-    const horaFinRaw = getVal('Hora Fin Migracion', 'Hora de Fin Migracion', 'Hora Fin');
-    const ventanaTexto = getVal('Dias y horarios de migracion?', 'Dias y horarios de migracion', 'Horario');
+    const horaIniRaw = getVal('horainiciomigracion', 'horainicio');
+    const horaFinRaw = getVal('horafinmigracion', 'horafin');
+    const ventanaTexto = getVal('diashorariosmigracion', 'horariomigracion', 'horario');
 
     const horaIniStr = formatHoraString(horaIniRaw);
     const horaFinStr = formatHoraString(horaFinRaw);
@@ -632,13 +650,18 @@ async function processWorkbook(file) {
       rangoHorario = String(ventanaTexto).trim();
     }
 
-    let qValRaw = String(getVal('Q - IBK', 'Trimestre', 'Quarter') || 'Sin Q').trim();
+    let qValRaw = String(getVal('qibk', 'trimestre', 'quarter') || 'Sin Q').trim();
     let qVal = qValRaw.replace(/\s+/g, '');
     if (!qVal || qVal.toLowerCase() === 'sinq') qVal = '2026-Q3';
 
-    let anioVal = fechaRef ? fechaRef.getFullYear() : (qVal.startsWith('2025') ? 2025 : 2026);
+    let anioVal = 2026;
+    if (qVal.startsWith('2025')) anioVal = 2025;
+    else if (qVal.startsWith('2024')) anioVal = 2024;
+    else if (fechaRef && fechaRef.getFullYear() >= 2024 && fechaRef.getFullYear() <= 2028) {
+      anioVal = fechaRef.getFullYear();
+    }
     
-    let mesNom = normalizeNombreMes(getVal('MES', 'Mes'));
+    let mesNom = normalizeNombreMes(getVal('mes'));
     let mesIdx = -1;
     if (mesNom !== 'Sin Mes' && mesNom !== '') {
       mesIdx = MESES_ES.findIndex(m => m.toLowerCase() === mesNom.toLowerCase());
@@ -658,26 +681,26 @@ async function processWorkbook(file) {
       diaNom = DIAS[dIdx];
     }
 
-    const ownerKyndryl = String(getVal('Owner Kyndryl', 'Crew Leader', 'Responsable de Administración') || 'Sin Asignar').trim();
-    const ocNum = getVal('OC(3) Migracion', 'OC Migracion', 'OC (3)');
-    const ocEstado = getVal('Estado de la OC (3)', 'Estado OC (3)', 'Estado OC');
+    const ownerKyndryl = String(getVal('ownerkyndryl', 'crewleader', 'responsableadministracion', 'owner') || 'Sin Asignar').trim();
+    const ocNum = getVal('oc3migracion', 'oc3migracion', 'ocmigracion', 'oc3', 'oc(3)migracion', 'oc');
+    const ocEstado = getVal('estadooc3', 'estadooc', 'estadodelaoc');
 
-    const ticketUpg = getVal('Ticket de Upgrade Capacidades', 'Ticket Upgrade Capacidades', 'Ticket de Upgrade \nCapacidades');
-    const estadoUpg = getVal('Estado Ticket Upgrade Capacidades', 'Estado  Ticket Upgrade Capacidades');
-    const ticketAprov = getVal('Ticket de Aprovisionamiento', 'Ticket Aprovisionamiento', 'Ticket de Aprovisionamiento \n(Habilitador)');
-    const estadoAprov = getVal('Estado del ticket de Aprovisionamiento', 'Estado Ticket Aprovisionamiento');
-    const queFalta = getVal('Que Falta?', 'Que Falta', 'Qué Falta?');
+    const ticketUpg = getVal('ticketupgradecapacidades', 'ticketupgrade', 'upgradecapacidades');
+    const estadoUpg = getVal('estadoticketupgradecapacidades', 'estadoticketupgrade', 'estadoupgrade');
+    const ticketAprov = getVal('ticketaprovisionamiento', 'ticketaprov', 'aprovisionamiento');
+    const estadoAprov = getVal('estadoticketaprovisionamiento', 'estadoaprovisionamiento', 'estadoaprov');
+    const queFalta = getVal('quefalta', 'que falta');
 
-    const soOrigen = String(getVal('Sistema Operativo', 'SO') || 'Sin SO').trim();
-    const subOrigen = String(getVal('Componente Sub Sistema', 'Componente') || '—').trim();
-    const verOrigen = getVal('Versión', 'Version');
+    const soOrigen = String(getVal('sistemaoperativoorigen', 'sistemaoperativo', 'so') || 'Sin SO').trim();
+    const subOrigen = String(getVal('componentesubsistema', 'componente') || '—').trim();
+    const verOrigen = getVal('version', 'versión');
     const subOrigenCompleto = (subOrigen !== '—' && subOrigen !== '') ? (subOrigen + (verOrigen ? ` ${verOrigen}` : '')) : '—';
 
-    const soDestinoRaw = getVal('Sistema Operativo_Destino', 'SO Destino', 'Sistema Operativo Destino');
+    const soDestinoRaw = getVal('sistemaoperativodestino', 'sodestino');
     const soDestino = soDestinoRaw ? String(soDestinoRaw).trim() : '—';
     
-    const bdDestino = getVal('BD');
-    const wmeDestino = getVal('WME - IIS', 'WME');
+    const bdDestino = getVal('bd');
+    const wmeDestino = getVal('wmeiis', 'wme');
     let subDestino = '—';
     if (bdDestino && String(bdDestino).trim() !== '-' && String(bdDestino).trim() !== '') {
       subDestino = String(bdDestino).trim();
@@ -687,13 +710,19 @@ async function processWorkbook(file) {
 
     const equipoSO = clasificarPlataformaSO(soOrigen, soDestino);
 
-    const etiquetaCategoria = String(getVal('Etiqueta (Categoria)', 'Etiqueta', 'Etiqueta Categoria') || '').trim();
-    const estadoSubCat = String(getVal('Estado (Sub_Categoria)', 'Sub_Categoria', 'Motivo No Entrega') || '').trim();
-    const fechaEntregaIBK = parseFecha(getVal('Fecha de Entrega IBK', 'Fecha Entrega IBK'));
+    const etiquetaCategoria = String(getVal('etiquetacategoria', 'etiqueta') || '').trim();
+    const estadoSubCat = String(getVal('estadosubcategoria', 'subcategoria', 'motivonoentrega') || '').trim();
+    const fechaEntregaIBK = parseFecha(getVal('fechaentregaibk', 'fechaentrega'));
     
-    const esEntregado = ['entregado', 'aceptado'].includes(etiquetaCategoria.toLowerCase()) || fechaEntregaIBK !== null;
-    const valForecastEC = getVal('Forecast - Estado', 'Forecast Estado', 'Forecast');
-    const estatusFinal = normalizeEstatus(valForecastEC != null && String(valForecastEC).trim() !== '' ? valForecastEC : getVal('ETIQUETA - Estado', 'Estatus'));
+    const esEntregado = etiquetaCategoria.toLowerCase().includes('entregad') || 
+                        etiquetaCategoria.toLowerCase().includes('aceptad') || 
+                        etiquetaCategoria.toLowerCase().includes('conforme') || 
+                        fechaEntregleIBK !== null ||
+                        fechaEntregaIBK !== null;
+
+    const valForecastEC = getVal('forecastestado', 'forecast');
+    const estatusFinal = normalizeEstatus(valForecastEC);
+
     const srvCumpleCierreAprov = (estatusFinal === 'Migrado') && esEntregado;
 
     let motivoRaw = 'Formalmente Entregado';
@@ -715,11 +744,11 @@ async function processWorkbook(file) {
       anio: anioVal,
       mesIdx: mesIdx,
       mes: mesNom,
-      siglas: String(getVal('Siglas', 'Sigla') || 'S/S').trim(),
-      app: String(getVal('Nombre de la aplicación', 'Aplicacion', 'App') || 'Sin Aplicación').trim(),
-      servidor: String(getVal('Servidor') || 'Sin Servidor').trim(),
-      ambiente: String(getVal('Ambiente') || 'PRD').toUpperCase().trim(),
-      crew: String(getVal('Crew', 'Dominio') || 'Sin Asignar').trim(),
+      siglas: String(getVal('siglas', 'sigla') || 'S/S').trim(),
+      app: String(getVal('nombredelaaplicacion', 'aplicacion', 'app') || 'Sin Aplicación').trim(),
+      servidor: String(getVal('servidor', 'host', 'hostname') || 'Sin Servidor').trim(),
+      ambiente: String(getVal('ambiente', 'env') || 'PRD').toUpperCase().trim(),
+      crew: String(getVal('crew', 'dominio') || 'Sin Asignar').trim(),
       ownerKyndryl: ownerKyndryl,
       componente: subOrigenCompleto !== '—' ? subOrigenCompleto : 'Sistema Operativo',
       soOrigen: soOrigen,
@@ -727,7 +756,7 @@ async function processWorkbook(file) {
       soDestino: soDestino,
       subDestino: subDestino,
       equipoSO: equipoSO,
-      nComp: getNumStrict('Componentes Kydryl', 'Componentes Proyeccion', 'Componentes', '# Componentes'),
+      nComp: getNumStrict('componenteskydryl', 'componentesproyeccion', 'componentes', 'cantcomponentes') || 1,
       estatus: estatusFinal,
       oc: ocNum ? String(ocNum).trim() : 'Sin OC',
       estadoOC: ocEstado ? String(ocEstado).trim() : 'Sin Estado OC',
@@ -755,14 +784,18 @@ async function processWorkbook(file) {
       semanaRangoLbl: semanaDate ? formatSemanaRango(semanaDate) : 'Semana por Definir',
       fechaLbl: fechaExacta ? formatFechaVisual(fechaExacta) : (semanaDate ? formatFechaVisual(semanaDate) : 'Sin fecha'),
       dia: diaNom,
-      comentarios: String(getVal('Comentarios de Migracion', 'Comentarios') || '').trim()
+      comentarios: String(getVal('comentariosmigracion', 'comentarios') || '').trim()
     });
   }
 
   state.raw = rows;
 
   const allQs = Array.from(new Set(rows.map(r => r.qIbk))).filter(Boolean);
-  state.selectedQs = new Set(allQs);
+  if (allQs.includes('2026-Q3')) {
+    state.selectedQs = new Set(['2026-Q3']);
+  } else if (allQs.length > 0) {
+    state.selectedQs = new Set([allQs[0]]);
+  }
 
   $('#gate').classList.add('hide');
   $('#shell').classList.remove('hide');
@@ -771,8 +804,16 @@ async function processWorkbook(file) {
 }
 
 function initSlicers() {
-  const allQs = Array.from(new Set(state.raw.map(r => r.qIbk))).filter(Boolean).sort().reverse();
+  const aniosDisponibles = Array.from(new Set(state.raw.map(r => r.anio))).filter(Boolean).sort().reverse();
+  const sAnio = $('#sAnioGlobal');
+  sAnio.innerHTML = '<option value="__ALL__">Todos</option>' + aniosDisponibles.map(a => `<option value="${a}" ${String(a) === String(state.selectedAnio) ? 'selected' : ''}>${a}</option>`).join('');
+  
+  sAnio.onchange = (e) => {
+    state.selectedAnio = e.target.value;
+    renderApp();
+  };
 
+  const allQs = Array.from(new Set(state.raw.map(r => r.qIbk))).filter(Boolean).sort().reverse();
   const ddQ = $('#msQDropdown');
   ddQ.innerHTML = `
     <div style="padding:4px 6px;margin-bottom:6px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;">
@@ -963,6 +1004,10 @@ function applyFilters() {
   let list = state.raw.slice();
   const f = state.filters;
 
+  if (state.selectedAnio !== '__ALL__') {
+    list = list.filter(r => String(r.anio) === String(state.selectedAnio));
+  }
+
   if (state.selectedQs.size > 0) {
     list = list.filter(r => state.selectedQs.has(r.qIbk));
   } else {
@@ -983,7 +1028,7 @@ function applyFilters() {
 
   if (f.leader !== '__ALL__') list = list.filter(r => r.ownerKyndryl === f.leader);
   if (f.estadoOC !== '__ALL__') list = list.filter(r => r.estadoOC === f.estadoOC);
-  if (f.amb !== '__ALL__') list = list.filter(r => r.ambiente === f.amb);
+  if (f.amb !== '__ALL__') list = list.filter(r => r.ambiente === f.ambiente);
   state.view = list;
 }
 
@@ -994,8 +1039,9 @@ function renderApp() {
   const mig = state.view.filter(r => r.estatus === 'Migrado').reduce((a, b) => a + b.nComp, 0);
 
   const qsStr = Array.from(state.selectedQs).join(', ') || 'Todos';
+  const anioStr = state.selectedAnio !== '__ALL__' ? `Año: ${state.selectedAnio} · ` : '';
   $('#navFoot').innerHTML = `<b>${fmt(tot)}</b> componentes en ámbito<br>${fmt(mig)} cerrados (${pct1(pct(mig, tot))})`;
-  $('#pgSub').textContent = `Trimestres: ${qsStr} · ${fmt(tot)} componentes totales · ${fmt(new Set(state.view.map(r=>r.servidor)).size)} servidores`;
+  $('#pgSub').textContent = `${anioStr}Trimestres: ${qsStr} · ${fmt(tot)} componentes totales · ${fmt(new Set(state.view.map(r=>r.servidor)).size)} servidores`;
 
   destroyCharts();
 
@@ -1012,6 +1058,1035 @@ function destroyCharts() {
     if (state.charts[k]) state.charts[k].destroy();
   }
   state.charts = {};
+}
+
+/* -------------------------------------------------------------
+   VISTA 1: NIVEL DE CUMPLIMIENTO (LECTURA DIRECTA POR MES DE EXCEL)
+------------------------------------------------------------- */
+function renderCumplimientoPage() {
+  // USAMOS LA DATA EN ÁMBITO (state.view) O LA DATA BASE GLOBAL PARA LAS BARRAS MENSUALES
+  const rows = state.view;
+
+  // CONTEO ESTRICTAMENTE IGUAL A LA TABLA DINÁMICA DE EXCEL POR COLUMNA "MES"
+  const getMigradosPorMesCol = (nombreMes) => {
+    return rows.filter(r => {
+      const mText = String(r.mes || '').trim().toLowerCase();
+      const target = nombreMes.toLowerCase();
+      const coincide = mText === target || 
+                       (target === 'julio' && mText === 'jul') ||
+                       (target === 'agosto' && mText === 'ago') ||
+                       (target === 'setiembre' && (mText === 'set' || mText === 'septiembre' || mText === 'sep'));
+      return coincide && r.estatus === 'Migrado';
+    }).reduce((a, b) => a + b.nComp, 0);
+  };
+
+  const migJul = getMigradosPorMesCol('Julio');     // Debe dar 56
+  const migAgo = getMigradosPorMesCol('Agosto');    // Debe dar 106
+  const migSep = getMigradosPorMesCol('Setiembre'); // Debe dar 63 (45 + 18)
+
+  const mesesAMostrar = [
+    { key: 'jul', label: 'jul', mesNombre: 'Julio', plan: 63, meta: 50, migReal: migJul },
+    { key: 'ago', label: 'ago', mesNombre: 'Agosto', plan: 150, meta: 120, migReal: migAgo },
+    { key: 'set', label: 'sep', mesNombre: 'Setiembre', plan: 134, meta: 120, migReal: migSep }
+  ];
+
+  const mesesLabels = mesesAMostrar.map(m => m.label);
+  const planMensual = mesesAMostrar.map(m => m.plan);
+  const metaMensual = mesesAMostrar.map(m => m.meta);
+  const migradoReal = mesesAMostrar.map(m => m.migReal);
+
+  // MÉTRICAS BASE
+  const metaTotalMensual = metaMensual.reduce((a, b) => a + b, 0);
+  const migradosRows = rows.filter(r => r.estatus === 'Migrado');
+  const ejecucionRealComp = migradosRows.reduce((a, b) => a + b.nComp, 0);
+  const entregadosRows = rows.filter(r => r.esEntregado && r.estatus === 'Migrado');
+  const entregadosComp = entregadosRows.reduce((a, b) => a + b.nComp, 0);
+  const noEntregadosRows = migradosRows.filter(r => !r.esEntregado);
+  const noEntregadosComp = noEntregadosRows.reduce((a, b) => a + b.nComp, 0);
+
+  const rollbacksRows = rows.filter(r => r.estatus === 'Rollback');
+  const rollbacksComp = rollbacksRows.reduce((a, b) => a + b.nComp, 0);
+  const intentosTotalComp = ejecucionRealComp + rollbacksComp;
+
+  const kpiCumplimiento = pct(ejecucionRealComp, metaTotalMensual);
+  const kpiEficaciaEntrega = pct(entregadosComp, ejecucionRealComp);
+  const kpiTasaRollback = pct(rollbacksComp, intentosTotalComp);
+
+  const motivosMap = new Map();
+  noEntregadosRows.forEach(r => {
+    const mot = r.motivoNoEntrega || 'Pendiente de validación formal IBK';
+    motivosMap.set(mot, (motivosMap.get(mot) || 0) + r.nComp);
+  });
+  const motivosSorted = Array.from(motivosMap.entries()).sort((a, b) => b[1] - a[1]);
+  const motivosLabels = motivosSorted.map(x => x[0]);
+  const motivosValues = motivosSorted.map(x => x[1]);
+
+  $('#page').innerHTML = `
+    <div class="section-label-bar">📌 Métricas Base del Servicio (Valores Crudos)</div>
+    <div class="row r-4">
+      <div class="tile kpi navy">
+        <div class="lbl">Meta Acumulada Q3</div>
+        <div class="val">${fmt(metaTotalMensual)} <span style="font-size:15px;color:var(--k-text-muted);">comp.</span></div>
+        <div class="sub">Julio (50) + Agosto (120) + Setiembre (120)</div>
+      </div>
+
+      <div class="tile kpi green kpi-clickable" onclick="drillKpiMainMigrados()" title="Clic para ver componentes migrados">
+        <div class="lbl">Ejecución Real (Migrados)</div>
+        <div class="val" style="color:var(--k-green);">${fmt(ejecucionRealComp)}</div>
+        <div class="sub">${new Set(migradosRows.map(r=>r.servidor)).size} servidores migrados · <b>Clic para ver</b></div>
+      </div>
+
+      <div class="tile kpi blue kpi-clickable" onclick="drillKpiMainEntregados()" title="Clic para ver componentes entregados a IBK">
+        <div class="lbl">Entregados Formalmente</div>
+        <div class="val" style="color:var(--k-blue);">${fmt(entregadosComp)}</div>
+        <div class="sub">${new Set(entregadosRows.map(r=>r.servidor)).size} servidores aceptados por IBK · <b>Clic para ver</b></div>
+      </div>
+
+      <div class="tile kpi ${noEntregadosComp > 0 ? 'amber' : 'green'} kpi-clickable" onclick="drillKpiMainNoEntregados()" title="Clic para ver motivos de no entrega">
+        <div class="lbl">Pendientes de Entrega</div>
+        <div class="val" style="color:${noEntregadosComp > 0 ? 'var(--k-amber)' : 'var(--k-green)'};">${fmt(noEntregadosComp)}</div>
+        <div class="sub">${noEntregadosComp > 0 ? '⚠️ Clic para ver motivos de retención' : '100% de lo migrado entregado'}</div>
+      </div>
+    </div>
+
+    <div class="section-label-bar" style="margin-top: 10px;">🩺 KPIs de Salud del Servicio (Indicadores de Calidad)</div>
+    <div class="row r-3">
+      <div class="tile kpi ${kpiCumplimiento >= 100 ? 'green' : 'amber'} kpi-clickable" onclick="drillKpiMainMigrados()" title="Clic para auditar avance">
+        <div class="lbl">% Cumplimiento de Actualización</div>
+        <div class="val" style="color:${kpiCumplimiento >= 100 ? 'var(--k-green)' : 'var(--k-amber)'};">${pct1(kpiCumplimiento)}</div>
+        <div class="sub">Fórmula: (Ejecución Real / Meta) * 100</div>
+      </div>
+
+      <div class="tile kpi ${kpiEficaciaEntrega >= 90 ? 'green' : 'amber'} kpi-clickable" onclick="drillKpiMainNoEntregados()" title="Clic para ver motivos de no entrega">
+        <div class="lbl">% Eficacia en la Entrega (Migrado vs Entregado)</div>
+        <div class="val" style="color:${kpiEficaciaEntrega >= 90 ? 'var(--k-green)' : 'var(--k-amber)'};">${pct1(kpiEficaciaEntrega)}</div>
+        <div class="sub">Fórmula: (Entregados / Migrados) * 100 · <b>Clic para ver motivos</b></div>
+      </div>
+
+      <div class="tile kpi ${kpiTasaRollback <= 5 ? 'green' : ''}" style="border-left-color:${kpiTasaRollback <= 5 ? 'var(--k-green)' : 'var(--k-alert)'};" onclick="drillKpiMainRollbacks()" title="Clic para auditar rollbacks">
+        <div class="lbl">Tasa de Rollback (%)</div>
+        <div class="val" style="color:${kpiTasaRollback <= 5 ? 'var(--k-green)' : 'var(--k-alert)'};">${pct1(kpiTasaRollback)}</div>
+        <div class="sub">${fmt(rollbacksComp)} rollbacks de ${fmt(intentosTotalComp)} intentos totales</div>
+      </div>
+    </div>
+
+    <div class="row r-2">
+      <div class="tile" style="border: 1.5px solid #CBD5E1; border-radius: 16px;">
+        <div class="th">
+          <div>
+            <h3>Nivel de Cumplimiento Mensual (Meta vs Planificado vs Migrado)</h3>
+            <div class="sb">Planificado fijo (Jul: 63, Ago: 150, Sep: 134) · Línea verde sincronizada con la columna MES</div>
+          </div>
+          <button class="btn ghost sm" onclick="irAPestana('detalle')">Ver Inventario Completo ➔</button>
+        </div>
+        <div class="cbox"><canvas id="cMensualHistorico"></canvas></div>
+      </div>
+
+      <div class="tile" style="border: 1.5px solid #CBD5E1; border-radius: 16px;">
+        <div class="th">
+          <div>
+            <h3>Motivos de Retención: ¿Por qué no se han entregado? (${fmt(noEntregadosComp)} comp.)</h3>
+            <div class="sb">Categorías unificadas sin duplicidad por mayúsculas/minúsculas</div>
+          </div>
+          <button class="btn ghost sm" onclick="drillKpiMainNoEntregados()">Auditar Servidores</button>
+        </div>
+        <div class="cbox"><canvas id="cDonaMotivos"></canvas></div>
+      </div>
+    </div>
+  `;
+
+  const ctxHist = $('#cMensualHistorico').getContext('2d');
+  state.charts['cMensualHistorico'] = new Chart(ctxHist, {
+    data: {
+      labels: mesesLabels,
+      datasets: [
+        {
+          type: 'bar',
+          label: 'Cant. Planificada',
+          data: planMensual,
+          backgroundColor: '#0E5A84',
+          borderRadius: 4,
+          barPercentage: 0.38,
+          order: 3
+        },
+        {
+          type: 'line',
+          label: 'Cant. Mensual',
+          data: metaMensual,
+          borderColor: '#EA580C',
+          backgroundColor: '#EA580C',
+          borderWidth: 3.5,
+          pointRadius: 0,
+          tension: 0,
+          order: 1
+        },
+        {
+          type: 'line',
+          label: 'Migrado',
+          data: migradoReal,
+          borderColor: '#2E7D32',
+          backgroundColor: '#2E7D32',
+          borderWidth: 3.5,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          pointBackgroundColor: '#2E7D32',
+          tension: 0,
+          order: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 26 } },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 14, padding: 16, font: { weight: '600' } } },
+        tooltip: {
+          callbacks: {
+            label: (c) => `${c.dataset.label}: ${c.raw} componentes`
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { weight: '700' } } },
+        y: { beginAtZero: true, max: 165, grid: { color: '#EDF2F9' } }
+      },
+      onClick: (evt, activeEls) => {
+        if (!activeEls || !activeEls.length) return;
+        const el = activeEls[0];
+        const mObj = mesesAMostrar[el.index];
+        const rowsMes = rows.filter(r => String(r.mes).toLowerCase() === mObj.mesNombre.toLowerCase() || (mObj.mesNombre === 'Setiembre' && (String(r.mes).toLowerCase() === 'set' || String(r.mes).toLowerCase() === 'septiembre')));
+        drillGrupo(`Detalle de Componentes de ${mObj.mesNombre} (${rowsMes.length} registros)`, rowsMes);
+      }
+    }
+  });
+
+  const ctxMotivos = $('#cDonaMotivos').getContext('2d');
+  state.charts['cDonaMotivos'] = new Chart(ctxMotivos, {
+    type: 'doughnut',
+    data: {
+      labels: motivosLabels.length ? motivosLabels : ['100% Entregado'],
+      datasets: [{
+        data: motivosValues.length ? motivosValues : [1],
+        backgroundColor: motivosValues.length ? ['#EA580C', '#D97706', '#EAB308', '#0F3A70', '#E11D48'] : ['#059669'],
+        borderWidth: 2,
+        borderColor: '#FFFFFF'
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12, font: { weight: '600', size: 11 } } },
+        tooltip: { callbacks: { label: c => `${c.label}: ${c.raw} componentes` } }
+      },
+      onClick: (evt, activeEls) => {
+        if (!activeEls || !activeEls.length) return;
+        const el = activeEls[0];
+        const labelMotivo = motivosLabels[el.index];
+        if (!labelMotivo) return;
+        const rowsMotivo = noEntregadosRows.filter(r => r.motivoNoEntrega.toLowerCase() === labelMotivo.toLowerCase());
+        drillGrupo(`Servidores No Entregados: ${labelMotivo} (${rowsMotivo.length} registros)`, rowsMotivo);
+      }
+    }
+  });
+
+  window.curMainMigradosRows = migradosRows;
+  window.curMainEntregadosRows = entregadosRows;
+  window.curMainNoEntregadosRows = noEntregadosRows;
+  window.curMainRollbackRows = rollbacksRows;
+}
+
+function irAPestana(pgId) {
+  const btn = $(`.navbtn[data-pg="${pgId}"]`);
+  if (btn) btn.click();
+}
+
+function drillKpiMainMigrados() {
+  const rows = window.curMainMigradosRows || [];
+  drillGrupo(`Ejecución Real: Servidores Migrados (${rows.length} registros)`, rows);
+}
+
+function drillKpiMainEntregados() {
+  const rows = window.curMainEntregadosRows || [];
+  drillGrupo(`Servidores Formalmente Entregados a IBK (${rows.length} registros)`, rows);
+}
+
+function drillKpiMainNoEntregados() {
+  const rows = window.curMainNoEntregadosRows || [];
+  drillGrupo(`Motivos de No Entrega (Diferencias Migrado vs Entregado)`, rows);
+}
+
+function drillKpiMainRollbacks() {
+  const rows = window.curMainRollbackRows || [];
+  drillGrupo(`Intentos con Rollback (${rows.length} registros)`, rows);
+}
+
+/* -------------------------------------------------------------
+   VISTA 2: FLUJO E2E Y ALERTAS DE OC (UPGRADE CAPACIDADES)
+------------------------------------------------------------- */
+function renderFlujoE2EPage() {
+  const rows = state.view;
+  const hoyRef = new Date(2026, 8, 6);
+
+  const diagnosticados = rows.map(r => {
+    const tieneOC = r.oc && r.oc !== 'Sin OC' && r.oc.trim() !== '';
+    const yaMigrado = r.estatus === 'Migrado';
+
+    const upgAplica = r.ticketUpg && !r.ticketUpg.toLowerCase().includes('no aplica');
+    const estUpg = r.estadoUpg ? r.estadoUpg.toLowerCase() : '';
+    const upgOk = !upgAplica || estUpg.includes('aprobado') || estUpg.includes('cerrado') || estUpg.includes('ejecutado');
+
+    const estAprov = r.estadoAprov ? r.estadoAprov.toLowerCase() : '';
+    const aprovOk = estAprov.includes('aprobado') || estAprov.includes('cerrado');
+
+    let diasRestantes = 999;
+    if (r.fechaRef instanceof Date && !isNaN(r.fechaRef)) {
+      const diffMs = r.fechaRef.getTime() - hoyRef.getTime();
+      diasRestantes = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    }
+
+    let alertaNivel = 'verde';
+    let diagnostico = 'Flujo completado (OC generada)';
+
+    if (yaMigrado) {
+      alertaNivel = 'verde';
+      diagnostico = 'Migración ejecutada';
+    } else if (!tieneOC) {
+      if (!upgOk) {
+        diagnostico = 'Bloqueado: Ticket Upgrade Capacidades pendiente';
+      } else if (!aprovOk) {
+        diagnostico = 'Bloqueado: Ticket Aprovisionamiento no aprobado';
+      } else {
+        diagnostico = 'Aprobado en Kyndryl (Listo para generar OC)';
+      }
+
+      if (diasRestantes <= 4) {
+        alertaNivel = 'rojo';
+      } else if (diasRestantes <= 8) {
+        alertaNivel = 'naranja';
+      } else {
+        alertaNivel = 'amarillo';
+      }
+    }
+
+    return {
+      ...r,
+      tieneOC,
+      upgOk,
+      aprovOk,
+      diasRestantes,
+      alertaNivel,
+      diagnostico
+    };
+  });
+
+  const rojos = diagnosticados.filter(d => d.alertaNivel === 'rojo');
+  const naranjas = diagnosticados.filter(d => d.alertaNivel === 'naranja');
+  const amarillos = diagnosticados.filter(d => d.alertaNivel === 'amarillo');
+  const verdes = diagnosticados.filter(d => d.alertaNivel === 'verde');
+
+  const semMap = new Map();
+  diagnosticados.forEach(r => {
+    if (!r.semanaDate) return;
+    const t = r.semanaDate.getTime();
+    if (!semMap.has(t)) semMap.set(t, { time: t, label: r.semanaCompletaLbl });
+  });
+  const semanasFlujo = Array.from(semMap.values()).sort((a, b) => a.time - b.time);
+
+  const act = state.filtroAlertaFlujo;
+
+  $('#page').innerHTML = `
+    <div class="row r-4">
+      <div class="tile kpi kpi-clickable ${act === 'rojo' ? 'active-card rojo' : ''}" id="cardAlertaRojo" style="border-left-color: #E11D48;">
+        <div class="lbl">🔴 ALERTA CRÍTICA (≤ 4 DÍAS)</div>
+        <div class="val" style="color:#E11D48;">${fmt(rojos.length)}</div>
+        <div class="sub">Sin OC generada a días de la ventana</div>
+      </div>
+
+      <div class="tile kpi kpi-clickable ${act === 'naranja' ? 'active-card naranja' : ''}" id="cardAlertaNaranja" style="border-left-color: #EA580C;">
+        <div class="lbl">🟠 ALERTA MEDIA (5 A 8 DÍAS)</div>
+        <div class="val" style="color:#EA580C;">${fmt(naranjas.length)}</div>
+        <div class="sub">Requiere aprobación de aprovisionamiento</div>
+      </div>
+
+      <div class="tile kpi kpi-clickable ${act === 'amarillo' ? 'active-card amarillo' : ''}" id="cardAlertaAmarillo" style="border-left-color: #CA8A04;">
+        <div class="lbl">🟡 PREVENTIVOS (> 8 DÍAS)</div>
+        <div class="val" style="color:#A16207;">${fmt(amarillos.length)}</div>
+        <div class="sub">En cola de habilitación</div>
+      </div>
+
+      <div class="tile kpi green kpi-clickable ${act === 'verde' ? 'active-card verde' : ''}" id="cardAlertaVerde">
+        <div class="lbl">🟢 CONTROLADOS CON OC</div>
+        <div class="val">${fmt(verdes.length)}</div>
+        <div class="sub">Con OC emitida o ya migrados</div>
+      </div>
+    </div>
+
+    <div class="tile" style="overflow: visible;">
+      <div class="sticky-oc-header">
+        <div>
+          <h3 style="font-size:16px;margin:0 0 2px 0;">Pipeline de Habilitadores: Upgrade Capacidades ➔ Aprovisionamiento ➔ OC</h3>
+          <div class="sb" style="margin:0;">Selecciona cualquiera de las tarjetas superiores para filtrar servidores</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <div class="sl">
+            <input type="text" id="tbSearchFlujo" placeholder="🔍 Buscar servidor, app u owner..." value="${esc(state.searchFlujoQuery)}" style="min-width: 210px;">
+          </div>
+          <div class="sl">
+            <select id="selAlertaFlujo">
+              <option value="__ALL__" ${state.filtroAlertaFlujo === '__ALL__' ? 'selected' : ''}>Todas las alertas</option>
+              <option value="rojo" ${state.filtroAlertaFlujo === 'rojo' ? 'selected' : ''}>🔴 Solo Críticos (≤ 4 días)</option>
+              <option value="naranja" ${state.filtroAlertaFlujo === 'naranja' ? 'selected' : ''}>🟠 Solo Advertencias (5-8 días)</option>
+              <option value="amarillo" ${state.filtroAlertaFlujo === 'amarillo' ? 'selected' : ''}>🟡 Solo Preventivos</option>
+              <option value="verde" ${state.filtroAlertaFlujo === 'verde' ? 'selected' : ''}>🟢 Solo Controlados con OC</option>
+            </select>
+          </div>
+          <div class="sl">
+            <select id="selSemanaFlujo">
+              <option value="__ALL__">Todas las semanas (${semanasFlujo.length})</option>
+              ${semanasFlujo.map(s => `<option value="${s.time}">${esc(s.label)}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="tw" style="max-height: 580px;">
+        <table class="dt">
+          <thead>
+            <tr>
+              <th class="l">Alerta E2E</th>
+              <th class="l">Fecha Plan.</th>
+              <th class="l">Servidor</th>
+              <th class="l">Sigla</th>
+              <th class="l">Owner Kyndryl</th>
+              <th class="l" style="background:#0F3A70;">Ticket Upgrade Capacidades</th>
+              <th class="l" style="background:#0F3A70;">Estado Upgrade</th>
+              <th class="l" style="background:#1E3A8A;">Ticket Aprovisionamiento</th>
+              <th class="l" style="background:#1E3A8A;">Estado Aprov.</th>
+              <th class="l" style="background:#065F46;">OC Migración</th>
+              <th class="l" style="background:#065F46;">Estado OC</th>
+              <th class="l">Diagnóstico del Bloqueo</th>
+            </tr>
+          </thead>
+          <tbody id="tbBodyFlujo"></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  const paintFlujo = () => {
+    const qText = norm(state.searchFlujoQuery);
+    const nivelAlerta = state.filtroAlertaFlujo;
+    const semVal = $('#selSemanaFlujo').value;
+
+    let filtrados = diagnosticados;
+
+    if (nivelAlerta !== '__ALL__') filtrados = filtrados.filter(d => d.alertaNivel === nivelAlerta);
+    if (semVal !== '__ALL__') filtrados = filtrados.filter(d => d.semanaDate && d.semanaDate.getTime() === Number(semVal));
+
+    if (qText) {
+      filtrados = filtrados.filter(d => norm(`${d.servidor} ${d.siglas} ${d.app} ${d.ownerKyndryl} ${d.oc} ${d.ticketUpg} ${d.ticketAprov} ${d.diagnostico}`).includes(qText));
+    }
+
+    filtrados.sort((a, b) => {
+      const p = { rojo: 1, naranja: 2, amarillo: 3, verde: 4 };
+      if (p[a.alertaNivel] !== p[b.alertaNivel]) return p[a.alertaNivel] - p[b.alertaNivel];
+      return a.diasRestantes - b.diasRestantes;
+    });
+
+    window.curFlujoFiltrados = filtrados;
+
+    $('#tbBodyFlujo').innerHTML = filtrados.slice(0, 350).map((d, idx) => {
+      let badgeHtml = '';
+      if (d.alertaNivel === 'rojo') badgeHtml = `<span class="alerta-badge rojo">🔴 CRÍTICO (${d.diasRestantes}d)</span>`;
+      else if (d.alertaNivel === 'naranja') badgeHtml = `<span class="alerta-badge naranja">🟠 ALERTA (${d.diasRestantes}d)</span>`;
+      else if (d.alertaNivel === 'amarillo') badgeHtml = `<span class="alerta-badge amarillo">🟡 PREVENTIVO</span>`;
+      else badgeHtml = `<span class="alerta-badge verde">🟢 CONTROLADO</span>`;
+
+      return `
+        <tr onclick="drillFlujoPorIdx(${idx})">
+          <td class="l">${badgeHtml}</td>
+          <td class="l mono" style="white-space:nowrap;"><b>${esc(d.fechaLbl)}</b></td>
+          <td class="l mono" style="font-weight:700;">${esc(d.servidor)}</td>
+          <td class="l mono">${esc(d.siglas)}</td>
+          <td class="l"><b>${esc(d.ownerKyndryl)}</b></td>
+          <td class="l mono" style="font-weight:700;color:var(--k-navy);">${esc(d.ticketUpg)}</td>
+          <td class="l" style="font-size:12px;">${esc(d.estadoUpg)}</td>
+          <td class="l mono" style="font-weight:700;color:#1E3A8A;">${esc(d.ticketAprov)}</td>
+          <td class="l" style="font-size:12px;"><span class="tag ${d.estadoAprov.toLowerCase().includes('aprobado') ? 'oc-aprobado' : 'oc-definicion'}">${esc(d.estadoAprov)}</span></td>
+          <td class="l mono" style="font-weight:700;">${esc(d.oc)}</td>
+          <td class="l"><span class="tag ${getEstadoOCClass(d.estadoOC)}">${esc(d.estadoOC)}</span></td>
+          <td class="l" style="font-size:12px;font-weight:600;color:${d.alertaNivel === 'rojo' ? '#BE123C' : (d.alertaNivel === 'naranja' ? '#C2410C' : '#334155')}">${esc(d.diagnostico)}</td>
+        </tr>
+      `;
+    }).join('') + (filtrados.length > 350 ? `<tr><td colspan="12" class="l" style="text-align:center;padding:12px;color:#888;">Mostrando las primeras 350 alertas...</td></tr>` : '');
+  };
+
+  const bindCardClick = (cardId, targetAlerta) => {
+    const el = $(cardId);
+    if (!el) return;
+    el.onclick = () => {
+      state.filtroAlertaFlujo = state.filtroAlertaFlujo === targetAlerta ? '__ALL__' : targetAlerta;
+      $('#selAlertaFlujo').value = state.filtroAlertaFlujo;
+      $$('.kpi-clickable').forEach(c => c.classList.remove('active-card', 'rojo', 'naranja', 'amarillo', 'verde'));
+      if (state.filtroAlertaFlujo !== '__ALL__') el.classList.add('active-card', targetAlerta);
+      paintFlujo();
+    };
+  };
+
+  bindCardClick('#cardAlertaRojo', 'rojo');
+  bindCardClick('#cardAlertaNaranja', 'naranja');
+  bindCardClick('#cardAlertaAmarillo', 'amarillo');
+  bindCardClick('#cardAlertaVerde', 'verde');
+
+  $('#tbSearchFlujo').oninput = (e) => { state.searchFlujoQuery = e.target.value; paintFlujo(); };
+  $('#selAlertaFlujo').onchange = (e) => {
+    state.filtroAlertaFlujo = e.target.value;
+    $$('.kpi-clickable').forEach(c => c.classList.remove('active-card', 'rojo', 'naranja', 'amarillo', 'verde'));
+    if (state.filtroAlertaFlujo === 'rojo') $('#cardAlertaRojo').classList.add('active-card', 'rojo');
+    else if (state.filtroAlertaFlujo === 'naranja') $('#cardAlertaNaranja').classList.add('active-card', 'naranja');
+    else if (state.filtroAlertaFlujo === 'amarillo') $('#cardAlertaAmarillo').classList.add('active-card', 'amarillo');
+    else if (state.filtroAlertaFlujo === 'verde') $('#cardAlertaVerde').classList.add('active-card', 'verde');
+    paintFlujo();
+  };
+  $('#selSemanaFlujo').onchange = paintFlujo;
+
+  paintFlujo();
+}
+
+function drillFlujoPorIdx(idx) {
+  const item = (window.curFlujoFiltrados || [])[idx];
+  if (!item) return;
+  drillGrupo(`Auditoría Habilitadores: ${item.servidor}`, [item]);
+}
+
+/* -------------------------------------------------------------
+   VISTA 3: AVANCE DE ENTREGAS
+------------------------------------------------------------- */
+function renderEntregasPage() {
+  const rows = state.view;
+  const migRowsAll = rows.filter(r => r.estatus === 'Migrado');
+
+  const semMap = new Map();
+  migRowsAll.forEach(r => {
+    if (!r.semanaDate) return;
+    const t = r.semanaDate.getTime();
+    if (!semMap.has(t)) {
+      semMap.set(t, {
+        time: t,
+        label: r.semanaRangoLbl,
+        shortLabel: `${r.semanaDate.getDate()}-${MESES_CORTO[r.semanaDate.getMonth()]}`,
+        rows: []
+      });
+    }
+    semMap.get(t).rows.push(r);
+  });
+  const semanasEntregas = Array.from(semMap.values()).sort((a, b) => a.time - b.time);
+
+  let migRows = migRowsAll;
+  if (state.filtroSemanaEntregas !== '__ALL__') {
+    migRows = migRowsAll.filter(r => r.semanaDate && r.semanaDate.getTime() === Number(state.filtroSemanaEntregas));
+  }
+
+  const serverMap = new Map();
+  migRows.forEach(r => {
+    if (!serverMap.has(r.servidor)) {
+      serverMap.set(r.servidor, {
+        servidor: r.servidor,
+        app: r.app,
+        siglas: r.siglas,
+        ambiente: r.ambiente,
+        ownerKyndryl: r.ownerKyndryl,
+        qIbk: r.qIbk,
+        nComp: 0,
+        esEntregado: false,
+        etiquetaCategoria: r.etiquetaCategoria,
+        estadoSubCat: r.estadoSubCat,
+        fechaEntregaIBKLbl: r.fechaEntregaIBKLbl,
+        rows: []
+      });
+    }
+    const s = serverMap.get(r.servidor);
+    s.nComp += r.nComp;
+    if (r.esEntregado) s.esEntregado = true;
+    s.rows.push(r);
+  });
+
+  const allMigServers = Array.from(serverMap.values());
+  const entregadosServers = allMigServers.filter(s => s.esEntregado);
+  const pendientesServers = allMigServers.filter(s => !s.esEntregado);
+
+  const totSrv = allMigServers.length;
+  const entSrv = entregadosServers.length;
+  const pendSrv = pendientesServers.length;
+  const pctAvanceSrv = pct(entSrv, totSrv);
+
+  const totComp = allMigServers.reduce((a, b) => a + b.nComp, 0);
+  const entComp = entregadosServers.reduce((a, b) => a + b.nComp, 0);
+  const pendComp = pendientesServers.reduce((a, b) => a + b.nComp, 0);
+
+  const semanasVersusData = semanasEntregas.map(sem => {
+    const migCompSem = sem.rows.reduce((a, b) => a + b.nComp, 0);
+    const entCompSem = sem.rows.filter(r => r.esEntregado).reduce((a, b) => a + b.nComp, 0);
+    const pctEntSem = migCompSem > 0 ? (entCompSem / migCompSem) * 100 : 0;
+    return {
+      time: sem.time,
+      label: sem.shortLabel,
+      fullLabel: sem.label,
+      migComp: migCompSem,
+      entComp: entCompSem,
+      pctEnt: pctEntSem,
+      rows: sem.rows
+    };
+  });
+
+  $('#page').innerHTML = `
+    <div class="row r-4">
+      <div class="tile kpi green kpi-clickable" onclick="drillKpiServidoresEntregados()" title="Clic para ver servidores formalmente entregados">
+        <div class="lbl">Servidores Entregados</div>
+        <div class="val">${fmt(entSrv)} <span style="font-size:16px;color:var(--k-text-muted);">/ ${fmt(totSrv)}</span></div>
+        <div class="sub">${fmt(entComp)} de ${fmt(totComp)} componentes · <b>Clic para ver</b></div>
+      </div>
+
+      <div class="tile kpi amber kpi-clickable" onclick="drillKpiServidoresPendientes()" title="Clic para ver servidores pendientes de entrega">
+        <div class="lbl">Pendientes de Entrega</div>
+        <div class="val">${fmt(pendSrv)}</div>
+        <div class="sub">${fmt(pendComp)} componentes por entregar a IBK · <b>Clic para ver</b></div>
+      </div>
+
+      <div class="tile kpi kpi-clickable" onclick="drillKpiConsolidadoEntregas()" title="Clic para auditar todo el avance">
+        <div class="lbl">Avance de Entregas (Servidores)</div>
+        <div class="val">${pct1(pctAvanceSrv)}</div>
+        <div class="sub">Tasa de formalización de entrega</div>
+      </div>
+
+      <div class="tile kpi blue kpi-clickable" onclick="drillKpiConsolidadoEntregas()" title="Clic para auditar componentes">
+        <div class="lbl">Avance en Componentes</div>
+        <div class="val">${pct1(pct(entComp, totComp))}</div>
+        <div class="sub">Esfuerzo entregado a IBK</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="tile" style="padding: 12px 18px; display: flex; flex-direction: row; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div style="font-size: 13px; font-weight: 700; color: var(--k-charcoal);">
+          📅 Filtrar Avance de Entregas por Semana de Planificación:
+        </div>
+        <div class="sl">
+          <select id="selSemanaEntregas" style="min-width: 250px;">
+            <option value="__ALL__">Todas las semanas (${semanasEntregas.length})</option>
+            ${semanasEntregas.map(s => `<option value="${s.time}" ${state.filtroSemanaEntregas == s.time ? 'selected' : ''}>${esc(s.label)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="tile" style="border: 1.5px solid #CBD5E1; border-radius: 16px;">
+        <div class="th">
+          <div>
+            <h3>Evolución Semanal de Entregas (Migrados vs Entregados)</h3>
+            <div class="sb">Compara en cada semana los componentes migrados técnicamente versus los que ya cuentan con entrega formal aceptada a IBK</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span class="stat-pill mig">Migrados Técnicos</span>
+            <span class="stat-pill plan">Entregados / Aceptados</span>
+          </div>
+        </div>
+        <div class="cbox" style="min-height: 310px;"><canvas id="cEntregasVersusChart"></canvas></div>
+      </div>
+    </div>
+  `;
+
+  const ctxVersus = $('#cEntregasVersusChart').getContext('2d');
+  state.charts['cEntregasVersusChart'] = new Chart(ctxVersus, {
+    type: 'bar',
+    data: {
+      labels: semanasVersusData.map(s => s.label),
+      datasets: [
+        {
+          type: 'bar',
+          label: 'Componentes Migrados',
+          data: semanasVersusData.map(s => s.migComp),
+          backgroundColor: '#059669',
+          borderRadius: 4,
+          barPercentage: 0.7,
+          order: 2,
+          yAxisID: 'y'
+        },
+        {
+          type: 'bar',
+          label: 'Componentes Entregados',
+          data: semanasVersusData.map(s => s.entComp),
+          backgroundColor: '#0284C7',
+          borderRadius: 4,
+          barPercentage: 0.7,
+          order: 3,
+          yAxisID: 'y'
+        },
+        {
+          type: 'line',
+          label: '% Tasa de Entrega',
+          data: semanasVersusData.map(s => s.pctEnt),
+          borderColor: '#EA580C',
+          backgroundColor: '#EA580C',
+          borderWidth: 3,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: '#EA580C',
+          order: 1,
+          yAxisID: 'y1'
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 22 } },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16, font: { weight: '600' } } },
+        tooltip: {
+          callbacks: {
+            label: (c) => {
+              if (c.datasetIndex === 2) return `${c.dataset.label}: ${c.raw.toFixed(1)}%`;
+              return `${c.dataset.label}: ${c.raw} componentes`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false } },
+        y: { type: 'linear', position: 'left', beginAtZero: true, grace: '10%', title: { display: true, text: 'Componentes' }, grid: { color: '#EDF2F9' } },
+        y1: { type: 'linear', position: 'right', beginAtZero: true, max: 105, title: { display: true, text: '% Tasa de Entrega' }, grid: { display: false }, ticks: { callback: v => `${v}%` } }
+      },
+      onClick: (evt, activeEls) => {
+        if (!activeEls || !activeEls.length) return;
+        const el = activeEls[0];
+        const sIdx = el.index;
+        const dsIdx = el.datasetIndex;
+        const semItem = semanasVersusData[sIdx];
+        if (!semItem) return;
+
+        let targetRows = semItem.rows;
+        let tipo = 'Todos los Migrados';
+        if (dsIdx === 1) {
+          targetRows = targetRows.filter(r => r.esEntregado);
+          tipo = 'Solo Entregados';
+        } else if (dsIdx === 0) {
+          tipo = 'Migrados de la Semana';
+        }
+        drillGrupo(`Avance: ${semItem.fullLabel} (${tipo})`, targetRows);
+      }
+    }
+  });
+
+  $('#selSemanaEntregas').onchange = (e) => {
+    state.filtroSemanaEntregas = e.target.value;
+    renderEntregasPage();
+  };
+
+  window.curEntregadosRows = migRows.filter(r => r.esEntregado);
+  window.curPendientesRows = migRows.filter(r => !r.esEntregado);
+  window.curMigRows = migRows;
+}
+
+function drillKpiServidoresEntregados() {
+  const rows = window.curEntregadosRows || [];
+  drillGrupo(`Servidores Formalmente Entregados (${rows.length} registros)`, rows);
+}
+
+function drillKpiServidoresPendientes() {
+  const rows = window.curPendientesRows || [];
+  drillGrupo(`Servidores Migrados Pendientes de Entrega (${rows.length} registros)`, rows);
+}
+
+function drillKpiConsolidadoEntregas() {
+  const rows = window.curMigRows || [];
+  drillGrupo(`Consolidado de Entregas de Servidores (${rows.length} registros)`, rows);
+}
+
+/* -------------------------------------------------------------
+   VISTA: CIERRE DE APROVISIONAMIENTO (MIGRADOS + ENTREGADOS)
+------------------------------------------------------------- */
+function renderCierreAprovPage() {
+  const rows = state.view;
+
+  const aprovMap = new Map();
+  rows.forEach(r => {
+    const rawTicket = r.ticketAprov;
+    if (!rawTicket || rawTicket === 'Sin Ticket' || rawTicket === '-' || String(rawTicket).trim() === '') return;
+    const ticketKey = String(rawTicket).trim();
+
+    if (!aprovMap.has(ticketKey)) {
+      aprovMap.set(ticketKey, {
+        ticket: ticketKey,
+        owner: r.ownerKyndryl,
+        estadoTicket: r.estadoAprov,
+        appSet: new Set(),
+        serverMap: new Map(),
+        rows: []
+      });
+    }
+    const t = aprovMap.get(ticketKey);
+    if (r.siglas && r.siglas !== 'S/S') t.appSet.add(r.siglas);
+
+    if (!t.serverMap.has(r.servidor)) {
+      t.serverMap.set(r.servidor, {
+        servidor: r.servidor,
+        sigla: r.siglas,
+        app: r.app,
+        ambiente: r.ambiente,
+        esMigrado: (r.estatus === 'Migrado'),
+        esEntregado: r.esEntregado,
+        cumple: r.srvCumpleCierreAprov,
+        rows: []
+      });
+    } else {
+      const s = t.serverMap.get(r.servidor);
+      if (r.estatus === 'Migrado') s.esMigrado = true;
+      if (r.esEntregado) s.esEntregado = true;
+      s.cumple = s.esMigrado && s.esEntregado;
+    }
+    t.serverMap.get(r.servidor).rows.push(r);
+    t.rows.push(r);
+  });
+
+  const allTickets = Array.from(aprovMap.values()).map(t => {
+    const srvList = Array.from(t.serverMap.values());
+    const totalSrv = srvList.length;
+    const aptosSrv = srvList.filter(s => s.cumple).length;
+    const listoParaCerrar = (totalSrv > 0) && (aptosSrv === totalSrv);
+    const pctAvance = totalSrv > 0 ? (aptosSrv / totalSrv) * 100 : 0;
+
+    return {
+      ...t,
+      srvList,
+      totalSrv,
+      aptosSrv,
+      listoParaCerrar,
+      pctAvance,
+      appsStr: Array.from(t.appSet).join(', ') || 'S/S'
+    };
+  });
+
+  const totalTicketsCount = allTickets.length;
+  const ticketsListos = allTickets.filter(t => t.listoParaCerrar);
+  const ticketsPendientes = allTickets.filter(t => !t.listoParaCerrar);
+  const totalSrvEnAprov = allTickets.reduce((a, b) => a + b.totalSrv, 0);
+  const totalSrvAptos = allTickets.reduce((a, b) => a + b.aptosSrv, 0);
+  const totalSrvFaltantes = totalSrvEnAprov - totalSrvAptos;
+  const pctCierreTickets = totalTicketsCount > 0 ? (ticketsListos.length / totalTicketsCount) * 100 : 0;
+
+  $('#page').innerHTML = `
+    <div class="row r-4">
+      <div class="tile kpi green kpi-clickable" onclick="drillKpiTicketsListos()" title="Clic para auditar los tickets listos para cerrar">
+        <div class="lbl">Tickets Listos para Cierre</div>
+        <div class="val" style="color:var(--k-green);">${ticketsListos.length} <span style="font-size:16px;color:var(--k-text-muted);">/ ${totalTicketsCount}</span></div>
+        <div class="sub">100% servidores migrados y entregados · <b>Clic para ver</b></div>
+      </div>
+
+      <div class="tile kpi amber kpi-clickable" onclick="drillKpiTicketsPendientes()" title="Clic para ver tickets bloqueados o en proceso">
+        <div class="lbl">Tickets con Cierre Pendiente</div>
+        <div class="val" style="color:var(--k-amber);">${ticketsPendientes.length}</div>
+        <div class="sub">${totalSrvFaltantes} servidores pendientes por completar · <b>Clic para ver</b></div>
+      </div>
+
+      <div class="tile kpi blue">
+        <div class="lbl">Tasa de Efectividad de Cierre</div>
+        <div class="val">${pct1(pctCierreTickets)}</div>
+        <div class="sub">Proporción de tickets listos para formalizar</div>
+      </div>
+
+      <div class="tile kpi">
+        <div class="lbl">Servidores Aptos / Totales</div>
+        <div class="val">${totalSrvAptos} <span style="font-size:16px;color:var(--k-text-muted);">/ ${totalSrvEnAprov}</span></div>
+        <div class="sub">${pct1(pct(totalSrvAptos, totalSrvEnAprov))} de avance físico en aprovisionamiento</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="tile" style="overflow: visible;">
+        <div class="sticky-oc-header">
+          <div>
+            <h3 style="font-size:16px;margin:0 0 2px 0;">Auditoría Detallada por Ticket de Aprovisionamiento</h3>
+            <div class="sb" style="margin:0;">Haz clic en «Auditar Servidores» para ver las máquinas exactas que cumplen o bloquean el cierre</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <div class="sl">
+              <input type="text" id="tbSearchAprov" placeholder="🔍 Buscar ticket, app u owner..." value="${esc(state.searchAprovQuery)}" style="min-width: 220px;">
+            </div>
+            <div class="sl">
+              <select id="selFiltroCierreAprov">
+                <option value="__ALL__" ${state.filtroEstadoCierreAprov === '__ALL__' ? 'selected' : ''}>Todos los Tickets (${totalTicketsCount})</option>
+                <option value="listo" ${state.filtroEstadoCierreAprov === 'listo' ? 'selected' : ''}>🟢 Listos para Cierre (${ticketsListos.length})</option>
+                <option value="pendiente" ${state.filtroEstadoCierreAprov === 'pendiente' ? 'selected' : ''}>🟠 Cierre Pendiente (${ticketsPendientes.length})</option>
+              </select>
+            </div>
+            <button class="btn green sm" id="btnExpAprovFull">Exportar Auditoría</button>
+          </div>
+        </div>
+
+        <div class="tw" style="max-height: 540px;">
+          <table class="dt">
+            <thead>
+              <tr>
+                <th class="l">Ticket Aprovisionamiento</th>
+                <th class="l">Estado del Ticket</th>
+                <th class="l">Owner Kyndryl</th>
+                <th class="l">Aplicaciones</th>
+                <th>Servidores Totales</th>
+                <th>Servidores Aptos</th>
+                <th class="l">Progreso de Cierre</th>
+                <th class="l">Dictamen de Cierre</th>
+                <th class="l">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="tbBodyCierreAprov"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const paintTableAprov = () => {
+    const qText = norm(state.searchAprovQuery);
+    const filtro = state.filtroEstadoCierreAprov;
+
+    let filtrados = allTickets;
+    if (filtro === 'listo') filtrados = filtrados.filter(t => t.listoParaCerrar);
+    else if (filtro === 'pendiente') filtrados = filtrados.filter(t => !t.listoParaCerrar);
+
+    if (qText) {
+      filtrados = filtrados.filter(t => norm(`${t.ticket} ${t.owner} ${t.appsStr} ${t.estadoTicket} ${Array.from(t.serverMap.keys()).join(' ')}`).includes(qText));
+    }
+
+    $('#tbBodyCierreAprov').innerHTML = filtrados.map(t => {
+      let fillClass = 'zero';
+      if (t.listoParaCerrar) fillClass = '';
+      else if (t.aptosSrv > 0) fillClass = 'partial';
+
+      const dictamenTag = t.listoParaCerrar
+        ? `<span class="tag listo-cierre">🟢 LISTO PARA CERRAR</span>`
+        : `<span class="tag incompleto">🟠 Faltan ${t.totalSrv - t.aptosSrv} servidores</span>`;
+
+      return `
+        <tr>
+          <td class="l mono" style="font-weight:800;font-size:13.5px;color:var(--k-navy);">🎫 ${esc(t.ticket)}</td>
+          <td class="l"><span class="tag ${t.estadoTicket.toLowerCase().includes('aprobado') ? 'oc-aprobado' : 'oc-definicion'}">${esc(t.estadoTicket)}</span></td>
+          <td class="l"><b>${esc(t.owner)}</b></td>
+          <td class="l mono" style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(t.appsStr)}</td>
+          <td class="num">${t.totalSrv}</td>
+          <td class="num" style="font-weight:700;color:${t.listoParaCerrar ? 'var(--k-green)' : 'var(--k-amber)'};">${t.aptosSrv}</td>
+          <td class="l">
+            <div class="prog-bar-container">
+              <div class="prog-bar-fill ${fillClass}" style="width:${t.pctAvance}%;"></div>
+            </div>
+            <span class="mono" style="font-size:11.5px;font-weight:700;">${t.aptosSrv}/${t.totalSrv} (${t.pctAvance.toFixed(0)}%)</span>
+          </td>
+          <td class="l">${dictamenTag}</td>
+          <td class="l">
+            <button class="btn sm ghost" onclick="drillTicketAprovDetalle('${esc(t.ticket)}')">Auditar Servidores</button>
+          </td>
+        </tr>
+      `;
+    }).join('') || `<tr><td colspan="9" class="l" style="text-align:center;padding:20px;color:#888;">No se encontraron tickets con el criterio indicado.</td></tr>`;
+  };
+
+  paintTableAprov();
+
+  $('#tbSearchAprov').oninput = (e) => { state.searchAprovQuery = e.target.value; paintTableAprov(); };
+  $('#selFiltroCierreAprov').onchange = (e) => { state.filtroEstadoCierreAprov = e.target.value; paintTableAprov(); };
+
+  $('#btnExpAprovFull').onclick = () => {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(allTickets.map(t => ({
+      'Ticket Aprovisionamiento': t.ticket,
+      'Estado del Ticket': t.estadoTicket,
+      'Owner Kyndryl': t.owner,
+      'Aplicaciones': t.appsStr,
+      'Servidores Totales': t.totalSrv,
+      'Servidores Aptos': t.aptosSrv,
+      '% Cumplimiento': `${t.pctAvance.toFixed(1)}%`,
+      'Dictamen': t.listoParaCerrar ? 'LISTO PARA CERRAR' : 'PENDIENTE',
+      'Lista de Servidores': Array.from(t.serverMap.keys()).join(', ')
+    })));
+    XLSX.utils.book_append_sheet(wb, ws, 'Tickets_Aprovisionamiento');
+    XLSX.writeFile(wb, 'Kyndryl_Auditoria_Cierre_Aprovisionamiento.xlsx');
+  };
+
+  window.curAllTicketsData = allTickets;
+}
+
+function drillTicketAprovDetalle(ticketNum) {
+  const t = (window.curAllTicketsData || []).find(x => x.ticket === ticketNum);
+  if (!t) return;
+
+  const modalHtml = `
+    <div style="background:#F8FAFC;border:1px solid var(--k-border);border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div>
+        <span style="font-size:15px;font-weight:800;color:var(--k-navy);">Ticket Aprovisionamiento: ${esc(t.ticket)}</span>
+        <div style="font-size:12px;color:var(--k-text-muted);margin-top:2px;">Owner: <b>${esc(t.owner)}</b> · Apps: <b>${esc(t.appsStr)}</b></div>
+      </div>
+      <div>
+        ${t.listoParaCerrar 
+          ? `<span class="alerta-badge verde" style="font-size:12px;padding:4px 10px;">🟢 100% CUMPLIDO: LISTO PARA SER CERRADO</span>` 
+          : `<span class="alerta-badge naranja" style="font-size:12px;padding:4px 10px;">🟠 INCOMPLETO: Faltan ${t.totalSrv - t.aptosSrv} servidores por migrar/entregar</span>`}
+      </div>
+    </div>
+
+    <div style="font-weight:700;font-size:12.5px;color:var(--k-charcoal);margin-bottom:8px;">Servidores incluidos en este ticket (${t.totalSrv} servidores únicos):</div>
+    <div class="tw" style="max-height: 52vh;">
+      <table class="dt">
+        <thead>
+          <tr>
+            <th class="l">Estado Servidor</th>
+            <th class="l">Servidor</th>
+            <th class="l">Sigla</th>
+            <th class="l">Aplicación</th>
+            <th class="l">Ambiente</th>
+            <th class="l">Estatus Migración</th>
+            <th class="l">Estado Entrega (Col. EA)</th>
+            <th class="l">Fecha Entrega IBK</th>
+            <th class="l">Diagnóstico del Servidor</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${t.srvList.map(s => {
+            let diagTexto = 'Cumple ambas condiciones (Migrado + Entregado)';
+            if (!s.esMigrado && !s.esEntregado) diagTexto = 'No migrado y sin entrega formal';
+            else if (!s.esMigrado) diagTexto = 'Pendiente de migración';
+            else if (!s.esEntregado) diagTexto = 'Migrado pero pendiente de entrega formal a IBK';
+
+            return `
+              <tr>
+                <td class="l">${s.cumple ? '<span class="alerta-badge verde">✔ Apto</span>' : '<span class="alerta-badge rojo">✖ Bloqueante</span>'}</td>
+                <td class="l mono" style="font-weight:700;">${esc(s.servidor)}</td>
+                <td class="l mono">${esc(s.sigla)}</td>
+                <td class="l">${esc(s.app)}</td>
+                <td class="l">${esc(s.ambiente)}</td>
+                <td class="l"><span class="tag ${s.esMigrado ? 'mig' : 'plan'}">${s.esMigrado ? 'Migrado' : 'No Migrado'}</span></td>
+                <td class="l"><span class="tag ${s.esEntregado ? 'mig' : 'pend'}">${s.esEntregado ? 'Entregado' : 'Pendiente'}</span></td>
+                <td class="l mono" style="font-size:11.5px;">${esc(s.rows[0]?.fechaEntregaIBKLbl || 'Pendiente')}</td>
+                <td class="l" style="font-size:12px;font-weight:600;color:${s.cumple ? 'var(--k-green)' : 'var(--k-alert)'};">${esc(diagTexto)}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  openModal(`Auditoría de Ticket: ${t.ticket}`, `${t.aptosSrv} de ${t.totalSrv} servidores aptos (${t.pctAvance.toFixed(0)}%)`, modalHtml, t.rows);
+}
+
+function drillKpiTicketsListos() {
+  const listos = (window.curAllTicketsData || []).filter(t => t.listoParaCerrar);
+  const rows = listos.flatMap(t => t.rows);
+  drillGrupo(`Tickets Listos para Cerrar (${listos.length} tickets · ${rows.length} componentes)`, rows);
+}
+
+function drillKpiTicketsPendientes() {
+  const pendientes = (window.curAllTicketsData || []).filter(t => !t.listoParaCerrar);
+  const rows = pendientes.flatMap(t => t.rows);
+  drillGrupo(`Tickets con Cierre Pendiente (${pendientes.length} tickets · ${rows.length} componentes)`, rows);
 }
 
 /* -------------------------------------------------------------
@@ -1127,7 +2202,6 @@ function renderCalendarioPage() {
   </table>
   `;
 
-  // Determinación de registros para el panel inferior estático
   let rowsOCInferior = calRows;
   let tituloInferior = 'Todas las Semanas y Días en Ámbito';
 
@@ -1183,7 +2257,6 @@ function renderCalendarioPage() {
   const ocsInferiorList = Array.from(ocInferiorMap.values());
   const compMostradosInferior = ocsInferiorList.reduce((a, b) => a + b.totalComp, 0);
 
-  // Registro global en memoria para evitar el error de sintaxis en inline onclick
   window.curOcsInferiorList = ocsInferiorList;
 
   let pillsInferiorHtml = `
@@ -1199,7 +2272,6 @@ function renderCalendarioPage() {
   if (desComp > 0) pillsInferiorHtml += `<span class="stat-pill des ${state.calFiltroPillEstatus === 'Desestimado' ? 'active' : ''}" onclick="seleccionarPillCalInferior('Desestimado')">Desestimados: ${desComp}</span>`;
 
   $('#page').innerHTML = `
-    <!-- SECCIÓN SUPERIOR: MATRIZ SEMANA X DÍA -->
     <div class="tile" style="overflow: visible; margin-bottom: 20px;">
       <div class="sticky-oc-header">
         <div>
@@ -1246,7 +2318,6 @@ function renderCalendarioPage() {
       </div>
     </div>
 
-    <!-- SECCIÓN INFERIOR: CONTROL DE OC ESTÁTICO PERMANENTE -->
     <div class="tile" style="overflow: visible;">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#F1F5F9;border-radius:8px 8px 0 0;border:1px solid var(--k-border);border-bottom:0;flex-wrap:wrap;gap:8px;">
         <div>
@@ -1335,7 +2406,6 @@ function renderCalendarioPage() {
   window.semanasMatrizFullRows = calRows;
 }
 
-// CONTROLADOR SEGURO POR ÍNDICE PARA VER SERVIDORES SIN ERROR DE SINTAXIS
 function drillOCInferiorPorIdx(idx) {
   const item = (window.curOcsInferiorList || [])[idx];
   if (!item || !item.rows) return;
@@ -1607,7 +2677,7 @@ function renderDetallePage() {
         <td class="l"><b>${esc(r.ownerKyndryl)}</b></td>
         <td class="l mono">${esc(r.oc)}</td>
         <td class="l"><span class="tag ${getEstadoOCClass(r.estadoOC)}">${esc(r.estadoOC)}</span></td>
-        <td class="l mono" style="white-space:nowrap;">${esc(r.fechaLbl)}</td>
+        <td class="l mono" style="white-space:nowrap;"><b>${esc(r.fechaLbl)}</b></td>
         <td class="l" style="font-size:12px;">${esc(r.soOrigen)}</td>
         <td class="l" style="font-size:12px;">${esc(r.subOrigen)}</td>
         <td class="l" style="font-size:12px;">${esc(r.soDestino)}</td>
@@ -1677,13 +2747,17 @@ function initEvents() {
     state.calSeleccionDia = null;
     state.calFiltroPillEstatus = '__ALL__';
 
+    state.selectedAnio = '2026';
+    $('#sAnioGlobal').value = '2026';
+
     const allQs = Array.from(new Set(state.raw.map(r => r.qIbk))).filter(Boolean);
-    state.selectedQs = new Set(allQs);
+    state.selectedQs = new Set(allQs.filter(q => q.includes('2026-Q3')));
+    if (state.selectedQs.size === 0 && allQs.length > 0) state.selectedQs = new Set([allQs[0]]);
     
     $('#msQDropdown').querySelectorAll('input').forEach(cb => {
-      cb.checked = true;
+      cb.checked = state.selectedQs.has(cb.value);
     });
-    $('#msQText').textContent = `Todos (${allQs.length} Qs)`;
+    $('#msQText').textContent = Array.from(state.selectedQs)[0] || 'Seleccionar Q...';
 
     state.selectedMeses.clear();
     $('#msMesDropdown').querySelectorAll('input').forEach(cb => cb.checked = false);
@@ -1691,7 +2765,9 @@ function initEvents() {
 
     state.selectedEstatus.clear();
     $('#msEstatusDropdown').querySelectorAll('input').forEach(cb => cb.checked = false);
-    $('#msEstatusText').textContent = 'Todos los estatus';      $$('.slicers select').forEach(s => s.value = '__ALL__');
+    $('#msEstatusText').textContent = 'Todos los estatus';      $$('.slicers select').forEach(s => {
+      if (s.id !== 'sAnioGlobal') s.value = '__ALL__';
+    });
     renderApp();
   };
 
@@ -1702,15 +2778,15 @@ function initEvents() {
       'Equipo': r.equipoSO,
       'Trimestre': r.qIbk, 'Mes': r.mes, 'Sigla': r.siglas, 'Aplicación': r.app, 'Servidor': r.servidor,
       '# Componentes': r.nComp, 'Ambiente': r.ambiente, 'Owner Kyndryl': r.ownerKyndryl,
-      'Ticket Upgrade Capacidades': r.ticketUpg, 'Estado Upgrade Capacidades': r.estadoUpg,
-      'Ticket Aprovisionamiento': r.ticketAprov, 'Estado Aprovisionamiento': r.estadoAprov,
+      'Estado Entrega': r.esEntregado ? 'Entregado' : 'Pendiente',
+      'Motivo No Entrega': r.motivoNoEntrega,
+      'Ticket Aprovisionamiento': r.ticketAprov,
       'OC Migración': r.oc, 'Estado OC': r.estadoOC, 'Fecha': r.fechaLbl,
-      'Horario': r.rangoHorario,
       'S.O Origen': r.soOrigen, 'Subsistema Origen': r.subOrigen,
       'S.O Destino': r.soDestino, 'Subsistema Destino': r.subDestino,
       'Estatus': r.estatus, 'Comentarios': r.comentarios
     })));
-    XLSX.utils.book_append_sheet(wb, ws, 'Plan_Kyndryl');
+    XLSX.utils.book_append_sheet(wb, ws, 'Seleccion');
     XLSX.writeFile(wb, 'Kyndryl_Plan_Migraciones_OC.xlsx');
   };
 }
