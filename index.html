@@ -113,6 +113,7 @@ select:focus, input:focus { outline: 2px solid rgba(255,70,45,0.4); outline-offs
 .r-4 { grid-template-columns: repeat(4, 1fr); }
 .r-3 { grid-template-columns: repeat(3, 1fr); }
 .r-2 { grid-template-columns: 1fr 1fr; }
+.r-1 { grid-template-columns: 1fr; }
 
 .tile { background: var(--k-panel); border: 1px solid var(--k-border); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03), 0 8px 24px rgba(0,0,0,0.04); padding: 18px 20px; display: flex; flex-direction: column; min-width: 0; }
 .kpi { border-left: 4px solid var(--k-red); }
@@ -382,6 +383,35 @@ const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Se
 const MESES_CORTO_LOWER = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
 const ESTATUS_MIGRACION_LIST = ['Migrado', 'Planificado', 'Por Definir', 'Reprogramado', 'Rollback', 'Desestimado'];
 
+// Plugin personalizado para dibujar etiquetas encima de las barras (sin dependencias extra)
+const drawLabelsPlugin = {
+  id: 'drawLabels',
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+    chart.data.datasets.forEach((dataset, i) => {
+      // Ignoramos las lineas en la gráfica mensual mixta
+      if (dataset.type === 'line') return;
+      const meta = chart.getDatasetMeta(i);
+      if (!meta.hidden) {
+        meta.data.forEach((element, index) => {
+          const dataString = dataset.data[index].toString();
+          // No dibujar ceros para evitar ruido visual
+          if (dataString !== '0') {
+            ctx.fillStyle = '#1e293b';
+            ctx.font = '600 10.5px "Inter", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            const position = element.tooltipPosition();
+            ctx.fillText(dataString, position.x, position.y - 4);
+          }
+        });
+      }
+    });
+  }
+};
+
+Chart.register(drawLabelsPlugin);
+
 function getMetaMensual(anio, mesIdx0) {
   if (anio < 2026 || (anio === 2026 && mesIdx0 <= 6)) return 50;
   return 120;
@@ -579,7 +609,6 @@ async function processWorkbook(file) {
     const o = {};
     headerCols.forEach((colName, idx) => { if (colName) o[colName] = row[idx]; });
 
-    // BUSCADOR ULTRA-ESTRICTO PARA FECHAS DEL CALENDARIO
     const getVal = (...patterns) => {
       const pClean = patterns.map(cleanKey);
       for (const col of Object.keys(o)) {
@@ -609,22 +638,16 @@ async function processWorkbook(file) {
       return isFinite(n) ? n : 0;
     };
 
-    // EXTRACCIÓN EXACTA DE LAS COLUMNAS DL y DM
     const fechaExacta = parseFecha(getVal('fechadeiniciomigracion', 'fechainiciomigracion', 'fechaejecucion'));
     let semanaDate = parseFecha(getVal('semanadeplanificacion', 'semanaplanificacion', 'semanaplanificada'));
     
-    const fechaRef = fechaExacta || semanaDate;
-
-    let diaNom = 'Sin fecha';
-    if (fechaExacta) { 
-      let dIdx = fechaExacta.getDay() - 1;
-      if (dIdx === -1) dIdx = 6;
-      diaNom = DIAS[dIdx];
-    } else if (semanaDate) {
-      let dIdx = semanaDate.getDay() - 1;
-      if (dIdx === -1) dIdx = 6;
-      diaNom = DIAS[dIdx];
+    if (!semanaDate && fechaExacta) {
+      const d = new Date(fechaExacta.getFullYear(), fechaExacta.getMonth(), fechaExacta.getDate());
+      let day = d.getDay();
+      let diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      semanaDate = new Date(d.setDate(diff));
     }
+    const fechaRef = fechaExacta || semanaDate;
 
     const horaIniRaw = getVal('horainiciomigracion', 'horainicio');
     const horaFinRaw = getVal('horafinmigracion', 'horafin');
@@ -668,6 +691,17 @@ async function processWorkbook(file) {
       mesNom = 'Julio';
     }
 
+    let diaNom = 'Sin fecha';
+    if (fechaExacta) { 
+      let dIdx = fechaExacta.getDay() - 1;
+      if (dIdx === -1) dIdx = 6;
+      diaNom = DIAS[dIdx];
+    } else if (semanaDate) {
+      let dIdx = semanaDate.getDay() - 1;
+      if (dIdx === -1) dIdx = 6;
+      diaNom = DIAS[dIdx];
+    }
+
     const ownerKyndryl = String(getVal('ownerkyndryl', 'crewleader', 'responsableadministracion', 'owner') || 'Sin Asignar').trim();
     const ocNum = getVal('oc3migracion', 'oc3migracion', 'ocmigracion', 'oc3', 'oc(3)migracion', 'oc');
     const ocEstado = getVal('estadooc3', 'estadooc', 'estadodelaoc');
@@ -698,6 +732,7 @@ async function processWorkbook(file) {
 
     const etiquetaCategoria = String(getVal('etiquetacategoria', 'etiqueta') || '').trim();
     const estadoSubCat = String(getVal('estadosubcategoria', 'subcategoria', 'motivonoentrega') || '').trim();
+    // Se extrae la fecha de entrega pero YA NO se usa para render visual para evitar ruido
     const fechaEntregaIBK = parseFecha(getVal('fechaentregaibk', 'fechaentrega'));
     
     const esEntregado = etiquetaCategoria.toLowerCase().includes('entregad') || 
@@ -759,8 +794,6 @@ async function processWorkbook(file) {
       etiquetaCategoria: etiquetaCategoria || 'Sin Etiqueta',
       estadoSubCat: estadoSubCat || '—',
       motivoNoEntrega: normalizarTextoMotivo(motivoRaw),
-      fechaEntregaIBK: fechaEntregaIBK,
-      fechaEntregaIBKLbl: fechaEntregaIBK ? formatFechaVisual(fechaEntregaIBK) : 'Pendiente',
       esEntregado: esEntregado,
       srvCumpleCierreAprov: srvCumpleCierreAprov,
       semanaDate: semanaDate,
@@ -1046,7 +1079,7 @@ function destroyCharts() {
 }
 
 /* -------------------------------------------------------------
-   VISTA 1: NIVEL DE CUMPLIMIENTO (NUEVOS KPIS DE SALUD ESTRICTOS)
+   VISTA 1: NIVEL DE CUMPLIMIENTO
 ------------------------------------------------------------- */
 function renderCumplimientoPage() {
   const rows = state.view;
@@ -1137,6 +1170,36 @@ function renderCumplimientoPage() {
   const motivosLabels = motivosSorted.map(x => x[0]);
   const motivosValues = motivosSorted.map(x => x[1]);
 
+  // AGRUPACIÓN PARA EL NUEVO GRÁFICO DE ESTADO SEMANAL
+  const semMap = new Map();
+  rows.forEach(r => {
+    if (!r.semanaDate) return;
+    const t = r.semanaDate.getTime();
+    if (!semMap.has(t)) {
+      const diaNum = String(r.semanaDate.getDate()).padStart(2, '0');
+      const mesCorto = MESES_CORTO_LOWER[r.semanaDate.getMonth()];
+      const labelFormat = `${diaNum}-${mesCorto.charAt(0).toUpperCase() + mesCorto.slice(1)}`;
+      semMap.set(t, {
+        time: t,
+        label: labelFormat,
+        total: 0,
+        migrados: 0,
+        entregados: 0,
+        rollback: 0,
+        reprogramados: 0,
+        rows: []
+      });
+    }
+    const s = semMap.get(t);
+    s.total += r.nComp;
+    if (r.estatus === 'Migrado') s.migrados += r.nComp;
+    if (r.esEntregado && r.estatus === 'Migrado') s.entregados += r.nComp;
+    if (r.estatus === 'Rollback') s.rollback += r.nComp;
+    if (r.estatus === 'Reprogramado') s.reprogramados += r.nComp;
+    s.rows.push(r);
+  });
+  const semanasOrdenadas = Array.from(semMap.values()).sort((a, b) => a.time - b.time);
+
   $('#page').innerHTML = `
     <div class="section-label-bar">📌 Métricas Base del Servicio (Valores Crudos)</div>
     <div class="row r-4">
@@ -1213,6 +1276,18 @@ function renderCumplimientoPage() {
           <button class="btn ghost sm" onclick="drillKpiMainNoEntregados()">Auditar Servidores</button>
         </div>
         <div class="cbox"><canvas id="cDonaMotivos"></canvas></div>
+      </div>
+    </div>
+
+    <div class="row r-1">
+      <div class="tile" style="border: 1.5px solid #CBD5E1; border-radius: 16px;">
+        <div class="th">
+          <div>
+            <h3>Estado de Migraciones por Semana Operativa (Planificado vs Ejecutado)</h3>
+            <div class="sb">Desglose de rendimiento semanal de componentes extraído de la "Semana de Planificación". Clic en la barra para auditar.</div>
+          </div>
+        </div>
+        <div class="cbox" style="min-height: 280px;"><canvas id="cSemanalProgreso"></canvas></div>
       </div>
     </div>
   `;
@@ -1308,6 +1383,74 @@ function renderCumplimientoPage() {
         if (!labelMotivo) return;
         const rowsMotivo = noEntregadosRows.filter(r => r.motivoNoEntrega.toLowerCase() === labelMotivo.toLowerCase());
         drillGrupo(`Servidores No Entregados: ${labelMotivo} (${rowsMotivo.length} registros)`, rowsMotivo);
+      }
+    }
+  });
+
+  // NUEVO: GRÁFICO SEMANAL DE ESTADOS
+  const ctxSemanal = $('#cSemanalProgreso').getContext('2d');
+  state.charts['cSemanalProgreso'] = new Chart(ctxSemanal, {
+    type: 'bar',
+    data: {
+      labels: semanasOrdenadas.map(s => s.label),
+      datasets: [
+        {
+          label: 'Planificados',
+          data: semanasOrdenadas.map(s => s.total),
+          backgroundColor: '#00477B', // Azul oscuro
+          borderRadius: 3
+        },
+        {
+          label: 'Migrados',
+          data: semanasOrdenadas.map(s => s.migrados),
+          backgroundColor: '#00B050', // Verde
+          borderRadius: 3
+        },
+        {
+          label: 'Rollback',
+          data: semanasOrdenadas.map(s => s.rollback),
+          backgroundColor: '#FF4040', // Rojo
+          borderRadius: 3
+        },
+        {
+          label: 'Entregados',
+          data: semanasOrdenadas.map(s => s.entregados),
+          backgroundColor: '#5B9BD5', // Celeste
+          borderRadius: 3
+        },
+        {
+          label: 'Reprogramados',
+          data: semanasOrdenadas.map(s => s.reprogramados),
+          backgroundColor: '#FFC000', // Amarillo
+          borderRadius: 3
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 22 } },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15, font: { weight: '600', size: 11.5 } } },
+        tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.raw} componentes` } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { weight: '600' } } },
+        y: { beginAtZero: true, grid: { color: '#EDF2F9' } }
+      },
+      onClick: (evt, activeEls) => {
+        if (!activeEls || !activeEls.length) return;
+        const el = activeEls[0];
+        const sObj = semanasOrdenadas[el.index];
+        const dsIdx = el.datasetIndex;
+        let filterRows = sObj.rows;
+        let titleExt = "Total Planificados";
+        
+        if (dsIdx === 1) { filterRows = filterRows.filter(r => r.estatus === 'Migrado'); titleExt = "Migrados"; }
+        if (dsIdx === 2) { filterRows = filterRows.filter(r => r.estatus === 'Rollback'); titleExt = "Rollbacks"; }
+        if (dsIdx === 3) { filterRows = filterRows.filter(r => r.esEntregado && r.estatus === 'Migrado'); titleExt = "Entregados"; }
+        if (dsIdx === 4) { filterRows = filterRows.filter(r => r.estatus === 'Reprogramado'); titleExt = "Reprogramados"; }
+        
+        if (filterRows.length > 0) drillGrupo(`Semana del ${sObj.label} - ${titleExt} (${filterRows.length} registros)`, filterRows);
       }
     }
   });
