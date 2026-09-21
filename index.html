@@ -313,7 +313,6 @@ table.dt tbody tr:hover { background: #F8FAFC; cursor: pointer; }
         <button class="btn ghost sm" id="btnExportXls">Exportar Excel</button>
       </div>
       <div class="slicers">
-        <!-- 1. SLICER GLOBAL DE AÑO -->
         <div class="sl">
           <label>Año</label>
           <select id="sAnioGlobal">
@@ -321,7 +320,6 @@ table.dt tbody tr:hover { background: #F8FAFC; cursor: pointer; }
           </select>
         </div>
 
-        <!-- 2. SLICER GLOBAL DE TRIMESTRE (Q) -->
         <div class="sl">
           <label>Trimestre (Q)</label>
           <div class="ms-container" id="msQContainer">
@@ -333,7 +331,6 @@ table.dt tbody tr:hover { background: #F8FAFC; cursor: pointer; }
           </div>
         </div>
 
-        <!-- 3. SLICER GLOBAL DE MES -->
         <div class="sl">
           <label>Mes</label>
           <div class="ms-container" id="msMesContainer">
@@ -384,12 +381,9 @@ const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Se
 const MESES_CORTO_LOWER = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
 const ESTATUS_MIGRACION_LIST = ['Migrado', 'Planificado', 'Por Definir', 'Reprogramado', 'Rollback', 'Desestimado'];
 
-// META MENSUAL: 50 en Julio, 120 de Agosto en adelante
 function getMetaMensual(anio, mesIdx0) {
-  if (anio < 2026 || (anio === 2026 && mesIdx0 <= 6)) { // 6 = Julio
-    return 50;
-  }
-  return 120; // 7 = Agosto en adelante
+  if (anio < 2026 || (anio === 2026 && mesIdx0 <= 6)) return 50;
+  return 120;
 }
 
 function getEstadoOCClass(raw) {
@@ -595,12 +589,20 @@ async function processWorkbook(file) {
     const o = {};
     headerCols.forEach((colName, idx) => { if (colName) o[colName] = row[idx]; });
 
-    // BUSCADOR SEMÁNTICO
+    // BUSCADOR SEMÁNTICO ULTRA-ESTRICTO: Aislamos conflictos
     const getVal = (...patterns) => {
       const pClean = patterns.map(cleanKey);
       for (const col of Object.keys(o)) {
         const cClean = cleanKey(col);
-        if (pClean.some(p => cClean === p || cClean.includes(p) || p.includes(cClean)) && o[col] != null) {
+        if (pClean.some(p => cClean === p) && o[col] != null) return o[col];
+      }
+      for (const col of Object.keys(o)) {
+        const cClean = cleanKey(col);
+        if (pClean.some(p => (cClean.includes(p) || p.includes(cClean)) && 
+            !(p === 'mes' && cClean.includes('trimestre')) && 
+            !(p === 'componenteskyndryl' && cClean.includes('subsistema')) &&
+            !(p === 'componenteskydryl' && cClean.includes('subsistema'))
+        ) && o[col] != null) {
           return o[col];
         }
       }
@@ -609,7 +611,7 @@ async function processWorkbook(file) {
 
     const getNumStrict = (...patterns) => {
       const v = getVal(...patterns);
-      if (v == null) return 0;
+      if (v == null || v === '') return 0;
       if (typeof v === 'number') return isFinite(v) ? v : 0;
       const t = String(v).replace(/\u00a0/g, ' ').trim().replace(/\s/g, '').replace(',', '.');
       if (t === '' || t === '-' || t === '·') return 0;
@@ -628,7 +630,6 @@ async function processWorkbook(file) {
     }
     const fechaRef = fechaExacta || semanaDate;
 
-    // HORARIOS
     const horaIniRaw = getVal('horainiciomigracion', 'horainicio');
     const horaFinRaw = getVal('horafinmigracion', 'horafin');
     const ventanaTexto = getVal('diashorariosmigracion', 'horariomigracion', 'horario');
@@ -650,18 +651,15 @@ async function processWorkbook(file) {
       rangoHorario = String(ventanaTexto).trim();
     }
 
-    let qValRaw = String(getVal('qibk', 'trimestre', 'quarter') || 'Sin Q').trim();
+    let qValRaw = String(getVal('qibk', 'q-ibk', 'qivk', 'trimestre') || 'Sin Q').trim();
     let qVal = qValRaw.replace(/\s+/g, '');
     if (!qVal || qVal.toLowerCase() === 'sinq') qVal = '2026-Q3';
 
-    let anioVal = 2026;
-    if (qVal.startsWith('2025')) anioVal = 2025;
-    else if (qVal.startsWith('2024')) anioVal = 2024;
-    else if (fechaRef && fechaRef.getFullYear() >= 2024 && fechaRef.getFullYear() <= 2028) {
-      anioVal = fechaRef.getFullYear();
-    }
+    let anioExtraido = getNumStrict('ano', 'año', 'anio');
+    let anioVal = (anioExtraido > 2000 && anioExtraido < 2050) ? anioExtraido : 2026;
     
-    let mesNom = normalizeNombreMes(getVal('mes'));
+    let mesNomRaw = getVal('mes');
+    let mesNom = normalizeNombreMes(mesNomRaw);
     let mesIdx = -1;
     if (mesNom !== 'Sin Mes' && mesNom !== '') {
       mesIdx = MESES_ES.findIndex(m => m.toLowerCase() === mesNom.toLowerCase());
@@ -695,7 +693,6 @@ async function processWorkbook(file) {
     const subOrigen = String(getVal('componentesubsistema', 'componente') || '—').trim();
     const verOrigen = getVal('version', 'versión');
     const subOrigenCompleto = (subOrigen !== '—' && subOrigen !== '') ? (subOrigen + (verOrigen ? ` ${verOrigen}` : '')) : '—';
-
     const soDestinoRaw = getVal('sistemaoperativodestino', 'sodestino');
     const soDestino = soDestinoRaw ? String(soDestinoRaw).trim() : '—';
     
@@ -717,11 +714,16 @@ async function processWorkbook(file) {
     const esEntregado = etiquetaCategoria.toLowerCase().includes('entregad') || 
                         etiquetaCategoria.toLowerCase().includes('aceptad') || 
                         etiquetaCategoria.toLowerCase().includes('conforme') || 
-                        fechaEntregleIBK !== null ||
                         fechaEntregaIBK !== null;
 
-    const valForecastEC = getVal('forecastestado', 'forecast');
-    const estatusFinal = normalizeEstatus(valForecastEC);
+    // LECTURA DIRECTA Y EXCLUSIVA DE LA COLUMNA EC "Forecast - Estado"
+    const valForecastEC = String(getVal('forecastestado', 'forecast-estado') || '').trim().toLowerCase();
+    let estatusFinal = 'Por Definir';
+    if (valForecastEC.includes('migrad')) estatusFinal = 'Migrado';
+    else if (valForecastEC.includes('planific') || valForecastEC.includes('aprobado')) estatusFinal = 'Planificado';
+    else if (valForecastEC.includes('desestimad')) estatusFinal = 'Desestimado';
+    else if (valForecastEC.includes('rollback')) estatusFinal = 'Rollback';
+    else if (valForecastEC.includes('reprogram')) estatusFinal = 'Reprogramado';
 
     const srvCumpleCierreAprov = (estatusFinal === 'Migrado') && esEntregado;
 
@@ -737,7 +739,8 @@ async function processWorkbook(file) {
         motivoRaw = 'Pendiente de validación formal IBK';
       }
     }
-    const motivoNoEntrega = normalizarTextoMotivo(motivoRaw);
+    
+    const componentesExtraidos = getNumStrict('componenteskyndryl', 'componenteskydryl', 'sumadecomponenteskyndryl', 'sumadecomponenteskydryl') || 0;
 
     rows.push({
       qIbk: qVal,
@@ -756,15 +759,10 @@ async function processWorkbook(file) {
       soDestino: soDestino,
       subDestino: subDestino,
       equipoSO: equipoSO,
-      nComp: getNumStrict('componenteskydryl', 'componentesproyeccion', 'componentes', 'cantcomponentes') || 1,
+      nComp: componentesExtraidos,
       estatus: estatusFinal,
       oc: ocNum ? String(ocNum).trim() : 'Sin OC',
       estadoOC: ocEstado ? String(ocEstado).trim() : 'Sin Estado OC',
-      horaIniStr: horaIniStr || '22:00',
-      horaFinStr: horaFinStr || '02:00',
-      horaIniNum: horaIniNum,
-      horaFinNum: horaFinNum,
-      rangoHorario: rangoHorario,
       ticketUpg: ticketUpg != null && String(ticketUpg).trim() !== '' ? String(ticketUpg).trim() : 'No Aplica',
       estadoUpg: estadoUpg != null && String(estadoUpg).trim() !== '' ? String(estadoUpg).trim() : 'No Aplica',
       ticketAprov: ticketAprov != null && String(ticketAprov).trim() !== '' ? String(ticketAprov).trim() : 'Sin Ticket',
@@ -772,7 +770,7 @@ async function processWorkbook(file) {
       queFalta: queFalta ? String(queFalta).trim() : '—',
       etiquetaCategoria: etiquetaCategoria || 'Sin Etiqueta',
       estadoSubCat: estadoSubCat || '—',
-      motivoNoEntrega: motivoNoEntrega,
+      motivoNoEntrega: normalizarTextoMotivo(motivoRaw),
       fechaEntregaIBK: fechaEntregaIBK,
       fechaEntregaIBKLbl: fechaEntregaIBK ? formatFechaVisual(fechaEntregaIBK) : 'Pendiente',
       esEntregado: esEntregado,
@@ -1028,7 +1026,7 @@ function applyFilters() {
 
   if (f.leader !== '__ALL__') list = list.filter(r => r.ownerKyndryl === f.leader);
   if (f.estadoOC !== '__ALL__') list = list.filter(r => r.estadoOC === f.estadoOC);
-  if (f.amb !== '__ALL__') list = list.filter(r => r.ambiente === f.ambiente);
+  if (f.amb !== '__ALL__') list = list.filter(r => r.ambiente === f.amb);
   state.view = list;
 }
 
@@ -1061,42 +1059,72 @@ function destroyCharts() {
 }
 
 /* -------------------------------------------------------------
-   VISTA 1: NIVEL DE CUMPLIMIENTO (LECTURA DIRECTA POR MES DE EXCEL)
+   VISTA 1: NIVEL DE CUMPLIMIENTO (Suma exacta y dinámica por mes)
 ------------------------------------------------------------- */
 function renderCumplimientoPage() {
-  // USAMOS LA DATA EN ÁMBITO (state.view) O LA DATA BASE GLOBAL PARA LAS BARRAS MENSUALES
   const rows = state.view;
+  const mesMap = new Map();
+  
+  rows.forEach(r => {
+    let mNom = r.mes;
+    if (!mNom || mNom === 'Sin Mes') return;
+    
+    let mIdx = r.mesIdx !== -1 ? r.mesIdx : MESES_ES.findIndex(m => m.toLowerCase() === mNom.toLowerCase());
+    if (mIdx === -1) mIdx = 6; 
+    
+    let y = r.anio || (state.selectedAnio !== '__ALL__' ? Number(state.selectedAnio) : 2026);
+    const key = `${y}-${String(mIdx).padStart(2, '0')}`;
+    
+    if (!mesMap.has(key)) {
+      let planFijo = null;
+      let metaFija = getMetaMensual(y, mIdx);
+      if (y === 2026 && mIdx === 6) { planFijo = 63; metaFija = 50; }
+      else if (y === 2026 && mIdx === 7) { planFijo = 150; metaFija = 120; }
+      else if (y === 2026 && mIdx === 8) { planFijo = 134; metaFija = 120; }
 
-  // CONTEO ESTRICTAMENTE IGUAL A LA TABLA DINÁMICA DE EXCEL POR COLUMNA "MES"
-  const getMigradosPorMesCol = (nombreMes) => {
-    return rows.filter(r => {
-      const mText = String(r.mes || '').trim().toLowerCase();
-      const target = nombreMes.toLowerCase();
-      const coincide = mText === target || 
-                       (target === 'julio' && mText === 'jul') ||
-                       (target === 'agosto' && mText === 'ago') ||
-                       (target === 'setiembre' && (mText === 'set' || mText === 'septiembre' || mText === 'sep'));
-      return coincide && r.estatus === 'Migrado';
-    }).reduce((a, b) => a + b.nComp, 0);
-  };
+      mesMap.set(key, {
+        key,
+        monthIdx: mIdx,
+        mesOriginal: mNom,
+        label: (mIdx === 8 ? 'sep' : MESES_CORTO_LOWER[mIdx]) || mNom.slice(0, 3).toLowerCase(),
+        planFijo,
+        metaFija,
+        rows: []
+      });
+    }
+    mesMap.get(key).rows.push(r);
+  });
 
-  const migJul = getMigradosPorMesCol('Julio');     // Debe dar 56
-  const migAgo = getMigradosPorMesCol('Agosto');    // Debe dar 106
-  const migSep = getMigradosPorMesCol('Setiembre'); // Debe dar 63 (45 + 18)
+  const ordenados = Array.from(mesMap.values()).sort((a, b) => a.key.localeCompare(b.key));
+  
+  let mesesAMostrar = ordenados.map(m => {
+    return {
+      key: m.label,
+      label: m.label,
+      mesNombre: m.mesOriginal,
+      plan: m.planFijo != null ? m.planFijo : m.rows.reduce((a, b) => a + b.nComp, 0),
+      meta: m.metaFija,
+      migReal: m.rows.filter(r => r.estatus === 'Migrado').reduce((a, b) => a + b.nComp, 0),
+      rowsMes: m.rows
+    };
+  });
 
-  const mesesAMostrar = [
-    { key: 'jul', label: 'jul', mesNombre: 'Julio', plan: 63, meta: 50, migReal: migJul },
-    { key: 'ago', label: 'ago', mesNombre: 'Agosto', plan: 150, meta: 120, migReal: migAgo },
-    { key: 'set', label: 'sep', mesNombre: 'Setiembre', plan: 134, meta: 120, migReal: migSep }
-  ];
+  if (mesesAMostrar.length === 0) {
+    mesesAMostrar = [
+      { key: 'jul', label: 'jul', mesNombre: 'Julio', plan: 63, meta: 50, migReal: 0, rowsMes: [] },
+      { key: 'ago', label: 'ago', mesNombre: 'Agosto', plan: 150, meta: 120, migReal: 0, rowsMes: [] },
+      { key: 'sep', label: 'sep', mesNombre: 'Setiembre', plan: 134, meta: 120, migReal: 0, rowsMes: [] }
+    ];
+  }
 
   const mesesLabels = mesesAMostrar.map(m => m.label);
   const planMensual = mesesAMostrar.map(m => m.plan);
   const metaMensual = mesesAMostrar.map(m => m.meta);
   const migradoReal = mesesAMostrar.map(m => m.migReal);
 
-  // MÉTRICAS BASE
+  const subMetaText = mesesAMostrar.map(m => `${m.mesNombre} (${m.meta})`).join(' + ');
   const metaTotalMensual = metaMensual.reduce((a, b) => a + b, 0);
+
   const migradosRows = rows.filter(r => r.estatus === 'Migrado');
   const ejecucionRealComp = migradosRows.reduce((a, b) => a + b.nComp, 0);
   const entregadosRows = rows.filter(r => r.esEntregado && r.estatus === 'Migrado');
@@ -1125,9 +1153,9 @@ function renderCumplimientoPage() {
     <div class="section-label-bar">📌 Métricas Base del Servicio (Valores Crudos)</div>
     <div class="row r-4">
       <div class="tile kpi navy">
-        <div class="lbl">Meta Acumulada Q3</div>
+        <div class="lbl">Meta Acumulada del Periodo</div>
         <div class="val">${fmt(metaTotalMensual)} <span style="font-size:15px;color:var(--k-text-muted);">comp.</span></div>
-        <div class="sub">Julio (50) + Agosto (120) + Setiembre (120)</div>
+        <div class="sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${subMetaText}">${subMetaText || 'Sin selección'}</div>
       </div>
 
       <div class="tile kpi green kpi-clickable" onclick="drillKpiMainMigrados()" title="Clic para ver componentes migrados">
@@ -1175,7 +1203,7 @@ function renderCumplimientoPage() {
         <div class="th">
           <div>
             <h3>Nivel de Cumplimiento Mensual (Meta vs Planificado vs Migrado)</h3>
-            <div class="sb">Planificado fijo (Jul: 63, Ago: 150, Sep: 134) · Línea verde sincronizada con la columna MES</div>
+            <div class="sb">Gráfico dinámico sincronizado con las variables en la selección de cabecera</div>
           </div>
           <button class="btn ghost sm" onclick="irAPestana('detalle')">Ver Inventario Completo ➔</button>
         </div>
@@ -1248,14 +1276,15 @@ function renderCumplimientoPage() {
       },
       scales: {
         x: { grid: { display: false }, ticks: { font: { weight: '700' } } },
-        y: { beginAtZero: true, max: 165, grid: { color: '#EDF2F9' } }
+        y: { beginAtZero: true, max: Math.max(165, ...planMensual, ...metaMensual) + 15, grid: { color: '#EDF2F9' } }
       },
       onClick: (evt, activeEls) => {
         if (!activeEls || !activeEls.length) return;
         const el = activeEls[0];
         const mObj = mesesAMostrar[el.index];
-        const rowsMes = rows.filter(r => String(r.mes).toLowerCase() === mObj.mesNombre.toLowerCase() || (mObj.mesNombre === 'Setiembre' && (String(r.mes).toLowerCase() === 'set' || String(r.mes).toLowerCase() === 'septiembre')));
-        drillGrupo(`Detalle de Componentes de ${mObj.mesNombre} (${rowsMes.length} registros)`, rowsMes);
+        if(mObj.rowsMes && mObj.rowsMes.length > 0) {
+           drillGrupo(`Detalle de Componentes del mes de ${mObj.mesNombre} (${mObj.rowsMes.length} registros)`, mObj.rowsMes);
+        }
       }
     }
   });
@@ -2677,7 +2706,7 @@ function renderDetallePage() {
         <td class="l"><b>${esc(r.ownerKyndryl)}</b></td>
         <td class="l mono">${esc(r.oc)}</td>
         <td class="l"><span class="tag ${getEstadoOCClass(r.estadoOC)}">${esc(r.estadoOC)}</span></td>
-        <td class="l mono" style="white-space:nowrap;"><b>${esc(r.fechaLbl)}</b></td>
+        <td class="l mono" style="white-space:nowrap;">${esc(r.fechaLbl)}</td>
         <td class="l" style="font-size:12px;">${esc(r.soOrigen)}</td>
         <td class="l" style="font-size:12px;">${esc(r.subOrigen)}</td>
         <td class="l" style="font-size:12px;">${esc(r.soDestino)}</td>
@@ -2782,11 +2811,12 @@ function initEvents() {
       'Motivo No Entrega': r.motivoNoEntrega,
       'Ticket Aprovisionamiento': r.ticketAprov,
       'OC Migración': r.oc, 'Estado OC': r.estadoOC, 'Fecha': r.fechaLbl,
+      'Horario': r.rangoHorario,
       'S.O Origen': r.soOrigen, 'Subsistema Origen': r.subOrigen,
       'S.O Destino': r.soDestino, 'Subsistema Destino': r.subDestino,
       'Estatus': r.estatus, 'Comentarios': r.comentarios
     })));
-    XLSX.utils.book_append_sheet(wb, ws, 'Seleccion');
+    XLSX.utils.book_append_sheet(wb, ws, 'Plan_Kyndryl');
     XLSX.writeFile(wb, 'Kyndryl_Plan_Migraciones_OC.xlsx');
   };
 }
