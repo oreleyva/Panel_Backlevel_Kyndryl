@@ -123,7 +123,7 @@ select:focus, input:focus { outline: 2px solid rgba(255,70,45,0.4); outline-offs
 .kpi.amber { border-left-color: var(--k-amber); }
 .kpi.blue { border-left-color: var(--k-blue); }
 .kpi.navy { border-left-color: var(--k-navy); }
-.kpi.alert { border-left-color: var(--k-alert); } /* Agregado para el color de alerta en KPIs */
+.kpi.alert { border-left-color: var(--k-alert); }
 
 .kpi-clickable { cursor: pointer; transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease; user-select: none; }
 .kpi-clickable:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08); }
@@ -382,6 +382,7 @@ const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Se
 const MESES_CORTO_LOWER = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
 const ESTATUS_MIGRACION_LIST = ['Migrado', 'Planificado', 'Por Definir', 'Reprogramado', 'Rollback', 'Desestimado'];
 
+// META MENSUAL
 function getMetaMensual(anio, mesIdx0) {
   if (anio < 2026 || (anio === 2026 && mesIdx0 <= 6)) return 50;
   return 120;
@@ -538,17 +539,6 @@ function formatSemanaMatriz(d, incluirAnio = false) {
   return `${diaNum} - ${mesCorto}`;
 }
 
-function normalizeEstatus(raw) {
-  const s = norm(raw);
-  if (!s) return 'Por Definir';
-  if (s.includes('migrad')) return 'Migrado';
-  if (s.includes('desestimad')) return 'Desestimado';
-  if (s.includes('rollback')) return 'Rollback';
-  if (s.includes('reprogram')) return 'Reprogramado';
-  if (s.includes('planific') || s.includes('aprobado')) return 'Planificado';
-  return 'Por Definir';
-}
-
 function normalizeNombreMes(raw) {
   if (!raw) return 'Sin Mes';
   const s = String(raw).trim().toLowerCase();
@@ -590,12 +580,15 @@ async function processWorkbook(file) {
     const o = {};
     headerCols.forEach((colName, idx) => { if (colName) o[colName] = row[idx]; });
 
+    // BUSCADOR ULTRA-ESTRICTO: Aislamos conflictos
     const getVal = (...patterns) => {
       const pClean = patterns.map(cleanKey);
+      // 1. Coincidencia Exacta
       for (const col of Object.keys(o)) {
         const cClean = cleanKey(col);
         if (pClean.some(p => cClean === p) && o[col] != null) return o[col];
       }
+      // 2. Coincidencia Parcial Segura
       for (const col of Object.keys(o)) {
         const cClean = cleanKey(col);
         if (pClean.some(p => (cClean.includes(p) || p.includes(cClean)) && 
@@ -1122,7 +1115,6 @@ function renderCumplimientoPage() {
   const metaMensual = mesesAMostrar.map(m => m.meta);
   const migradoReal = mesesAMostrar.map(m => m.migReal);
 
-  // NUEVA METODOLOGÍA PARA LOS 4 KPIs EXACTOS DEL REQUERIMIENTO
   const metaTotalMensual = metaMensual.reduce((a, b) => a + b, 0);
   const planTotalMensual = planMensual.reduce((a, b) => a + b, 0);
 
@@ -1137,12 +1129,10 @@ function renderCumplimientoPage() {
   const rollbacksComp = rollbacksRows.reduce((a, b) => a + b.nComp, 0);
   const intentosTotalComp = ejecucionRealComp + rollbacksComp;
 
-  // CÁLCULO DE LOS 4 KPIs OFICIALES
-  const kpiCumplimiento = pct(ejecucionRealComp, metaTotalMensual); // Target >= 90%
-  const kpiEficaciaEntrega = pct(entregadosComp, ejecucionRealComp); // Target >= 95%
-  const kpiTasaRollback = pct(rollbacksComp, intentosTotalComp); // Target <= 5%
-  // Varianza Absoluta de Tendencia: (|Planificado - Real|) / Planificado * 100
-  const kpiVarianza = planTotalMensual > 0 ? (Math.abs(planTotalMensual - ejecucionRealComp) / planTotalMensual) * 100 : 0; // Target <= 10%
+  const kpiCumplimiento = pct(ejecucionRealComp, metaTotalMensual);
+  const kpiEficaciaEntrega = pct(entregadosComp, ejecucionRealComp);
+  const kpiTasaRollback = pct(rollbacksComp, intentosTotalComp);
+  const kpiVarianza = planTotalMensual > 0 ? (Math.abs(planTotalMensual - ejecucionRealComp) / planTotalMensual) * 100 : 0;
 
   const motivosMap = new Map();
   noEntregadosRows.forEach(r => {
@@ -1183,28 +1173,24 @@ function renderCumplimientoPage() {
 
     <div class="section-label-bar" style="margin-top: 10px;">🩺 KPIs de Salud del Servicio (Según Matriz de Evaluación)</div>
     <div class="row r-4">
-      <!-- KPI 1: Eficiencia Operativa -->
       <div class="tile kpi ${kpiCumplimiento >= 90 ? 'green' : (kpiCumplimiento >= 75 ? 'amber' : 'alert')} kpi-clickable" onclick="drillKpiMainMigrados()">
         <div class="lbl" style="font-size:10.5px;">% de Cumplimiento (Migrado vs. Meta)</div>
         <div class="val" style="color:${kpiCumplimiento >= 90 ? 'var(--k-green)' : (kpiCumplimiento >= 75 ? 'var(--k-amber)' : 'var(--k-alert)')};">${pct1(kpiCumplimiento)}</div>
         <div class="sub">Eficiencia Operativa · <b>Target: ≥ 90%</b></div>
       </div>
 
-      <!-- KPI 2: Calidad en Servicio -->
       <div class="tile kpi ${kpiEficaciaEntrega >= 95 ? 'green' : (kpiEficaciaEntrega >= 80 ? 'amber' : 'alert')} kpi-clickable" onclick="drillKpiMainNoEntregados()">
         <div class="lbl" style="font-size:10.5px;">% Eficacia en Entrega (Entr. vs Migrado)</div>
         <div class="val" style="color:${kpiEficaciaEntrega >= 95 ? 'var(--k-green)' : (kpiEficaciaEntrega >= 80 ? 'var(--k-amber)' : 'var(--k-alert)')};">${pct1(kpiEficaciaEntrega)}</div>
         <div class="sub">Calidad y Exp. del Cliente · <b>Target: ≥ 95%</b></div>
       </div>
 
-      <!-- KPI 3: Riesgo y Calidad Técnica -->
       <div class="tile kpi ${kpiTasaRollback <= 5 ? 'green' : 'alert'} kpi-clickable" onclick="drillKpiMainRollbacks()">
         <div class="lbl" style="font-size:10.5px;">Tasa de Rollback</div>
         <div class="val" style="color:${kpiTasaRollback <= 5 ? 'var(--k-green)' : 'var(--k-alert)'};">${pct1(kpiTasaRollback)}</div>
         <div class="sub">Riesgo y Calidad Técnica · <b>Target: ≤ 5%</b></div>
       </div>
 
-      <!-- KPI 4: Predictibilidad del Servicio -->
       <div class="tile kpi ${kpiVarianza <= 10 ? 'green' : (kpiVarianza <= 25 ? 'amber' : 'alert')}">
         <div class="lbl" style="font-size:10.5px;">Varianza (Desv. Planificado vs Real)</div>
         <div class="val" style="color:${kpiVarianza <= 10 ? 'var(--k-green)' : (kpiVarianza <= 25 ? 'var(--k-amber)' : 'var(--k-alert)')};">${pct1(kpiVarianza)}</div>
@@ -1497,7 +1483,6 @@ function renderFlujoE2EPage() {
           <thead>
             <tr>
               <th class="l">Alerta E2E</th>
-              <th class="l">Fecha Plan.</th>
               <th class="l">Servidor</th>
               <th class="l">Sigla</th>
               <th class="l">Owner Kyndryl</th>
@@ -1548,7 +1533,6 @@ function renderFlujoE2EPage() {
       return `
         <tr onclick="drillFlujoPorIdx(${idx})">
           <td class="l">${badgeHtml}</td>
-          <td class="l mono" style="white-space:nowrap;"><b>${esc(d.fechaLbl)}</b></td>
           <td class="l mono" style="font-weight:700;">${esc(d.servidor)}</td>
           <td class="l mono">${esc(d.siglas)}</td>
           <td class="l"><b>${esc(d.ownerKyndryl)}</b></td>
@@ -1561,7 +1545,7 @@ function renderFlujoE2EPage() {
           <td class="l" style="font-size:12px;font-weight:600;color:${d.alertaNivel === 'rojo' ? '#BE123C' : (d.alertaNivel === 'naranja' ? '#C2410C' : '#334155')}">${esc(d.diagnostico)}</td>
         </tr>
       `;
-    }).join('') + (filtrados.length > 350 ? `<tr><td colspan="12" class="l" style="text-align:center;padding:12px;color:#888;">Mostrando las primeras 350 alertas...</td></tr>` : '');
+    }).join('') + (filtrados.length > 350 ? `<tr><td colspan="11" class="l" style="text-align:center;padding:12px;color:#888;">Mostrando las primeras 350 alertas...</td></tr>` : '');
   };
 
   const bindCardClick = (cardId, targetAlerta) => {
@@ -2087,7 +2071,6 @@ function drillTicketAprovDetalle(ticketNum) {
             <th class="l">Ambiente</th>
             <th class="l">Estatus Migración</th>
             <th class="l">Estado Entrega (Col. EA)</th>
-            <th class="l">Fecha Entrega IBK</th>
             <th class="l">Diagnóstico del Servidor</th>
           </tr>
         </thead>
@@ -2107,7 +2090,6 @@ function drillTicketAprovDetalle(ticketNum) {
                 <td class="l">${esc(s.ambiente)}</td>
                 <td class="l"><span class="tag ${s.esMigrado ? 'mig' : 'plan'}">${s.esMigrado ? 'Migrado' : 'No Migrado'}</span></td>
                 <td class="l"><span class="tag ${s.esEntregado ? 'mig' : 'pend'}">${s.esEntregado ? 'Entregado' : 'Pendiente'}</span></td>
-                <td class="l mono" style="font-size:11.5px;">${esc(s.rows[0]?.fechaEntregaIBKLbl || 'Pendiente')}</td>
                 <td class="l" style="font-size:12px;font-weight:600;color:${s.cumple ? 'var(--k-green)' : 'var(--k-alert)'};">${esc(diagTexto)}</td>
               </tr>
             `;
@@ -2546,7 +2528,6 @@ function drillGrupo(titulo, rows) {
             <th class="l">Motivo No Entrega</th>
             <th class="l">OC Migración</th>
             <th class="l">Estado OC</th>
-            <th class="l">Fecha</th>
             <th class="l" style="background:#0F3A70;">S.O Origen</th>
             <th class="l" style="background:#0F3A70;">Subsistema Origen</th>
             <th class="l" style="background:#047857;">S.O Destino</th>
@@ -2579,7 +2560,6 @@ function renderModalRows(rows) {
       <td class="l" style="font-size:12px;font-weight:600;color:${r.esEntregado ? 'var(--k-green)' : 'var(--k-alert)'};">${esc(r.motivoNoEntrega)}</td>
       <td class="l mono">${esc(r.oc)}</td>
       <td class="l"><span class="tag ${getEstadoOCClass(r.estadoOC)}">${esc(r.estadoOC)}</span></td>
-      <td class="l mono" style="white-space:nowrap;"><b>${esc(r.fechaLbl)}</b></td>
       <td class="l" style="font-size:12px;">${esc(r.soOrigen)}</td>
       <td class="l" style="font-size:12px;">${esc(r.subOrigen)}</td>
       <td class="l" style="font-size:12px;">${esc(r.soDestino)}</td>
@@ -2654,7 +2634,7 @@ function openModal(title, sub, bodyHtml, exportData) {
       'Estado Entrega': r.esEntregado ? 'Entregado' : 'Pendiente',
       'Motivo No Entrega': r.motivoNoEntrega,
       'Ticket Aprovisionamiento': r.ticketAprov,
-      'OC Migración': r.oc, 'Estado OC': r.estadoOC, 'Fecha': r.fechaLbl,
+      'OC Migración': r.oc, 'Estado OC': r.estadoOC, 
       'Horario': r.rangoHorario,
       'S.O Origen': r.soOrigen, 'Subsistema Origen': r.subOrigen,
       'S.O Destino': r.soDestino, 'Subsistema Destino': r.subDestino,
@@ -2694,7 +2674,6 @@ function renderDetallePage() {
               <th class="l">Owner Kyndryl</th>
               <th class="l">OC Migración</th>
               <th class="l">Estado OC</th>
-              <th class="l">Fecha Plan.</th>
               <th class="l">S.O Origen</th>
               <th class="l">Subsistema Origen</th>
               <th class="l">S.O Destino</th>
@@ -2720,14 +2699,13 @@ function renderDetallePage() {
         <td class="l"><b>${esc(r.ownerKyndryl)}</b></td>
         <td class="l mono">${esc(r.oc)}</td>
         <td class="l"><span class="tag ${getEstadoOCClass(r.estadoOC)}">${esc(r.estadoOC)}</span></td>
-        <td class="l mono" style="white-space:nowrap;">${esc(r.fechaLbl)}</td>
         <td class="l" style="font-size:12px;">${esc(r.soOrigen)}</td>
         <td class="l" style="font-size:12px;">${esc(r.subOrigen)}</td>
         <td class="l" style="font-size:12px;">${esc(r.soDestino)}</td>
         <td class="l" style="font-size:12px;">${esc(r.subDestino)}</td>
         <td class="l"><span class="tag ${r.estatus === 'Migrado' ? 'mig' : (r.estatus === 'Planificado' ? 'plan' : (r.estatus === 'Desestimado' || r.estatus === 'Rollback' ? 'rb' : 'pend'))}">${esc(r.estatus)}</span></td>
       </tr>
-    `).join('') + (data.length > 300 ? '<tr><td colspan="15" class="l" style="text-align:center;color:#888;">Mostrando los primeros 300 registros...</td></tr>' : '');
+    `).join('') + (data.length > 300 ? '<tr><td colspan="14" class="l" style="text-align:center;color:#888;">Mostrando los primeros 300 registros...</td></tr>' : '');
   };
 
   paint(rows);
@@ -2824,7 +2802,7 @@ function initEvents() {
       'Estado Entrega': r.esEntregado ? 'Entregado' : 'Pendiente',
       'Motivo No Entrega': r.motivoNoEntrega,
       'Ticket Aprovisionamiento': r.ticketAprov,
-      'OC Migración': r.oc, 'Estado OC': r.estadoOC, 'Fecha': r.fechaLbl,
+      'OC Migración': r.oc, 'Estado OC': r.estadoOC, 
       'Horario': r.rangoHorario,
       'S.O Origen': r.soOrigen, 'Subsistema Origen': r.subOrigen,
       'S.O Destino': r.soDestino, 'Subsistema Destino': r.subDestino,
