@@ -382,7 +382,6 @@ const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Se
 const MESES_CORTO_LOWER = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
 const ESTATUS_MIGRACION_LIST = ['Migrado', 'Planificado', 'Por Definir', 'Reprogramado', 'Rollback', 'Desestimado'];
 
-// META MENSUAL
 function getMetaMensual(anio, mesIdx0) {
   if (anio < 2026 || (anio === 2026 && mesIdx0 <= 6)) return 50;
   return 120;
@@ -580,15 +579,13 @@ async function processWorkbook(file) {
     const o = {};
     headerCols.forEach((colName, idx) => { if (colName) o[colName] = row[idx]; });
 
-    // BUSCADOR ULTRA-ESTRICTO: Aislamos conflictos
+    // BUSCADOR ULTRA-ESTRICTO PARA FECHAS DEL CALENDARIO
     const getVal = (...patterns) => {
       const pClean = patterns.map(cleanKey);
-      // 1. Coincidencia Exacta
       for (const col of Object.keys(o)) {
         const cClean = cleanKey(col);
         if (pClean.some(p => cClean === p) && o[col] != null) return o[col];
       }
-      // 2. Coincidencia Parcial Segura
       for (const col of Object.keys(o)) {
         const cClean = cleanKey(col);
         if (pClean.some(p => (cClean.includes(p) || p.includes(cClean)) && 
@@ -612,16 +609,22 @@ async function processWorkbook(file) {
       return isFinite(n) ? n : 0;
     };
 
-    const fechaExacta = parseFecha(getVal('fechainiciomigracion', 'fechaplanificada', 'fechaejecucion', 'fecha'));
-    let semanaDate = parseFecha(getVal('semanaplanificacion', 'semana'));
+    // EXTRACCIÓN EXACTA DE LAS COLUMNAS DL y DM
+    const fechaExacta = parseFecha(getVal('fechadeiniciomigracion', 'fechainiciomigracion', 'fechaejecucion'));
+    let semanaDate = parseFecha(getVal('semanadeplanificacion', 'semanaplanificacion', 'semanaplanificada'));
     
-    if (!semanaDate && fechaExacta) {
-      const d = new Date(fechaExacta.getFullYear(), fechaExacta.getMonth(), fechaExacta.getDate());
-      let day = d.getDay();
-      let diff = d.getDate() - day + (day === 0 ? -6 : 1);
-      semanaDate = new Date(d.setDate(diff));
-    }
     const fechaRef = fechaExacta || semanaDate;
+
+    let diaNom = 'Sin fecha';
+    if (fechaExacta) { 
+      let dIdx = fechaExacta.getDay() - 1;
+      if (dIdx === -1) dIdx = 6;
+      diaNom = DIAS[dIdx];
+    } else if (semanaDate) {
+      let dIdx = semanaDate.getDay() - 1;
+      if (dIdx === -1) dIdx = 6;
+      diaNom = DIAS[dIdx];
+    }
 
     const horaIniRaw = getVal('horainiciomigracion', 'horainicio');
     const horaFinRaw = getVal('horafinmigracion', 'horafin');
@@ -665,13 +668,6 @@ async function processWorkbook(file) {
       mesNom = 'Julio';
     }
 
-    let diaNom = 'Sin fecha';
-    if (fechaRef) {
-      let dIdx = fechaRef.getDay() - 1;
-      if (dIdx === -1) dIdx = 6;
-      diaNom = DIAS[dIdx];
-    }
-
     const ownerKyndryl = String(getVal('ownerkyndryl', 'crewleader', 'responsableadministracion', 'owner') || 'Sin Asignar').trim();
     const ocNum = getVal('oc3migracion', 'oc3migracion', 'ocmigracion', 'oc3', 'oc(3)migracion', 'oc');
     const ocEstado = getVal('estadooc3', 'estadooc', 'estadodelaoc');
@@ -709,7 +705,6 @@ async function processWorkbook(file) {
                         etiquetaCategoria.toLowerCase().includes('conforme') || 
                         fechaEntregaIBK !== null;
 
-    // LECTURA DIRECTA Y EXCLUSIVA DE LA COLUMNA EC "Forecast - Estado"
     const valForecastEC = String(getVal('forecastestado', 'forecast-estado') || '').trim().toLowerCase();
     let estatusFinal = 'Por Definir';
     if (valForecastEC.includes('migrad')) estatusFinal = 'Migrado';
@@ -772,8 +767,7 @@ async function processWorkbook(file) {
       fechaDate: fechaExacta,
       fechaRef: fechaRef,
       semanaCompletaLbl: semanaDate ? formatSemanaCompleta(semanaDate) : 'Sin fecha',
-      semanaRangoLbl: semanaDate ? formatSemanaRango(semanaDate) : 'Semana por Definir',
-      fechaLbl: fechaExacta ? formatFechaVisual(fechaExacta) : (semanaDate ? formatFechaVisual(semanaDate) : 'Sin fecha'),
+      semanaRangoLbl: semanaDate ? formatSemanaRango(semanaDate) : (fechaExacta ? formatSemanaRango(fechaExacta) : 'Semana por Definir'),
       dia: diaNom,
       comentarios: String(getVal('comentariosmigracion', 'comentarios') || '').trim()
     });
@@ -2120,32 +2114,38 @@ function drillKpiTicketsPendientes() {
 function renderCalendarioPage() {
   let calRows = state.view.slice();
 
-  const aniosDisponibles = Array.from(new Set(calRows.map(r => r.anio))).filter(Boolean).sort();
-  const mesesDisponibles = MESES_ES.filter(m => calRows.some(r => r.mes === m));
+  // EXTRACCIÓN ESTRICTA DE AÑOS Y MESES BASADO EN "SEMANA DE PLANIFICACION"
+  const calRowsConSemana = calRows.filter(r => r.semanaDate != null);
+  const aniosDisponibles = Array.from(new Set(calRowsConSemana.map(r => r.semanaDate.getFullYear()))).sort();
+  const mesesDisponiblesSet = new Set(calRowsConSemana.map(r => MESES_ES[r.semanaDate.getMonth()]));
+  const mesesDisponibles = MESES_ES.filter(m => mesesDisponiblesSet.has(m));
 
   if (state.calFiltroAnio !== '__ALL__') {
-    calRows = calRows.filter(r => String(r.anio) === String(state.calFiltroAnio));
+    calRows = calRows.filter(r => r.semanaDate && String(r.semanaDate.getFullYear()) === String(state.calFiltroAnio));
   }
   if (state.calFiltroMes !== '__ALL__') {
-    calRows = calRows.filter(r => r.mes === state.calFiltroMes);
+    calRows = calRows.filter(r => r.semanaDate && MESES_ES[r.semanaDate.getMonth()] === state.calFiltroMes);
   }
 
   const semMap = new Map();
   calRows.forEach(r => {
-    const sDate = r.semanaDate || r.fechaRef;
+    const sDate = r.semanaDate;
     if (!sDate) return;
     const t = new Date(sDate.getFullYear(), sDate.getMonth(), sDate.getDate()).getTime();
-    if (!semMap.has(t)) {
-      semMap.set(t, {
+    
+    // EVITAR FUSIONES ERRÓNEAS: Agrupamos estrictamente por fecha de inicio de semana
+    const key = `${t}_${r.mes}`; 
+    if (!semMap.has(key)) {
+      semMap.set(key, {
         date: sDate,
         time: t,
         anio: sDate.getFullYear(),
         mes: MESES_ES[sDate.getMonth()],
-        completaLbl: r.semanaRangoLbl || formatSemanaRango(sDate),
+        completaLbl: r.semanaRangoLbl,
         rows: []
       });
     }
-    semMap.get(t).rows.push(r);
+    semMap.get(key).rows.push(r);
   });
 
   const semanasTotales = Array.from(semMap.values()).sort((a, b) => a.time - b.time);
@@ -2306,7 +2306,7 @@ function renderCalendarioPage() {
         
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
           <div class="sl">
-            <label>Año</label>
+            <label>Año (Según Semana)</label>
             <select id="selCalAnio" style="min-width: 100px;">
               <option value="__ALL__">Todos</option>
               ${aniosDisponibles.map(a => `<option value="${a}" ${state.calFiltroAnio == a ? 'selected' : ''}>${a}</option>`).join('')}
@@ -2314,7 +2314,7 @@ function renderCalendarioPage() {
           </div>
 
           <div class="sl">
-            <label>Mes</label>
+            <label>Mes (Según Semana)</label>
             <select id="selCalMes" style="min-width: 130px;">
               <option value="__ALL__">Todos los meses</option>
               ${mesesDisponibles.map(m => `<option value="${m}" ${state.calFiltroMes === m ? 'selected' : ''}>${m}</option>`).join('')}
@@ -2322,7 +2322,7 @@ function renderCalendarioPage() {
           </div>
 
           <div class="sl">
-            <label>Semana</label>
+            <label>Semana Planificada</label>
             <select id="selCalSemana" style="min-width: 220px;">
               <option value="__ALL__">Todas las semanas (${semanasTotales.length})</option>
               ${semanasTotales.map(s => `<option value="${s.time}" ${state.calFiltroSemana == s.time ? 'selected' : ''}>${esc(s.completaLbl)}</option>`).join('')}
@@ -2635,7 +2635,6 @@ function openModal(title, sub, bodyHtml, exportData) {
       'Motivo No Entrega': r.motivoNoEntrega,
       'Ticket Aprovisionamiento': r.ticketAprov,
       'OC Migración': r.oc, 'Estado OC': r.estadoOC, 
-      'Horario': r.rangoHorario,
       'S.O Origen': r.soOrigen, 'Subsistema Origen': r.subOrigen,
       'S.O Destino': r.soDestino, 'Subsistema Destino': r.subDestino,
       'Estatus': r.estatus, 'Comentarios': r.comentarios
@@ -2705,7 +2704,7 @@ function renderDetallePage() {
         <td class="l" style="font-size:12px;">${esc(r.subDestino)}</td>
         <td class="l"><span class="tag ${r.estatus === 'Migrado' ? 'mig' : (r.estatus === 'Planificado' ? 'plan' : (r.estatus === 'Desestimado' || r.estatus === 'Rollback' ? 'rb' : 'pend'))}">${esc(r.estatus)}</span></td>
       </tr>
-    `).join('') + (data.length > 300 ? '<tr><td colspan="14" class="l" style="text-align:center;color:#888;">Mostrando los primeros 300 registros...</td></tr>' : '');
+    `).join('') + (data.length > 300 ? '<tr><td colspan="15" class="l" style="text-align:center;color:#888;">Mostrando los primeros 300 registros...</td></tr>' : '');
   };
 
   paint(rows);
@@ -2803,7 +2802,6 @@ function initEvents() {
       'Motivo No Entrega': r.motivoNoEntrega,
       'Ticket Aprovisionamiento': r.ticketAprov,
       'OC Migración': r.oc, 'Estado OC': r.estadoOC, 
-      'Horario': r.rangoHorario,
       'S.O Origen': r.soOrigen, 'Subsistema Origen': r.subOrigen,
       'S.O Destino': r.soDestino, 'Subsistema Destino': r.subDestino,
       'Estatus': r.estatus, 'Comentarios': r.comentarios
