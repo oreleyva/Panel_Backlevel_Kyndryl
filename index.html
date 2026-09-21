@@ -123,6 +123,7 @@ select:focus, input:focus { outline: 2px solid rgba(255,70,45,0.4); outline-offs
 .kpi.amber { border-left-color: var(--k-amber); }
 .kpi.blue { border-left-color: var(--k-blue); }
 .kpi.navy { border-left-color: var(--k-navy); }
+.kpi.alert { border-left-color: var(--k-alert); } /* Agregado para el color de alerta en KPIs */
 
 .kpi-clickable { cursor: pointer; transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease; user-select: none; }
 .kpi-clickable:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08); }
@@ -589,7 +590,6 @@ async function processWorkbook(file) {
     const o = {};
     headerCols.forEach((colName, idx) => { if (colName) o[colName] = row[idx]; });
 
-    // BUSCADOR SEMÁNTICO ULTRA-ESTRICTO: Aislamos conflictos
     const getVal = (...patterns) => {
       const pClean = patterns.map(cleanKey);
       for (const col of Object.keys(o)) {
@@ -1059,7 +1059,7 @@ function destroyCharts() {
 }
 
 /* -------------------------------------------------------------
-   VISTA 1: NIVEL DE CUMPLIMIENTO (Suma exacta y dinámica por mes)
+   VISTA 1: NIVEL DE CUMPLIMIENTO (NUEVOS KPIS DE SALUD ESTRICTOS)
 ------------------------------------------------------------- */
 function renderCumplimientoPage() {
   const rows = state.view;
@@ -1122,8 +1122,9 @@ function renderCumplimientoPage() {
   const metaMensual = mesesAMostrar.map(m => m.meta);
   const migradoReal = mesesAMostrar.map(m => m.migReal);
 
-  const subMetaText = mesesAMostrar.map(m => `${m.mesNombre} (${m.meta})`).join(' + ');
+  // NUEVA METODOLOGÍA PARA LOS 4 KPIs EXACTOS DEL REQUERIMIENTO
   const metaTotalMensual = metaMensual.reduce((a, b) => a + b, 0);
+  const planTotalMensual = planMensual.reduce((a, b) => a + b, 0);
 
   const migradosRows = rows.filter(r => r.estatus === 'Migrado');
   const ejecucionRealComp = migradosRows.reduce((a, b) => a + b.nComp, 0);
@@ -1136,9 +1137,12 @@ function renderCumplimientoPage() {
   const rollbacksComp = rollbacksRows.reduce((a, b) => a + b.nComp, 0);
   const intentosTotalComp = ejecucionRealComp + rollbacksComp;
 
-  const kpiCumplimiento = pct(ejecucionRealComp, metaTotalMensual);
-  const kpiEficaciaEntrega = pct(entregadosComp, ejecucionRealComp);
-  const kpiTasaRollback = pct(rollbacksComp, intentosTotalComp);
+  // CÁLCULO DE LOS 4 KPIs OFICIALES
+  const kpiCumplimiento = pct(ejecucionRealComp, metaTotalMensual); // Target >= 90%
+  const kpiEficaciaEntrega = pct(entregadosComp, ejecucionRealComp); // Target >= 95%
+  const kpiTasaRollback = pct(rollbacksComp, intentosTotalComp); // Target <= 5%
+  // Varianza Absoluta de Tendencia: (|Planificado - Real|) / Planificado * 100
+  const kpiVarianza = planTotalMensual > 0 ? (Math.abs(planTotalMensual - ejecucionRealComp) / planTotalMensual) * 100 : 0; // Target <= 10%
 
   const motivosMap = new Map();
   noEntregadosRows.forEach(r => {
@@ -1155,7 +1159,7 @@ function renderCumplimientoPage() {
       <div class="tile kpi navy">
         <div class="lbl">Meta Acumulada del Periodo</div>
         <div class="val">${fmt(metaTotalMensual)} <span style="font-size:15px;color:var(--k-text-muted);">comp.</span></div>
-        <div class="sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${subMetaText}">${subMetaText || 'Sin selección'}</div>
+        <div class="sub">Objetivo según meses en filtro</div>
       </div>
 
       <div class="tile kpi green kpi-clickable" onclick="drillKpiMainMigrados()" title="Clic para ver componentes migrados">
@@ -1177,24 +1181,34 @@ function renderCumplimientoPage() {
       </div>
     </div>
 
-    <div class="section-label-bar" style="margin-top: 10px;">🩺 KPIs de Salud del Servicio (Indicadores de Calidad)</div>
-    <div class="row r-3">
-      <div class="tile kpi ${kpiCumplimiento >= 100 ? 'green' : 'amber'} kpi-clickable" onclick="drillKpiMainMigrados()" title="Clic para auditar avance">
-        <div class="lbl">% Cumplimiento de Actualización</div>
-        <div class="val" style="color:${kpiCumplimiento >= 100 ? 'var(--k-green)' : 'var(--k-amber)'};">${pct1(kpiCumplimiento)}</div>
-        <div class="sub">Fórmula: (Ejecución Real / Meta) * 100</div>
+    <div class="section-label-bar" style="margin-top: 10px;">🩺 KPIs de Salud del Servicio (Según Matriz de Evaluación)</div>
+    <div class="row r-4">
+      <!-- KPI 1: Eficiencia Operativa -->
+      <div class="tile kpi ${kpiCumplimiento >= 90 ? 'green' : (kpiCumplimiento >= 75 ? 'amber' : 'alert')} kpi-clickable" onclick="drillKpiMainMigrados()">
+        <div class="lbl" style="font-size:10.5px;">% de Cumplimiento (Migrado vs. Meta)</div>
+        <div class="val" style="color:${kpiCumplimiento >= 90 ? 'var(--k-green)' : (kpiCumplimiento >= 75 ? 'var(--k-amber)' : 'var(--k-alert)')};">${pct1(kpiCumplimiento)}</div>
+        <div class="sub">Eficiencia Operativa · <b>Target: ≥ 90%</b></div>
       </div>
 
-      <div class="tile kpi ${kpiEficaciaEntrega >= 90 ? 'green' : 'amber'} kpi-clickable" onclick="drillKpiMainNoEntregados()" title="Clic para ver motivos de no entrega">
-        <div class="lbl">% Eficacia en la Entrega (Migrado vs Entregado)</div>
-        <div class="val" style="color:${kpiEficaciaEntrega >= 90 ? 'var(--k-green)' : 'var(--k-amber)'};">${pct1(kpiEficaciaEntrega)}</div>
-        <div class="sub">Fórmula: (Entregados / Migrados) * 100 · <b>Clic para ver motivos</b></div>
+      <!-- KPI 2: Calidad en Servicio -->
+      <div class="tile kpi ${kpiEficaciaEntrega >= 95 ? 'green' : (kpiEficaciaEntrega >= 80 ? 'amber' : 'alert')} kpi-clickable" onclick="drillKpiMainNoEntregados()">
+        <div class="lbl" style="font-size:10.5px;">% Eficacia en Entrega (Entr. vs Migrado)</div>
+        <div class="val" style="color:${kpiEficaciaEntrega >= 95 ? 'var(--k-green)' : (kpiEficaciaEntrega >= 80 ? 'var(--k-amber)' : 'var(--k-alert)')};">${pct1(kpiEficaciaEntrega)}</div>
+        <div class="sub">Calidad y Exp. del Cliente · <b>Target: ≥ 95%</b></div>
       </div>
 
-      <div class="tile kpi ${kpiTasaRollback <= 5 ? 'green' : ''}" style="border-left-color:${kpiTasaRollback <= 5 ? 'var(--k-green)' : 'var(--k-alert)'};" onclick="drillKpiMainRollbacks()" title="Clic para auditar rollbacks">
-        <div class="lbl">Tasa de Rollback (%)</div>
+      <!-- KPI 3: Riesgo y Calidad Técnica -->
+      <div class="tile kpi ${kpiTasaRollback <= 5 ? 'green' : 'alert'} kpi-clickable" onclick="drillKpiMainRollbacks()">
+        <div class="lbl" style="font-size:10.5px;">Tasa de Rollback</div>
         <div class="val" style="color:${kpiTasaRollback <= 5 ? 'var(--k-green)' : 'var(--k-alert)'};">${pct1(kpiTasaRollback)}</div>
-        <div class="sub">${fmt(rollbacksComp)} rollbacks de ${fmt(intentosTotalComp)} intentos totales</div>
+        <div class="sub">Riesgo y Calidad Técnica · <b>Target: ≤ 5%</b></div>
+      </div>
+
+      <!-- KPI 4: Predictibilidad del Servicio -->
+      <div class="tile kpi ${kpiVarianza <= 10 ? 'green' : (kpiVarianza <= 25 ? 'amber' : 'alert')}">
+        <div class="lbl" style="font-size:10.5px;">Varianza (Desv. Planificado vs Real)</div>
+        <div class="val" style="color:${kpiVarianza <= 10 ? 'var(--k-green)' : (kpiVarianza <= 25 ? 'var(--k-amber)' : 'var(--k-alert)')};">${pct1(kpiVarianza)}</div>
+        <div class="sub">Predictibilidad del Servicio · <b>Target: ≤ 10%</b></div>
       </div>
     </div>
 
@@ -1239,7 +1253,7 @@ function renderCumplimientoPage() {
         },
         {
           type: 'line',
-          label: 'Cant. Mensual',
+          label: 'Cant. Mensual (Meta)',
           data: metaMensual,
           borderColor: '#EA580C',
           backgroundColor: '#EA580C',
