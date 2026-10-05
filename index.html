@@ -359,6 +359,13 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
             <div class="ms-dropdown" id="msMesDropdown"></div>
           </div>
         </div>
+        
+        <div class="sl">
+          <label>Priorizado Q</label>
+          <select id="sPriorizadoQ">
+            <option value="__ALL__">Todos</option>
+          </select>
+        </div>
 
         <div class="sl"><label>Owner Kyndryl</label><select id="sLeader"><option value="__ALL__">Todos</option></select></div>
         <div class="sl"><label>Estado de OC</label><select id="sEstadoOC"><option value="__ALL__">Todos</option></select></div>
@@ -398,31 +405,6 @@ const MESES_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio'
 const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
 const MESES_CORTO_LOWER = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
 const ESTATUS_MIGRACION_LIST = ['Migrado', 'Planificado', 'Por Definir', 'Reprogramado', 'Rollback', 'Desestimado'];
-
-const drawLabelsPlugin = {
-  id: 'drawLabels',
-  afterDatasetsDraw(chart) {
-    const { ctx } = chart;
-    chart.data.datasets.forEach((dataset, i) => {
-      if (dataset.type === 'line') return;
-      const meta = chart.getDatasetMeta(i);
-      if (!meta.hidden) {
-        meta.data.forEach((element, index) => {
-          const dataString = dataset.data[index].toString();
-          if (dataString !== '0') {
-            ctx.fillStyle = '#1e293b';
-            ctx.font = '600 10.5px "Inter", sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'bottom';
-            const position = element.tooltipPosition();
-            ctx.fillText(dataString, position.x, position.y - 4);
-          }
-        });
-      }
-    });
-  }
-};
-Chart.register(drawLabelsPlugin);
 
 function getMetaMensual(anio, mesIdx0) {
   if (anio < 2026 || (anio === 2026 && mesIdx0 <= 6)) return 50;
@@ -472,13 +454,14 @@ const state = {
   filtroSemanaEntregas: '__ALL__',
   filtroEstadoCierreAprov: '__ALL__',
   searchAprovQuery: '',
+  searchInvQuery: '',
   calFiltroAnio: '__ALL__',
   calFiltroMes: '__ALL__',
   calFiltroSemana: '__ALL__',
   calSeleccionSemanaIdx: null,
   calSeleccionDia: null,
   calFiltroPillEstatus: '__ALL__',
-  filters: { leader: '__ALL__', estadoOC: '__ALL__', amb: '__ALL__' },
+  filters: { leader: '__ALL__', estadoOC: '__ALL__', amb: '__ALL__', priorizadoQ: '__ALL__' },
   aprovSortCol: 'pctAvance',
   aprovSortAsc: false
 };
@@ -722,6 +705,7 @@ async function processWorkbook(file) {
       diaNom = DIAS[dIdx];
     }
 
+    const priorizadoQVal = String(getVal('priorizadoq', 'priorizado q') || '—').trim();
     const ownerKyndryl = String(getVal('ownerkyndryl', 'crewleader', 'responsableadministracion', 'owner') || 'Sin Asignar').trim();
     const ocNum = getVal('oc3migracion', 'oc3migracion', 'ocmigracion', 'oc3', 'oc(3)migracion', 'oc');
     const ocEstado = getVal('estadooc3', 'estadooc', 'estadodelaoc');
@@ -783,9 +767,13 @@ async function processWorkbook(file) {
     }
     
     const componentesExtraidos = getNumStrict('componenteskyndryl', 'componenteskydryl', 'sumadecomponenteskyndryl', 'sumadecomponenteskydryl') || 0;
+    
+    // Anclaje numérico de fecha para poder ordenar columnas
+    const curFechaNum = fechaExacta ? fechaExacta.getTime() : (semanaDate ? semanaDate.getTime() : Infinity);
 
     rows.push({
       qIbk: qVal,
+      priorizadoQ: priorizadoQVal,
       anio: anioVal,
       mesIdx: mesIdx,
       mes: mesNom,
@@ -818,6 +806,7 @@ async function processWorkbook(file) {
       semanaDate: semanaDate,
       fechaDate: fechaExacta,
       fechaRef: fechaRef,
+      fechaNum: curFechaNum,
       semanaCompletaLbl: semanaDate ? formatSemanaCompleta(semanaDate) : 'Sin fecha',
       semanaRangoLbl: semanaDate ? formatSemanaRango(semanaDate) : (fechaExacta ? formatSemanaRango(fechaExacta) : 'Semana por Definir'),
       fechaLbl: fechaExacta ? formatFechaVisual(fechaExacta) : (semanaDate ? formatFechaVisual(semanaDate) : 'Sin fecha'),
@@ -1025,6 +1014,7 @@ function initSlicers() {
     if (!e.target.closest('#msEstatusContainer')) ddEstatus.classList.remove('open');
   });
 
+  const priorizados = Array.from(new Set(state.raw.map(r => r.priorizadoQ))).filter(x => x && x !== '—').sort();
   const owners = Array.from(new Set(state.raw.map(r => r.ownerKyndryl))).filter(Boolean).sort();
   const estadosOC = Array.from(new Set(state.raw.map(r => r.estadoOC))).filter(x => x && x !== 'Sin Estado OC').sort();
   const ambs = Array.from(new Set(state.raw.map(r => r.ambiente))).filter(Boolean).sort();
@@ -1033,6 +1023,7 @@ function initSlicers() {
     $(id).innerHTML = `<option value="__ALL__">Todos (${arr.length})</option>` + arr.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join('');
   };
 
+  populate('#sPriorizadoQ', priorizados);
   populate('#sLeader', owners);
   populate('#sEstadoOC', estadosOC);
   populate('#sAmb', ambs);
@@ -1064,6 +1055,7 @@ function applyFilters() {
     list = list.filter(r => state.selectedEstatus.has(r.estatus));
   }
 
+  if (f.priorizadoQ !== '__ALL__') list = list.filter(r => r.priorizadoQ === f.priorizadoQ);
   if (f.leader !== '__ALL__') list = list.filter(r => r.ownerKyndryl === f.leader);
   if (f.estadoOC !== '__ALL__') list = list.filter(r => r.estadoOC === f.estadoOC);
   if (f.amb !== '__ALL__') list = list.filter(r => r.ambiente === f.amb);
@@ -1109,18 +1101,16 @@ window.sortModal = function(col) {
     window.modalSortAsc = !window.modalSortAsc;
   } else {
     window.modalSortCol = col;
-    window.modalSortAsc = true; // Por defecto cuando tocas una columna nueva, que sea ascendente
+    window.modalSortAsc = true;
   }
   
   const sortFn = (a, b) => {
     let valA = a[col];
     let valB = b[col];
     
-    // Convertir a minúsculas si es texto
     if (typeof valA === 'string') valA = valA.toLowerCase();
     if (typeof valB === 'string') valB = valB.toLowerCase();
     
-    // Tratamiento especial: si un valor es null/undefined, empujarlo al fondo
     if (valA == null) valA = '';
     if (valB == null) valB = '';
 
@@ -1129,14 +1119,12 @@ window.sortModal = function(col) {
     return 0;
   };
   
-  // Ordenamos ambos arreglos en memoria para que no se pierda al cambiar de filtro
   window.modalCurrentRows.sort(sortFn);
   window.modalFilteredRows.sort(sortFn);
   
   const tbody = document.getElementById('modalTableBody');
   if (tbody) tbody.innerHTML = renderModalRows(window.modalFilteredRows);
   
-  // Limpiar todas las flechas y poner la actual
   document.querySelectorAll('.modal-sort-icon').forEach(el => el.textContent = '');
   const activeIcon = document.getElementById('ms_' + col);
   if (activeIcon) activeIcon.textContent = window.modalSortAsc ? '▲' : '▼';
@@ -1214,7 +1202,7 @@ function renderCumplimientoPage() {
   const entregadosRows = rows.filter(r => r.esEntregado && r.estatus === 'Migrado');
   const entregadosComp = entregadosRows.reduce((a, b) => a + b.nComp, 0);
   const noEntregadosRows = migradosRows.filter(r => !r.esEntregado);
-  const noEntregadosComp = noEntregadosRows.reduce((a, b) => a + b.nComp, 0);
+  const noEntregadosComp = noEntregadosRows.filter(r => r.estatus === 'Migrado').reduce((a, b) => a + b.nComp, 0);
 
   const rollbacksRows = rows.filter(r => r.estatus === 'Rollback');
   const rollbacksComp = rollbacksRows.reduce((a, b) => a + b.nComp, 0);
@@ -1262,6 +1250,23 @@ function renderCumplimientoPage() {
     s.rows.push(r);
   });
   const semanasOrdenadas = Array.from(semMap.values()).sort((a, b) => a.time - b.time);
+
+  // NUEVA LÓGICA: Agrupación por Priorizado Q
+  const prioMap = new Map();
+  rows.forEach(r => {
+    const p = (r.priorizadoQ && r.priorizadoQ !== '—') ? r.priorizadoQ : 'Sin Categoría';
+    if(!prioMap.has(p)) prioMap.set(p, { label: p, atendidos: 0, pendientes: 0, rowsAtendidos: [], rowsPendientes: [] });
+    const node = prioMap.get(p);
+    if(r.estatus === 'Migrado') {
+        node.atendidos += r.nComp;
+        node.rowsAtendidos.push(r);
+    } else {
+        node.pendientes += r.nComp;
+        node.rowsPendientes.push(r);
+    }
+  });
+  const prioData = Array.from(prioMap.values()).sort((a,b) => (b.atendidos + b.pendientes) - (a.atendidos + a.pendientes));
+
 
   $('#page').innerHTML = `
     <div class="section-label-bar">📌 Métricas Base del Servicio (Valores Crudos)</div>
@@ -1325,7 +1330,7 @@ function renderCumplimientoPage() {
             <h3>Nivel de Cumplimiento Mensual (Meta vs Planificado vs Migrado)</h3>
             <div class="sb">Gráfico dinámico sincronizado con las variables en la selección de cabecera</div>
           </div>
-          <button class="btn ghost sm" onclick="irAPestana('detalle')">Ver Inventario Completo ➔</button>
+          <button class="btn ghost sm" onclick="irAPestana('detalle')">Ver Inventario ➔</button>
         </div>
         <div class="cbox"><canvas id="cMensualHistorico"></canvas></div>
       </div>
@@ -1339,6 +1344,18 @@ function renderCumplimientoPage() {
           <button class="btn ghost sm" onclick="drillKpiMainNoEntregados()">Auditar Servidores</button>
         </div>
         <div class="cbox"><canvas id="cDonaMotivos"></canvas></div>
+      </div>
+    </div>
+
+    <div class="row r-1">
+      <div class="tile" style="border: 1.5px solid #CBD5E1; border-radius: 16px;">
+        <div class="th">
+          <div>
+            <h3>Estado de Avance por Priorizado Q (Atendidos vs Pendientes)</h3>
+            <div class="sb">Desglose de esfuerzo operativo según la categoría de priorización. Clic en las barras para auditar fechas planificadas.</div>
+          </div>
+        </div>
+        <div class="cbox" style="min-height: 250px;"><canvas id="cPriorizadoProgreso"></canvas></div>
       </div>
     </div>
 
@@ -1446,6 +1463,55 @@ function renderCumplimientoPage() {
         if (!labelMotivo) return;
         const rowsMotivo = noEntregadosRows.filter(r => r.motivoNoEntrega.toLowerCase() === labelMotivo.toLowerCase());
         drillGrupo(`Servidores No Entregados: ${labelMotivo} (${rowsMotivo.length} registros)`, rowsMotivo);
+      }
+    }
+  });
+
+  const ctxPrio = $('#cPriorizadoProgreso').getContext('2d');
+  state.charts['cPriorizadoProgreso'] = new Chart(ctxPrio, {
+    type: 'bar',
+    data: {
+      labels: prioData.map(p => p.label),
+      datasets: [
+        {
+          label: 'Atendidos (Migrados)',
+          data: prioData.map(p => p.atendidos),
+          backgroundColor: '#059669',
+          borderRadius: 3
+        },
+        {
+          label: 'Pendientes (Por Definir, Planificados, etc.)',
+          data: prioData.map(p => p.pendientes),
+          backgroundColor: '#D97706',
+          borderRadius: 3
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 22 } },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15, font: { weight: '600', size: 11.5 } } },
+        tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.raw} componentes` } }
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { font: { weight: '600' } } },
+        y: { stacked: true, beginAtZero: true, grid: { color: '#EDF2F9' } }
+      },
+      onClick: (evt, activeEls) => {
+        if (!activeEls || !activeEls.length) return;
+        const el = activeEls[0];
+        const pObj = prioData[el.index];
+        const dsIdx = el.datasetIndex;
+        let filterRows = pObj.rowsAtendidos;
+        let titleExt = "Atendidos (Migrados)";
+        
+        if (dsIdx === 1) { 
+          filterRows = pObj.rowsPendientes; 
+          titleExt = "Pendientes"; 
+        }
+        
+        if (filterRows.length > 0) drillGrupo(`Priorizado Q: ${pObj.label} - ${titleExt} (${filterRows.length} registros)`, filterRows);
       }
     }
   });
@@ -1999,7 +2065,6 @@ function renderEntregasPage() {
         } else if (dsIdx === 0) {
           tipo = 'Migrados de la Semana';
         }
-        // Corrección del bug "Avance: undefined" garantizando que fullLabel exista
         drillGrupo(`Avance: ${semItem.fullLabel || 'Semana Operativa'} (${tipo})`, targetRows);
       }
     }
@@ -2596,6 +2661,8 @@ function renderCalendarioPage() {
         appSet: new Set(),
         srvSet: new Set(),
         fechasSet: new Set(), 
+        ambientesSet: new Set(),
+        minFechaNum: r.fechaDate ? r.fechaDate.getTime() : (r.semanaDate ? r.semanaDate.getTime() : Infinity),
         totalComp: 0,
         rows: []
       });
@@ -2605,10 +2672,22 @@ function renderCalendarioPage() {
     item.srvSet.add(r.servidor);
     if (r.fechaLbl && r.fechaLbl !== 'Sin fecha') item.fechasSet.add(r.fechaLbl);
     if (r.siglas && r.siglas !== 'S/S') item.appSet.add(r.siglas);
+    if (r.ambiente && r.ambiente !== '—') item.ambientesSet.add(r.ambiente);
+    
+    const curTime = r.fechaDate ? r.fechaDate.getTime() : (r.semanaDate ? r.semanaDate.getTime() : Infinity);
+    if(curTime < item.minFechaNum) item.minFechaNum = curTime;
+
     item.rows.push(r);
   });
 
-  const ocsInferiorList = Array.from(ocInferiorMap.values());
+  const ocsInferiorList = Array.from(ocInferiorMap.values()).map(item => ({
+      ...item,
+      ambientesStr: Array.from(item.ambientesSet).join(', ') || '—',
+      appsStr: Array.from(item.appSet).join(', ') || 'S/S',
+      fechasStr: Array.from(item.fechasSet).join('<br>') || 'Sin fecha',
+      srvCount: item.srvSet.size
+  }));
+
   const compMostradosInferior = ocsInferiorList.reduce((a, b) => a + b.totalComp, 0);
 
   window.curOcsInferiorList = ocsInferiorList;
@@ -2689,45 +2768,89 @@ function renderCalendarioPage() {
         <table class="dt">
           <thead>
             <tr>
-              <th class="l">OC Migración</th>
-              <th class="l">Estado de la OC</th>
-              <th class="l">Estatus Migración</th>
-              <th class="l">Owner Kyndryl</th>
-              <th>Servidores</th>
-              <th>Componentes</th>
-              <th class="l">Fecha Migración</th>
-              <th class="l">Aplicaciones Involucradas</th>
+              <th class="l sortable" onclick="setCalSort('oc')" title="Clic para ordenar">OC Migración <span id="sc_oc" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setCalSort('estadoOC')" title="Clic para ordenar">Estado de la OC <span id="sc_estadoOC" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setCalSort('estatus')" title="Clic para ordenar">Estatus Migración <span id="sc_estatus" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setCalSort('owner')" title="Clic para ordenar">Owner Kyndryl <span id="sc_owner" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setCalSort('ambientesStr')" title="Clic para ordenar">Ambiente <span id="sc_ambientesStr" class="sort-icon"></span></th>
+              <th class="sortable" onclick="setCalSort('srvCount')" title="Clic para ordenar">Servidores <span id="sc_srvCount" class="sort-icon"></span></th>
+              <th class="sortable" onclick="setCalSort('totalComp')" title="Clic para ordenar">Componentes <span id="sc_totalComp" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setCalSort('minFechaNum')" title="Clic para ordenar">Fecha Migración <span id="sc_minFechaNum" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setCalSort('appsStr')" title="Clic para ordenar">Aplicaciones Involucradas <span id="sc_appsStr" class="sort-icon"></span></th>
               <th class="l">Acción</th>
             </tr>
           </thead>
-          <tbody>
-            ${ocsInferiorList.map((item, idx) => {
-              const apps = Array.from(item.appSet).join(', ') || 'S/S';
-              const fechas = Array.from(item.fechasSet).join('<br>') || 'Sin fecha';
-              const tagClass = getEstadoOCClass(item.estadoOC);
-              const estatusClass = item.estatus === 'Migrado' ? 'mig' : (item.estatus === 'Planificado' ? 'plan' : (item.estatus === 'Rollback' || item.estatus === 'Desestimado' ? 'rb' : 'pend'));
-              return `
-                <tr>
-                  <td class="l mono"><b>${esc(item.oc)}</b></td>
-                  <td class="l"><span class="tag ${tagClass}">${esc(item.estadoOC)}</span></td>
-                  <td class="l"><span class="tag ${estatusClass}">${esc(item.estatus)}</span></td>
-                  <td class="l"><b>${esc(item.owner)}</b></td>
-                  <td class="num"><span class="srv-badge">${item.srvSet.size} srv</span></td>
-                  <td class="num" style="color:var(--k-red);font-weight:700;font-size:13.5px;">${fmt(item.totalComp)}</td>
-                  <td class="l mono" style="font-weight:700;color:var(--k-navy);line-height:1.2;">${fechas}</td>
-                  <td class="l mono" style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(apps)}</td>
-                  <td class="l">
-                    <button class="btn sm ghost" onclick="drillOCInferiorPorIdx(${idx})">Ver servidores</button>
-                  </td>
-                </tr>
-              `;
-            }).join('')}
-            ${ocsInferiorList.length === 0 ? `<tr><td colspan="8" class="l" style="text-align:center;padding:24px;color:#888;">No hay órdenes de cambio bajo la selección actual.</td></tr>` : ''}
-          </tbody>
+          <tbody id="tbBodyCalInferior"></tbody>
         </table>
       </div>
     </div>
   `;
+
+  if (typeof window.calSortCol === 'undefined') {
+     window.calSortCol = 'minFechaNum';
+     window.calSortAsc = true;
+  }
+
+  window.setCalSort = (col) => {
+    if (window.calSortCol === col) {
+      window.calSortAsc = !window.calSortAsc;
+    } else {
+      window.calSortCol = col;
+      window.calSortAsc = true;
+    }
+    if (typeof window.paintCalTable === 'function') window.paintCalTable();
+  };
+
+  window.paintCalTable = () => {
+     let filtrados = ocsInferiorList.slice();
+     
+     filtrados.sort((a, b) => {
+        let valA = a[window.calSortCol];
+        let valB = b[window.calSortCol];
+        
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+        
+        if (valA == null) valA = '';
+        if (valB == null) valB = '';
+
+        if (valA < valB) return window.calSortAsc ? -1 : 1;
+        if (valA > valB) return window.calSortAsc ? 1 : -1;
+        return 0;
+     });
+
+     window.curOcsInferiorList = filtrados;
+
+     $('#tbBodyCalInferior').innerHTML = filtrados.map((item, idx) => {
+        const tagClass = getEstadoOCClass(item.estadoOC);
+        const estatusClass = item.estatus === 'Migrado' ? 'mig' : (item.estatus === 'Planificado' ? 'plan' : (item.estatus === 'Desestimado' ? 'des' : (item.estatus === 'Rollback' ? 'rb' : 'pend')));
+        
+        return `
+          <tr>
+            <td class="l mono"><b>${esc(item.oc)}</b></td>
+            <td class="l"><span class="tag ${tagClass}">${esc(item.estadoOC)}</span></td>
+            <td class="l"><span class="tag ${estatusClass}">${esc(item.estatus)}</span></td>
+            <td class="l"><b>${esc(item.owner)}</b></td>
+            <td class="l">${esc(item.ambientesStr)}</td>
+            <td class="num"><span class="srv-badge">${item.srvCount} srv</span></td>
+            <td class="num" style="color:var(--k-red);font-weight:700;font-size:13.5px;">${fmt(item.totalComp)}</td>
+            <td class="l mono" style="font-weight:700;color:var(--k-navy);line-height:1.2;">${item.fechasStr}</td>
+            <td class="l mono" style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(item.appsStr)}</td>
+            <td class="l">
+              <button class="btn sm ghost" onclick="drillOCInferiorPorIdx(${idx})">Ver servidores</button>
+            </td>
+          </tr>
+        `;
+     }).join('') || `<tr><td colspan="10" class="l" style="text-align:center;padding:24px;color:#888;">No hay órdenes de cambio bajo la selección actual.</td></tr>`;
+
+     $$('.sort-icon').forEach(el => {
+        if (el.id && el.id.startsWith('sc_')) el.textContent = '';
+     });
+     const activeIcon = $('#sc_' + window.calSortCol);
+     if (activeIcon) activeIcon.textContent = window.calSortAsc ? '▲' : '▼';
+  };
+
+  window.paintCalTable();
 
   $('#selCalAnio').onchange = (e) => {
     state.calFiltroAnio = e.target.value;
@@ -2853,7 +2976,6 @@ function drillGrupo(titulo, rows) {
   window.modalActiveEstatus = null;
   window.modalBaseTitle = titulo;
   
-  // Reiniciamos el sort al abrir un modal nuevo
   window.modalSortCol = null;
   window.modalSortAsc = true;
 
@@ -2900,6 +3022,7 @@ function drillGrupo(titulo, rows) {
             <th class="l sortable" onclick="sortModal('servidor')" title="Clic para ordenar">Servidor <span id="ms_servidor" class="sort-icon modal-sort-icon"></span></th>
             <th class="sortable" onclick="sortModal('nComp')" title="Clic para ordenar">Comp. <span id="ms_nComp" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('ambiente')" title="Clic para ordenar">Ambiente <span id="ms_ambiente" class="sort-icon modal-sort-icon"></span></th>
+            <th class="l sortable" onclick="sortModal('priorizadoQ')" title="Clic para ordenar">Priorizado Q <span id="ms_priorizadoQ" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('ownerKyndryl')" title="Clic para ordenar">Owner Kyndryl <span id="ms_ownerKyndryl" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('esEntregado')" title="Clic para ordenar">Estado Entrega <span id="ms_esEntregado" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('motivoNoEntrega')" title="Clic para ordenar">Motivo No Entrega <span id="ms_motivoNoEntrega" class="sort-icon modal-sort-icon"></span></th>
@@ -2932,6 +3055,7 @@ function renderModalRows(rows) {
       <td class="l mono" style="font-weight:700;">${esc(r.servidor)}</td>
       <td class="num" style="font-weight:700;color:var(--k-red);">${r.nComp}</td>
       <td class="l">${esc(r.ambiente)}</td>
+      <td class="l" style="font-size:12px;font-weight:600;color:var(--k-navy);">${esc(r.priorizadoQ)}</td>
       <td class="l"><b>${esc(r.ownerKyndryl)}</b></td>
       <td class="l"><span class="tag ${r.esEntregado ? 'mig' : 'pend'}">${r.esEntregado ? 'Entregado' : 'Pendiente'}</span></td>
       <td class="l" style="font-size:12px;font-weight:600;color:${r.esEntregado ? 'var(--k-green)' : 'var(--k-alert)'};">${esc(r.motivoNoEntrega)}</td>
@@ -3006,12 +3130,14 @@ function openModal(title, sub, bodyHtml, exportData) {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(dataToExport.map(r => ({
       'Equipo': r.equipoSO,
+      'Priorizado Q': r.priorizadoQ,
       'Trimestre': r.qIbk, 'Mes': r.mes, 'Sigla': r.siglas, 'Aplicación': r.app, 'Servidor': r.servidor,
       '# Componentes': r.nComp, 'Ambiente': r.ambiente, 'Owner Kyndryl': r.ownerKyndryl,
       'Estado Entrega': r.esEntregado ? 'Entregado' : 'Pendiente',
       'Motivo No Entrega': r.motivoNoEntrega,
       'Ticket Aprovisionamiento': r.ticketAprov,
       'OC Migración': r.oc, 'Estado OC': r.estadoOC, 'Fecha': r.fechaLbl,
+      'Horario': r.rangoHorario,
       'S.O Origen': r.soOrigen, 'Subsistema Origen': r.subOrigen,
       'S.O Destino': r.soDestino, 'Subsistema Destino': r.subDestino,
       'Estatus': r.estatus, 'Comentarios': r.comentarios
@@ -3024,70 +3150,146 @@ function openModal(title, sub, bodyHtml, exportData) {
 function closeModal() { $('#modalRoot').innerHTML = ''; }
 
 /* -------------------------------------------------------------
-   VISTA 6: INVENTARIO DE SERVIDORES
+   VISTA 6: INVENTARIO DE SERVIDORES CON PILLS Y SORTING
 ------------------------------------------------------------- */
 function renderDetallePage() {
   const rows = state.view;
+  
+  window.invSortCol = window.invSortCol || 'fechaNum';
+  window.invSortAsc = window.invSortAsc !== undefined ? window.invSortAsc : true;
+  window.invFiltroPill = window.invFiltroPill || '__ALL__';
+
+  const totComp = rows.reduce((a, b) => a + b.nComp, 0);
+  const planComp = rows.filter(r => r.estatus === 'Planificado').reduce((a, b) => a + b.nComp, 0);
+  const migComp = rows.filter(r => r.estatus === 'Migrado').reduce((a, b) => a + b.nComp, 0);
+  const pendComp = rows.filter(r => r.estatus === 'Por Definir').reduce((a, b) => a + b.nComp, 0);
+  const rbComp = rows.filter(r => r.estatus === 'Rollback').reduce((a, b) => a + b.nComp, 0);
+  const reprogComp = rows.filter(r => r.estatus === 'Reprogramado').reduce((a, b) => a + b.nComp, 0);
+  const desComp = rows.filter(r => r.estatus === 'Desestimado').reduce((a, b) => a + b.nComp, 0);
+
+  let pillsInvHtml = `<span class="stat-pill all ${window.invFiltroPill === '__ALL__' ? 'active' : ''}" onclick="setInvPill('__ALL__')">Todos: ${totComp}</span>`;
+  if (planComp > 0) pillsInvHtml += `<span class="stat-pill plan ${window.invFiltroPill === 'Planificado' ? 'active' : ''}" onclick="setInvPill('Planificado')">Planificados: ${planComp}</span>`;
+  if (migComp > 0) pillsInvHtml += `<span class="stat-pill mig ${window.invFiltroPill === 'Migrado' ? 'active' : ''}" onclick="setInvPill('Migrado')">Migrados: ${migComp}</span>`;
+  if (pendComp > 0) pillsInvHtml += `<span class="stat-pill pend ${window.invFiltroPill === 'Por Definir' ? 'active' : ''}" onclick="setInvPill('Por Definir')">Por Definir: ${pendComp}</span>`;
+  if (rbComp > 0) pillsInvHtml += `<span class="stat-pill rb ${window.invFiltroPill === 'Rollback' ? 'active' : ''}" onclick="setInvPill('Rollback')">Rollback: ${rbComp}</span>`;
+  if (reprogComp > 0) pillsInvHtml += `<span class="stat-pill reprog ${window.invFiltroPill === 'Reprogramado' ? 'active' : ''}" onclick="setInvPill('Reprogramado')">Reprogramados: ${reprogComp}</span>`;
+  if (desComp > 0) pillsInvHtml += `<span class="stat-pill des ${window.invFiltroPill === 'Desestimado' ? 'active' : ''}" onclick="setInvPill('Desestimado')">Desestimados: ${desComp}</span>`;
+
   $('#page').innerHTML = `
-    <div class="tile">
-      <div class="th">
+    <div class="tile" style="overflow: visible;">
+      <div class="sticky-oc-header" style="margin-top: 0; margin-bottom: 12px; background: #F8FAFC; border-radius: 8px 8px 0 0;">
         <div>
-          <h3>Inventario Completo de Componentes y Servidores</h3>
-          <div class="sb">${fmt(rows.length)} registros bajo los filtros actuales</div>
+          <h3 style="font-size:16px;margin:0 0 2px 0;">Inventario Completo de Componentes y Servidores</h3>
+          <div class="sb" id="invSub" style="margin:0;">${fmt(rows.length)} registros bajo los filtros actuales</div>
         </div>
-        <input type="text" id="tbSearch" placeholder="Buscar por servidor, sigla, app, owner kyndryl u OC..." style="min-width:320px;">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <div class="sl">
+            <input type="text" id="tbSearchInv" placeholder="🔍 Buscar servidor, app u owner..." value="${esc(state.searchInvQuery || '')}" style="min-width: 250px;">
+          </div>
+          ${pillsInvHtml}
+        </div>
       </div>
-      <div class="tw" style="max-height: 600px;">
+
+      <div class="tw" style="max-height: 600px; border-radius: 0 0 8px 8px;">
         <table class="dt">
           <thead>
             <tr>
-              <th class="l">Equipo</th>
-              <th class="l">Sigla</th>
-              <th class="l">Aplicación</th>
-              <th class="l">Servidor</th>
-              <th>Comp.</th>
-              <th class="l">Ambiente</th>
-              <th class="l">Owner Kyndryl</th>
-              <th class="l">OC Migración</th>
-              <th class="l">Estado OC</th>
-              <th class="l">S.O Origen</th>
-              <th class="l">Subsistema Origen</th>
-              <th class="l">S.O Destino</th>
-              <th class="l">Subsistema Destino</th>
-              <th class="l">Estatus</th>
+              <th class="l sortable" onclick="setInvSort('equipoSO')">Equipo <span id="si_equipoSO" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setInvSort('siglas')">Sigla <span id="si_siglas" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setInvSort('app')">Aplicación <span id="si_app" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setInvSort('servidor')">Servidor <span id="si_servidor" class="sort-icon"></span></th>
+              <th class="sortable" onclick="setInvSort('nComp')">Comp. <span id="si_nComp" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setInvSort('ambiente')">Ambiente <span id="si_ambiente" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setInvSort('priorizadoQ')">Priorizado Q <span id="si_priorizadoQ" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setInvSort('ownerKyndryl')">Owner <span id="si_ownerKyndryl" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setInvSort('oc')">OC Migración <span id="si_oc" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setInvSort('estadoOC')">Estado OC <span id="si_estadoOC" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setInvSort('fechaNum')">Fecha Plan. <span id="si_fechaNum" class="sort-icon"></span></th>
+              <th class="l" style="background:#0F3A70;">S.O Origen</th>
+              <th class="l" style="background:#0F3A70;">Subsistema Origen</th>
+              <th class="l" style="background:#047857;">S.O Destino</th>
+              <th class="l" style="background:#047857;">Subsistema Destino</th>
+              <th class="l sortable" onclick="setInvSort('estatus')">Estatus <span id="si_estatus" class="sort-icon"></span></th>
             </tr>
           </thead>
-          <tbody id="tbBody"></tbody>
+          <tbody id="tbBodyInv"></tbody>
         </table>
       </div>
     </div>
   `;
 
-  const paint = (data) => {
-    $('#tbBody').innerHTML = data.slice(0, 300).map(r => `
+  window.setInvSort = (col) => {
+    if (window.invSortCol === col) window.invSortAsc = !window.invSortAsc;
+    else { window.invSortCol = col; window.invSortAsc = true; }
+    if (typeof window.paintInvTable === 'function') window.paintInvTable();
+  };
+
+  window.setInvPill = (estatus) => {
+    window.invFiltroPill = estatus;
+    renderDetallePage();
+  };
+
+  window.paintInvTable = () => {
+    const qText = norm(state.searchInvQuery || '');
+    let filtrados = state.view.slice();
+
+    if (window.invFiltroPill !== '__ALL__') {
+      filtrados = filtrados.filter(r => r.estatus === window.invFiltroPill);
+    }
+
+    if (qText) {
+      filtrados = filtrados.filter(r => norm(`${r.siglas} ${r.app} ${r.servidor} ${r.ownerKyndryl} ${r.oc} ${r.estadoOC} ${r.soOrigen} ${r.soDestino} ${r.priorizadoQ}`).includes(qText));
+    }
+
+    filtrados.sort((a, b) => {
+      let valA = a[window.invSortCol];
+      let valB = b[window.invSortCol];
+      
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+      if (valA == null) valA = '';
+      if (valB == null) valB = '';
+
+      if (valA < valB) return window.invSortAsc ? -1 : 1;
+      if (valA > valB) return window.invSortAsc ? 1 : -1;
+      return 0;
+    });
+
+    const tot = filtrados.reduce((a, b) => a + b.nComp, 0);
+    const srvF = new Set(filtrados.map(r => r.servidor)).size;
+    $('#invSub').textContent = `Mostrando ${fmt(tot)} componentes de ${fmt(srvF)} servidores bajo los filtros actuales`;
+
+    $('#tbBodyInv').innerHTML = filtrados.slice(0, 300).map(r => `
       <tr>
         <td class="l"><span class="team-badge ${r.equipoSO === 'Windows' ? 'windows' : 'linux'}">${r.equipoSO === 'Windows' ? '🪟 Windows' : '🐧 Linux'}</span></td>
         <td class="l mono"><b>${esc(r.siglas)}</b></td>
-        <td class="l">${esc(r.app)}</td>
+        <td class="l" style="max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(r.app)}">${esc(r.app)}</td>
         <td class="l mono" style="font-weight:700;">${esc(r.servidor)}</td>
         <td class="num" style="font-weight:700;color:var(--k-red);">${r.nComp}</td>
         <td class="l">${esc(r.ambiente)}</td>
+        <td class="l" style="font-size:12px;font-weight:600;color:var(--k-navy);">${esc(r.priorizadoQ)}</td>
         <td class="l"><b>${esc(r.ownerKyndryl)}</b></td>
         <td class="l mono">${esc(r.oc)}</td>
         <td class="l"><span class="tag ${getEstadoOCClass(r.estadoOC)}">${esc(r.estadoOC)}</span></td>
-        <td class="l" style="font-size:12px;">${esc(r.soOrigen)}</td>
+        <td class="l mono" style="font-size:12px;white-space:nowrap;">${esc(r.fechaLbl)}</td>
+        <td class="l" style="font-size:12px;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(r.soOrigen)}">${esc(r.soOrigen)}</td>
         <td class="l" style="font-size:12px;">${esc(r.subOrigen)}</td>
-        <td class="l" style="font-size:12px;">${esc(r.soDestino)}</td>
+        <td class="l" style="font-size:12px;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(r.soDestino)}">${esc(r.soDestino)}</td>
         <td class="l" style="font-size:12px;">${esc(r.subDestino)}</td>
         <td class="l"><span class="tag ${r.estatus === 'Migrado' ? 'mig' : (r.estatus === 'Planificado' ? 'plan' : (r.estatus === 'Desestimado' ? 'des' : (r.estatus === 'Rollback' ? 'rb' : 'pend')))}">${esc(r.estatus)}</span></td>
       </tr>
-    `).join('') + (data.length > 300 ? '<tr><td colspan="14" class="l" style="text-align:center;color:#888;">Mostrando los primeros 300 registros...</td></tr>' : '');
+    `).join('') + (filtrados.length > 300 ? '<tr><td colspan="16" class="l" style="text-align:center;color:#888;">Mostrando los primeros 300 registros... Exportar para ver completo.</td></tr>' : '');
+
+    $$('.sort-icon').forEach(el => { if(el.id && el.id.startsWith('si_')) el.textContent = ''; });
+    const activeIcon = $('#si_' + window.invSortCol);
+    if (activeIcon) activeIcon.textContent = window.invSortAsc ? '▲' : '▼';
   };
 
-  paint(rows);
-  $('#tbSearch').oninput = e => {
-    const q = norm(e.target.value);
-    paint(rows.filter(r => norm(`${r.siglas} ${r.app} ${r.servidor} ${r.ownerKyndryl} ${r.oc} ${r.estadoOC} ${r.soOrigen} ${r.soDestino}`).includes(q)));
+  window.paintInvTable();
+
+  $('#tbSearchInv').oninput = e => {
+    state.searchInvQuery = e.target.value;
+    window.paintInvTable();
   };
 }
 
@@ -3106,8 +3308,8 @@ function initEvents() {
     if (e.dataTransfer.files.length) processWorkbook(e.dataTransfer.files[0]);
   };
 
-  $$('.navbtn').forEach(btn => btn.onclick = () => {$$
-('.navbtn').forEach(b => b.classList.remove('on'));
+  $$('.navbtn').forEach(btn => btn.onclick = () => {
+    $$('.navbtn').forEach(b => b.classList.remove('on'));
     btn.classList.add('on');
     state.page = btn.dataset.pg;
     const titles = {
@@ -3128,12 +3330,14 @@ function initEvents() {
   bind('#sLeader', 'leader');
   bind('#sEstadoOC', 'estadoOC');
   bind('#sAmb', 'amb');
+  bind('#sPriorizadoQ', 'priorizadoQ');
 
   $('#btnReset').onclick = () => {
     for (const k in state.filters) state.filters[k] = '__ALL__';
     state.searchOCQuery = '';
     state.searchFlujoQuery = '';
     state.searchAprovQuery = '';
+    state.searchInvQuery = '';
     state.filtroAlertaFlujo = '__ALL__';
     state.filtroSemanaEntregas = '__ALL__';
     state.filtroEstadoCierreAprov = '__ALL__';
@@ -3143,6 +3347,7 @@ function initEvents() {
     state.calSeleccionSemanaIdx = null;
     state.calSeleccionDia = null;
     state.calFiltroPillEstatus = '__ALL__';
+    window.invFiltroPill = '__ALL__';
 
     state.selectedAnio = '2026';
     $('#sAnioGlobal').value = '2026';
@@ -3162,7 +3367,9 @@ function initEvents() {
 
     state.selectedEstatus.clear();
     $('#msEstatusDropdown').querySelectorAll('input').forEach(cb => cb.checked = false);
-    $('#msEstatusText').textContent = 'Todos los estatus';      $$('.slicers select').forEach(s => {
+    $('#msEstatusText').textContent = 'Todos los estatus';
+
+    $$('.slicers select').forEach(s => {
       if (s.id !== 'sAnioGlobal') s.value = '__ALL__';
     });
     renderApp();
@@ -3173,12 +3380,14 @@ function initEvents() {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(state.view.map(r => ({
       'Equipo': r.equipoSO,
+      'Priorizado Q': r.priorizadoQ,
       'Trimestre': r.qIbk, 'Mes': r.mes, 'Sigla': r.siglas, 'Aplicación': r.app, 'Servidor': r.servidor,
       '# Componentes': r.nComp, 'Ambiente': r.ambiente, 'Owner Kyndryl': r.ownerKyndryl,
       'Estado Entrega': r.esEntregado ? 'Entregado' : 'Pendiente',
       'Motivo No Entrega': r.motivoNoEntrega,
       'Ticket Aprovisionamiento': r.ticketAprov,
-      'OC Migración': r.oc, 'Estado OC': r.estadoOC, 
+      'OC Migración': r.oc, 'Estado OC': r.estadoOC, 'Fecha': r.fechaLbl,
+      'Horario': r.rangoHorario,
       'S.O Origen': r.soOrigen, 'Subsistema Origen': r.subOrigen,
       'S.O Destino': r.soDestino, 'Subsistema Destino': r.subDestino,
       'Estatus': r.estatus, 'Comentarios': r.comentarios
