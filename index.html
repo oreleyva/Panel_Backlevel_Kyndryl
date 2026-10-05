@@ -171,6 +171,11 @@ table.dt td { padding: 8px 12px; border-bottom: 1px solid var(--k-border-subtle)
 table.dt td.l { text-align: left; font-weight: 500; }
 table.dt tbody tr:hover { background: #F8FAFC; cursor: pointer; }
 
+/* ESTILOS NUEVOS PARA ORDENAMIENTO (SORTING) */
+table.dt th.sortable { cursor: pointer; transition: all 0.2s ease; user-select: none; }
+table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
+.sort-icon { display: inline-block; width: 12px; margin-left: 4px; color: var(--k-red); font-size: 10.5px; }
+
 .prog-bar-container { background: #E2E8F0; border-radius: 6px; overflow: hidden; height: 14px; width: 110px; display: inline-block; vertical-align: middle; margin-right: 6px; }
 .prog-bar-fill { height: 100%; background: var(--k-green); border-radius: 6px; transition: width 0.3s ease; }
 .prog-bar-fill.partial { background: var(--k-amber); }
@@ -394,32 +399,6 @@ const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Se
 const MESES_CORTO_LOWER = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
 const ESTATUS_MIGRACION_LIST = ['Migrado', 'Planificado', 'Por Definir', 'Reprogramado', 'Rollback', 'Desestimado'];
 
-// Plugin para dibujar números sobre las barras
-const drawLabelsPlugin = {
-  id: 'drawLabels',
-  afterDatasetsDraw(chart) {
-    const { ctx } = chart;
-    chart.data.datasets.forEach((dataset, i) => {
-      if (dataset.type === 'line') return;
-      const meta = chart.getDatasetMeta(i);
-      if (!meta.hidden) {
-        meta.data.forEach((element, index) => {
-          const dataString = dataset.data[index].toString();
-          if (dataString !== '0') {
-            ctx.fillStyle = '#1e293b';
-            ctx.font = '600 10.5px "Inter", sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'bottom';
-            const position = element.tooltipPosition();
-            ctx.fillText(dataString, position.x, position.y - 4);
-          }
-        });
-      }
-    });
-  }
-};
-Chart.register(drawLabelsPlugin);
-
 function getMetaMensual(anio, mesIdx0) {
   if (anio < 2026 || (anio === 2026 && mesIdx0 <= 6)) return 50;
   return 120;
@@ -474,7 +453,9 @@ const state = {
   calSeleccionSemanaIdx: null,
   calSeleccionDia: null,
   calFiltroPillEstatus: '__ALL__',
-  filters: { leader: '__ALL__', estadoOC: '__ALL__', amb: '__ALL__' }
+  filters: { leader: '__ALL__', estadoOC: '__ALL__', amb: '__ALL__' },
+  aprovSortCol: 'pctAvance',
+  aprovSortAsc: false
 };
 
 const $ = s => document.querySelector(s);
@@ -746,10 +727,12 @@ async function processWorkbook(file) {
 
     const etiquetaCategoria = String(getVal('etiquetacategoria', 'etiqueta') || '').trim();
     const estadoSubCat = String(getVal('estadosubcategoria', 'subcategoria', 'motivonoentrega') || '').trim();
+    const fechaEntregaIBK = parseFecha(getVal('fechaentregaibk', 'fechaentrega'));
     
     const esEntregado = etiquetaCategoria.toLowerCase().includes('entregad') || 
                         etiquetaCategoria.toLowerCase().includes('aceptad') || 
-                        etiquetaCategoria.toLowerCase().includes('conforme');
+                        etiquetaCategoria.toLowerCase().includes('conforme') || 
+                        fechaEntregaIBK !== null;
 
     const valForecastEC = String(getVal('forecastestado', 'forecast-estado') || '').trim().toLowerCase();
     let estatusFinal = 'Por Definir';
@@ -2069,14 +2052,12 @@ function renderCierreAprovPage() {
   const ticketsListos = allTickets.filter(t => t.listoParaCerrar);
   const ticketsPendientes = allTickets.filter(t => !t.listoParaCerrar);
   
-  // Agrupación para el gráfico de evolución con conteo dinámico de componentes reales
   const chartMap = new Map();
   ticketsListos.forEach(t => {
      if (t.semTime > 0) {
         if (!chartMap.has(t.semTime)) {
            chartMap.set(t.semTime, { label: t.semKey, time: t.semTime, count: 0, tkts: [], compTot: 0 });
         }
-        // Calculamos los componentes entregados reales equivalentes para este ticket
         const eqComp = t.rows.filter(r => r.estatus === 'Migrado').reduce((a, b) => a + b.nComp, 0);
         const node = chartMap.get(t.semTime);
         node.count++;
@@ -2097,7 +2078,7 @@ function renderCierreAprovPage() {
       <div class="tile kpi amber kpi-clickable" onclick="drillKpiTicketsPendientes()" title="Clic para ver tickets bloqueados o en proceso">
         <div class="lbl">Tickets con Cierre Pendiente</div>
         <div class="val" style="color:var(--k-amber);">${ticketsPendientes.length}</div>
-        <div class="sub">Tienen servidores bloqueantes · <b>Clic para ver</b></div>
+        <div class="sub">${allTickets.reduce((a, b) => a + b.totalSrv, 0) - allTickets.reduce((a, b) => a + b.aptosSrv, 0)} servidores pendientes · <b>Clic para ver</b></div>
       </div>
 
       <div class="tile kpi blue">
@@ -2130,7 +2111,7 @@ function renderCierreAprovPage() {
         <div class="sticky-oc-header">
           <div>
             <h3 style="font-size:16px;margin:0 0 2px 0;">Auditoría de Entregables por Ticket de Aprovisionamiento</h3>
-            <div class="sb" style="margin:0;">Los servidores Desestimados ya no bloquean el cierre. Haz clic en «Auditar Servidores» para ver los detalles.</div>
+            <div class="sb" style="margin:0;">Los servidores Desestimados ya no bloquean el cierre. Haz clic en las cabeceras para ordenar.</div>
           </div>
           <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
             <div class="sl">
@@ -2151,13 +2132,13 @@ function renderCierreAprovPage() {
           <table class="dt">
             <thead>
               <tr>
-                <th class="l">Ticket Aprovisionamiento</th>
-                <th class="l">Estado del Ticket</th>
-                <th class="l">Owner Kyndryl</th>
-                <th class="l">Aplicaciones</th>
-                <th>Servidores Totales</th>
-                <th>Servidores Aptos</th>
-                <th class="l">Progreso de Cierre</th>
+                <th class="l sortable" onclick="setAprovSort('ticket')" title="Clic para ordenar">Ticket Aprovisionamiento <span id="s_ticket" class="sort-icon"></span></th>
+                <th class="l sortable" onclick="setAprovSort('estadoTicket')" title="Clic para ordenar">Estado del Ticket <span id="s_estadoTicket" class="sort-icon"></span></th>
+                <th class="l sortable" onclick="setAprovSort('owner')" title="Clic para ordenar">Owner Kyndryl <span id="s_owner" class="sort-icon"></span></th>
+                <th class="l sortable" onclick="setAprovSort('appsStr')" title="Clic para ordenar">Aplicaciones <span id="s_appsStr" class="sort-icon"></span></th>
+                <th class="sortable" onclick="setAprovSort('totalSrv')" title="Clic para ordenar">Servidores Totales <span id="s_totalSrv" class="sort-icon"></span></th>
+                <th class="sortable" onclick="setAprovSort('aptosSrv')" title="Clic para ordenar">Servidores Aptos <span id="s_aptosSrv" class="sort-icon"></span></th>
+                <th class="l sortable" onclick="setAprovSort('pctAvance')" title="Clic para ordenar">Progreso de Cierre <span id="s_pctAvance" class="sort-icon"></span></th>
                 <th class="l">Dictamen de Cierre</th>
                 <th class="l">Acción</th>
               </tr>
@@ -2189,7 +2170,6 @@ function renderCierreAprovPage() {
         legend: { display: false },
         tooltip: { 
           callbacks: { 
-            // NUEVO: Agregado el desglose de componentes entregados en la segunda línea del globo de texto
             label: (c) => {
               const sObj = chartData[c.dataIndex];
               return [
@@ -2214,6 +2194,17 @@ function renderCierreAprovPage() {
     }
   });
 
+  // Funcionalidad de reordenamiento (Sorting)
+  window.setAprovSort = (col) => {
+    if (state.aprovSortCol === col) {
+      state.aprovSortAsc = !state.aprovSortAsc;
+    } else {
+      state.aprovSortCol = col;
+      state.aprovSortAsc = ['ticket', 'owner', 'appsStr', 'estadoTicket'].includes(col);
+    }
+    if (typeof window.refreshAprovTable === 'function') window.refreshAprovTable();
+  };
+
   const paintTableAprov = () => {
     const qText = norm(state.searchAprovQuery);
     const filtro = state.filtroEstadoCierreAprov;
@@ -2225,6 +2216,17 @@ function renderCierreAprovPage() {
     if (qText) {
       filtrados = filtrados.filter(t => norm(`${t.ticket} ${t.owner} ${t.appsStr} ${t.estadoTicket} ${Array.from(t.serverMap.keys()).join(' ')}`).includes(qText));
     }
+
+    // Proceso de ordenamiento de la tabla
+    filtrados.sort((a, b) => {
+      let valA = a[state.aprovSortCol];
+      let valB = b[state.aprovSortCol];
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+      if (valA < valB) return state.aprovSortAsc ? -1 : 1;
+      if (valA > valB) return state.aprovSortAsc ? 1 : -1;
+      return 0;
+    });
 
     $('#tbBodyCierreAprov').innerHTML = filtrados.map(t => {
       let fillClass = 'zero';
@@ -2256,8 +2258,14 @@ function renderCierreAprovPage() {
         </tr>
       `;
     }).join('') || `<tr><td colspan="9" class="l" style="text-align:center;padding:20px;color:#888;">No se encontraron tickets con el criterio indicado.</td></tr>`;
+
+    // Actualizar los iconos de ordenamiento en la cabecera
+    $$('.sort-icon').forEach(el => el.textContent = '');
+    const activeIcon = $(`#s_${state.aprovSortCol}`);
+    if (activeIcon) activeIcon.textContent = state.aprovSortAsc ? '▲' : '▼';
   };
 
+  window.refreshAprovTable = paintTableAprov;
   paintTableAprov();
 
   $('#tbSearchAprov').oninput = (e) => { state.searchAprovQuery = e.target.value; paintTableAprov(); };
@@ -2514,6 +2522,7 @@ function renderCalendarioPage() {
         owner: r.ownerKyndryl,
         appSet: new Set(),
         srvSet: new Set(),
+        fechasSet: new Set(), 
         totalComp: 0,
         rows: []
       });
@@ -2521,6 +2530,7 @@ function renderCalendarioPage() {
     const item = ocInferiorMap.get(ocKey);
     item.totalComp += r.nComp;
     item.srvSet.add(r.servidor);
+    if (r.fechaLbl && r.fechaLbl !== 'Sin fecha') item.fechasSet.add(r.fechaLbl);
     if (r.siglas && r.siglas !== 'S/S') item.appSet.add(r.siglas);
     item.rows.push(r);
   });
@@ -2612,6 +2622,7 @@ function renderCalendarioPage() {
               <th class="l">Owner Kyndryl</th>
               <th>Servidores</th>
               <th>Componentes</th>
+              <th class="l">Fecha Migración</th>
               <th class="l">Aplicaciones Involucradas</th>
               <th class="l">Acción</th>
             </tr>
@@ -2619,6 +2630,7 @@ function renderCalendarioPage() {
           <tbody>
             ${ocsInferiorList.map((item, idx) => {
               const apps = Array.from(item.appSet).join(', ') || 'S/S';
+              const fechas = Array.from(item.fechasSet).join('<br>') || 'Sin fecha';
               const tagClass = getEstadoOCClass(item.estadoOC);
               const estatusClass = item.estatus === 'Migrado' ? 'mig' : (item.estatus === 'Planificado' ? 'plan' : (item.estatus === 'Rollback' || item.estatus === 'Desestimado' ? 'rb' : 'pend'));
               return `
@@ -2629,6 +2641,7 @@ function renderCalendarioPage() {
                   <td class="l"><b>${esc(item.owner)}</b></td>
                   <td class="num"><span class="srv-badge">${item.srvSet.size} srv</span></td>
                   <td class="num" style="color:var(--k-red);font-weight:700;font-size:13.5px;">${fmt(item.totalComp)}</td>
+                  <td class="l mono" style="font-weight:700;color:var(--k-navy);line-height:1.2;">${fechas}</td>
                   <td class="l mono" style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(apps)}</td>
                   <td class="l">
                     <button class="btn sm ghost" onclick="drillOCInferiorPorIdx(${idx})">Ver servidores</button>
@@ -2734,7 +2747,8 @@ function drillGrupo(titulo, rows) {
   const getTagClass = (e) => {
     if (e === 'Migrado') return 'mig';
     if (e === 'Planificado') return 'plan';
-    if (e === 'Rollback' || e === 'Desestimado') return 'rb';
+    if (e === 'Rollback') return 'rb';
+    if (e === 'Desestimado') return 'des'; 
     return 'pend';
   };
 
@@ -2950,7 +2964,7 @@ function renderDetallePage() {
         <td class="l" style="font-size:12px;">${esc(r.subDestino)}</td>
         <td class="l"><span class="tag ${r.estatus === 'Migrado' ? 'mig' : (r.estatus === 'Planificado' ? 'plan' : (r.estatus === 'Desestimado' ? 'des' : (r.estatus === 'Rollback' ? 'rb' : 'pend')))}">${esc(r.estatus)}</span></td>
       </tr>
-    `).join('') + (data.length > 300 ? '<tr><td colspan="14" class="l" style="text-align:center;color:#888;">Mostrando los primeros 300 registros...</td></tr>' : '');
+    `).join('') + (data.length > 300 ? '<tr><td colspan="15" class="l" style="text-align:center;color:#888;">Mostrando los primeros 300 registros...</td></tr>' : '');
   };
 
   paint(rows);
