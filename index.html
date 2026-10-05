@@ -171,7 +171,7 @@ table.dt td { padding: 8px 12px; border-bottom: 1px solid var(--k-border-subtle)
 table.dt td.l { text-align: left; font-weight: 500; }
 table.dt tbody tr:hover { background: #F8FAFC; cursor: pointer; }
 
-/* ESTILOS NUEVOS PARA ORDENAMIENTO (SORTING) */
+/* ESTILOS PARA ORDENAMIENTO DE TABLAS */
 table.dt th.sortable { cursor: pointer; transition: all 0.2s ease; user-select: none; }
 table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
 .sort-icon { display: inline-block; width: 12px; margin-left: 4px; color: var(--k-red); font-size: 10.5px; }
@@ -398,6 +398,31 @@ const MESES_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio'
 const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
 const MESES_CORTO_LOWER = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
 const ESTATUS_MIGRACION_LIST = ['Migrado', 'Planificado', 'Por Definir', 'Reprogramado', 'Rollback', 'Desestimado'];
+
+const drawLabelsPlugin = {
+  id: 'drawLabels',
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+    chart.data.datasets.forEach((dataset, i) => {
+      if (dataset.type === 'line') return;
+      const meta = chart.getDatasetMeta(i);
+      if (!meta.hidden) {
+        meta.data.forEach((element, index) => {
+          const dataString = dataset.data[index].toString();
+          if (dataString !== '0') {
+            ctx.fillStyle = '#1e293b';
+            ctx.font = '600 10.5px "Inter", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            const position = element.tooltipPosition();
+            ctx.fillText(dataString, position.x, position.y - 4);
+          }
+        });
+      }
+    });
+  }
+};
+Chart.register(drawLabelsPlugin);
 
 function getMetaMensual(anio, mesIdx0) {
   if (anio < 2026 || (anio === 2026 && mesIdx0 <= 6)) return 50;
@@ -791,6 +816,12 @@ async function processWorkbook(file) {
       esEntregado: esEntregado,
       srvCumpleCierreAprov: srvCumpleCierreAprov,
       semanaDate: semanaDate,
+      fechaDate: fechaExacta,
+      fechaRef: fechaRef,
+      semanaCompletaLbl: semanaDate ? formatSemanaCompleta(semanaDate) : 'Sin fecha',
+      semanaRangoLbl: semanaDate ? formatSemanaRango(semanaDate) : (fechaExacta ? formatSemanaRango(fechaExacta) : 'Semana por Definir'),
+      fechaLbl: fechaExacta ? formatFechaVisual(fechaExacta) : (semanaDate ? formatFechaVisual(semanaDate) : 'Sin fecha'),
+      dia: diaNom,
       comentarios: String(getVal('comentariosmigracion', 'comentarios') || '').trim()
     });
   }
@@ -1066,6 +1097,50 @@ function destroyCharts() {
   }
   state.charts = {};
 }
+
+/* -------------------------------------------------------------
+   MODAL DE ORDENAMIENTO (SORT) GLOBAL
+------------------------------------------------------------- */
+window.modalSortCol = null;
+window.modalSortAsc = true;
+
+window.sortModal = function(col) {
+  if (window.modalSortCol === col) {
+    window.modalSortAsc = !window.modalSortAsc;
+  } else {
+    window.modalSortCol = col;
+    window.modalSortAsc = true; // Por defecto cuando tocas una columna nueva, que sea ascendente
+  }
+  
+  const sortFn = (a, b) => {
+    let valA = a[col];
+    let valB = b[col];
+    
+    // Convertir a minúsculas si es texto
+    if (typeof valA === 'string') valA = valA.toLowerCase();
+    if (typeof valB === 'string') valB = valB.toLowerCase();
+    
+    // Tratamiento especial: si un valor es null/undefined, empujarlo al fondo
+    if (valA == null) valA = '';
+    if (valB == null) valB = '';
+
+    if (valA < valB) return window.modalSortAsc ? -1 : 1;
+    if (valA > valB) return window.modalSortAsc ? 1 : -1;
+    return 0;
+  };
+  
+  // Ordenamos ambos arreglos en memoria para que no se pierda al cambiar de filtro
+  window.modalCurrentRows.sort(sortFn);
+  window.modalFilteredRows.sort(sortFn);
+  
+  const tbody = document.getElementById('modalTableBody');
+  if (tbody) tbody.innerHTML = renderModalRows(window.modalFilteredRows);
+  
+  // Limpiar todas las flechas y poner la actual
+  document.querySelectorAll('.modal-sort-icon').forEach(el => el.textContent = '');
+  const activeIcon = document.getElementById('ms_' + col);
+  if (activeIcon) activeIcon.textContent = window.modalSortAsc ? '▲' : '▼';
+};
 
 /* -------------------------------------------------------------
    VISTA 1: NIVEL DE CUMPLIMIENTO
@@ -1924,7 +1999,8 @@ function renderEntregasPage() {
         } else if (dsIdx === 0) {
           tipo = 'Migrados de la Semana';
         }
-        drillGrupo(`Avance: ${semItem.fullLabel} (${tipo})`, targetRows);
+        // Corrección del bug "Avance: undefined" garantizando que fullLabel exista
+        drillGrupo(`Avance: ${semItem.fullLabel || 'Semana Operativa'} (${tipo})`, targetRows);
       }
     }
   });
@@ -2194,7 +2270,6 @@ function renderCierreAprovPage() {
     }
   });
 
-  // Funcionalidad de reordenamiento (Sorting)
   window.setAprovSort = (col) => {
     if (state.aprovSortCol === col) {
       state.aprovSortAsc = !state.aprovSortAsc;
@@ -2217,7 +2292,6 @@ function renderCierreAprovPage() {
       filtrados = filtrados.filter(t => norm(`${t.ticket} ${t.owner} ${t.appsStr} ${t.estadoTicket} ${Array.from(t.serverMap.keys()).join(' ')}`).includes(qText));
     }
 
-    // Proceso de ordenamiento de la tabla
     filtrados.sort((a, b) => {
       let valA = a[state.aprovSortCol];
       let valB = b[state.aprovSortCol];
@@ -2259,7 +2333,6 @@ function renderCierreAprovPage() {
       `;
     }).join('') || `<tr><td colspan="9" class="l" style="text-align:center;padding:20px;color:#888;">No se encontraron tickets con el criterio indicado.</td></tr>`;
 
-    // Actualizar los iconos de ordenamiento en la cabecera
     $$('.sort-icon').forEach(el => el.textContent = '');
     const activeIcon = $(`#s_${state.aprovSortCol}`);
     if (activeIcon) activeIcon.textContent = state.aprovSortAsc ? '▲' : '▼';
@@ -2730,6 +2803,46 @@ function seleccionarPillCalInferior(estatusTarget) {
 }
 
 /* -------------------------------------------------------------
+   MODAL DE ORDENAMIENTO (SORT) GLOBAL
+------------------------------------------------------------- */
+window.modalSortCol = null;
+window.modalSortAsc = true;
+
+window.sortModal = function(col) {
+  if (window.modalSortCol === col) {
+    window.modalSortAsc = !window.modalSortAsc;
+  } else {
+    window.modalSortCol = col;
+    window.modalSortAsc = true;
+  }
+  
+  const sortFn = (a, b) => {
+    let valA = a[col];
+    let valB = b[col];
+    
+    if (typeof valA === 'string') valA = valA.toLowerCase();
+    if (typeof valB === 'string') valB = valB.toLowerCase();
+    
+    if (valA == null) valA = '';
+    if (valB == null) valB = '';
+
+    if (valA < valB) return window.modalSortAsc ? -1 : 1;
+    if (valA > valB) return window.modalSortAsc ? 1 : -1;
+    return 0;
+  };
+  
+  window.modalCurrentRows.sort(sortFn);
+  window.modalFilteredRows.sort(sortFn);
+  
+  const tbody = document.getElementById('modalTableBody');
+  if (tbody) tbody.innerHTML = renderModalRows(window.modalFilteredRows);
+  
+  document.querySelectorAll('.modal-sort-icon').forEach(el => el.textContent = '');
+  const activeIcon = document.getElementById('ms_' + col);
+  if (activeIcon) activeIcon.textContent = window.modalSortAsc ? '▲' : '▼';
+};
+
+/* -------------------------------------------------------------
    DRILL-DOWN MODAL CON FILTRADO INTERACTIVO Y EQUIPOS
 ------------------------------------------------------------- */
 function drillGrupo(titulo, rows) {
@@ -2739,6 +2852,10 @@ function drillGrupo(titulo, rows) {
   window.modalFilteredRows = rows;
   window.modalActiveEstatus = null;
   window.modalBaseTitle = titulo;
+  
+  // Reiniciamos el sort al abrir un modal nuevo
+  window.modalSortCol = null;
+  window.modalSortAsc = true;
 
   const totComp = rows.reduce((a, b) => a + b.nComp, 0);
   const servidoresUnicos = Array.from(new Set(rows.map(r => r.servidor))).length;
@@ -2777,22 +2894,22 @@ function drillGrupo(titulo, rows) {
       <table class="dt">
         <thead>
           <tr>
-            <th class="l">Equipo</th>
-            <th class="l">Sigla</th>
-            <th class="l">Aplicación</th>
-            <th class="l">Servidor</th>
-            <th>Comp.</th>
-            <th class="l">Ambiente</th>
-            <th class="l">Owner Kyndryl</th>
-            <th class="l">Estado Entrega</th>
-            <th class="l">Motivo No Entrega</th>
-            <th class="l">OC Migración</th>
-            <th class="l">Estado OC</th>
+            <th class="l sortable" onclick="sortModal('equipoSO')" title="Clic para ordenar">Equipo <span id="ms_equipoSO" class="sort-icon modal-sort-icon"></span></th>
+            <th class="l sortable" onclick="sortModal('siglas')" title="Clic para ordenar">Sigla <span id="ms_siglas" class="sort-icon modal-sort-icon"></span></th>
+            <th class="l sortable" onclick="sortModal('app')" title="Clic para ordenar">Aplicación <span id="ms_app" class="sort-icon modal-sort-icon"></span></th>
+            <th class="l sortable" onclick="sortModal('servidor')" title="Clic para ordenar">Servidor <span id="ms_servidor" class="sort-icon modal-sort-icon"></span></th>
+            <th class="sortable" onclick="sortModal('nComp')" title="Clic para ordenar">Comp. <span id="ms_nComp" class="sort-icon modal-sort-icon"></span></th>
+            <th class="l sortable" onclick="sortModal('ambiente')" title="Clic para ordenar">Ambiente <span id="ms_ambiente" class="sort-icon modal-sort-icon"></span></th>
+            <th class="l sortable" onclick="sortModal('ownerKyndryl')" title="Clic para ordenar">Owner Kyndryl <span id="ms_ownerKyndryl" class="sort-icon modal-sort-icon"></span></th>
+            <th class="l sortable" onclick="sortModal('esEntregado')" title="Clic para ordenar">Estado Entrega <span id="ms_esEntregado" class="sort-icon modal-sort-icon"></span></th>
+            <th class="l sortable" onclick="sortModal('motivoNoEntrega')" title="Clic para ordenar">Motivo No Entrega <span id="ms_motivoNoEntrega" class="sort-icon modal-sort-icon"></span></th>
+            <th class="l sortable" onclick="sortModal('oc')" title="Clic para ordenar">OC Migración <span id="ms_oc" class="sort-icon modal-sort-icon"></span></th>
+            <th class="l sortable" onclick="sortModal('estadoOC')" title="Clic para ordenar">Estado OC <span id="ms_estadoOC" class="sort-icon modal-sort-icon"></span></th>
             <th class="l" style="background:#0F3A70;">S.O Origen</th>
             <th class="l" style="background:#0F3A70;">Subsistema Origen</th>
             <th class="l" style="background:#047857;">S.O Destino</th>
             <th class="l" style="background:#047857;">Subsistema Destino</th>
-            <th class="l">Estatus</th>
+            <th class="l sortable" onclick="sortModal('estatus')" title="Clic para ordenar">Estatus <span id="ms_estatus" class="sort-icon modal-sort-icon"></span></th>
           </tr>
         </thead>
         <tbody id="modalTableBody">
@@ -2894,7 +3011,7 @@ function openModal(title, sub, bodyHtml, exportData) {
       'Estado Entrega': r.esEntregado ? 'Entregado' : 'Pendiente',
       'Motivo No Entrega': r.motivoNoEntrega,
       'Ticket Aprovisionamiento': r.ticketAprov,
-      'OC Migración': r.oc, 'Estado OC': r.estadoOC, 
+      'OC Migración': r.oc, 'Estado OC': r.estadoOC, 'Fecha': r.fechaLbl,
       'S.O Origen': r.soOrigen, 'Subsistema Origen': r.subOrigen,
       'S.O Destino': r.soDestino, 'Subsistema Destino': r.subDestino,
       'Estatus': r.estatus, 'Comentarios': r.comentarios
@@ -2964,7 +3081,7 @@ function renderDetallePage() {
         <td class="l" style="font-size:12px;">${esc(r.subDestino)}</td>
         <td class="l"><span class="tag ${r.estatus === 'Migrado' ? 'mig' : (r.estatus === 'Planificado' ? 'plan' : (r.estatus === 'Desestimado' ? 'des' : (r.estatus === 'Rollback' ? 'rb' : 'pend')))}">${esc(r.estatus)}</span></td>
       </tr>
-    `).join('') + (data.length > 300 ? '<tr><td colspan="15" class="l" style="text-align:center;color:#888;">Mostrando los primeros 300 registros...</td></tr>' : '');
+    `).join('') + (data.length > 300 ? '<tr><td colspan="14" class="l" style="text-align:center;color:#888;">Mostrando los primeros 300 registros...</td></tr>' : '');
   };
 
   paint(rows);
