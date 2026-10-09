@@ -187,6 +187,7 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
 .tag.pend { border-color: var(--k-amber); background: rgba(217,119,6,0.1); color: var(--k-amber); }
 .tag.rb { border-color: var(--k-alert); background: rgba(225,29,72,0.1); color: var(--k-alert); }
 .tag.des { border-color: #94A3B8; background: #F1F5F9; color: #475569; }
+.tag.prop { border-color: #8B5CF6; background: rgba(139,92,246,0.12); color: #7C3AED; }
 .tag.listo-cierre { border-color: var(--k-green); background: #DCFCE7; color: #15803D; font-weight: 800; }
 .tag.incompleto { border-color: var(--k-amber); background: #FEF3C7; color: #B45309; }
 
@@ -199,6 +200,7 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
 .modal-chip.active.pend { background: var(--k-amber) !important; color: #FFFFFF !important; }
 .modal-chip.active.rb { background: var(--k-alert) !important; color: #FFFFFF !important; }
 .modal-chip.active.des { background: #475569 !important; color: #FFFFFF !important; }
+.modal-chip.active.prop { background: #7C3AED !important; color: #FFFFFF !important; }
 
 .stat-pill { 
   display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700; border: 1px solid transparent; cursor: pointer; user-select: none; transition: all 0.16s ease;
@@ -210,6 +212,7 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
 .stat-pill.rb { background: rgba(225,29,72,0.12); color: var(--k-alert); border-color: rgba(225,29,72,0.35); }
 .stat-pill.reprog { background: rgba(202,138,4,0.12); color: #A16207; border-color: rgba(202,138,4,0.35); }
 .stat-pill.des { background: rgba(100,116,139,0.12); color: #475569; border-color: rgba(100,116,139,0.35); }
+.stat-pill.prop { background: rgba(139,92,246,0.12); color: #7C3AED; border-color: rgba(139,92,246,0.35); }
 .stat-pill.all { background: #FFFFFF; color: var(--k-charcoal); border-color: var(--k-border); font-weight: 800; }
 
 .stat-pill.active { box-shadow: 0 0 0 2px var(--k-charcoal) !important; font-weight: 800; transform: scale(1.03); }
@@ -219,6 +222,7 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
 .stat-pill.active.rb { background: var(--k-alert) !important; color: #fff !important; }
 .stat-pill.active.reprog { background: #A16207 !important; color: #fff !important; }
 .stat-pill.active.des { background: #475569 !important; color: #fff !important; }
+.stat-pill.active.prop { background: #7C3AED !important; color: #fff !important; }
 .stat-pill.active.all { background: var(--k-charcoal) !important; color: #fff !important; }
 
 .alerta-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 5px; font-size: 11px; font-weight: 800; border: 1px solid; white-space: nowrap; }
@@ -413,7 +417,19 @@ const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', '
 const MESES_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
 const MESES_CORTO_LOWER = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
-const ESTATUS_MIGRACION_LIST = ['Migrado', 'Planificado', 'Por Definir', 'Reprogramado', 'Rollback', 'Desestimado'];
+const ESTATUS_MIGRACION_LIST = ['Migrado', 'Planificado', 'Propuesto', 'Por Definir', 'Reprogramado', 'Rollback', 'Desestimado'];
+
+function getEstatusTagClass(est) {
+  if (!est) return 'pend';
+  const e = est.toLowerCase();
+  if (e.includes('migrad')) return 'mig';
+  if (e.includes('planific')) return 'plan';
+  if (e.includes('propuest')) return 'prop';
+  if (e.includes('desestimad')) return 'des';
+  if (e.includes('rollback')) return 'rb';
+  if (e.includes('reprogram')) return 'reprog';
+  return 'pend'; 
+}
 
 const drawLabelsPlugin = {
   id: 'drawLabels',
@@ -823,13 +839,23 @@ async function processWorkbook(file) {
                         etiquetaCategoria.toLowerCase().includes('conforme') || 
                         fechaEntregaIBK !== null;
 
-    const valForecastEC = String(getVal('forecastestado', 'forecast-estado') || '').trim().toLowerCase();
+    const valForecastEC = String(getVal('forecastestado', 'forecast-estado') || '').trim();
+    const valForecastLower = valForecastEC.toLowerCase();
     let estatusFinal = 'Por Definir';
-    if (valForecastEC.includes('migrad')) estatusFinal = 'Migrado';
-    else if (valForecastEC.includes('planific') || valForecastEC.includes('aprobado')) estatusFinal = 'Planificado';
-    else if (valForecastEC.includes('desestimad')) estatusFinal = 'Desestimado';
-    else if (valForecastEC.includes('rollback')) estatusFinal = 'Rollback';
-    else if (valForecastEC.includes('reprogram')) estatusFinal = 'Reprogramado';
+    
+    if (valForecastLower.includes('migrad')) estatusFinal = 'Migrado';
+    else if (valForecastLower.includes('planific') || valForecastLower.includes('aprobado')) estatusFinal = 'Planificado';
+    else if (valForecastLower.includes('propuest')) estatusFinal = 'Propuesto';
+    else if (valForecastLower.includes('desestimad')) estatusFinal = 'Desestimado';
+    else if (valForecastLower.includes('rollback')) estatusFinal = 'Rollback';
+    else if (valForecastLower.includes('reprogram')) estatusFinal = 'Reprogramado';
+    else if (valForecastEC !== '' && valForecastEC !== '-' && valForecastEC !== '—') {
+      estatusFinal = valForecastEC.charAt(0).toUpperCase() + valForecastEC.slice(1);
+    }
+    
+    if (!ESTATUS_MIGRACION_LIST.includes(estatusFinal)) {
+      ESTATUS_MIGRACION_LIST.push(estatusFinal); 
+    }
 
     const srvCumpleCierreAprov = (estatusFinal === 'Migrado') && esEntregado;
 
@@ -2555,7 +2581,7 @@ function drillTicketAprovDetalle(ticketNum) {
                 <td class="l mono">${esc(s.sigla)}</td>
                 <td class="l">${esc(s.app)}</td>
                 <td class="l">${esc(s.ambiente)}</td>
-                <td class="l"><span class="tag ${s.esMigrado ? 'mig' : (s.esDesestimado ? 'des' : 'plan')}">${s.esMigrado ? 'Migrado' : (s.esDesestimado ? 'Desestimado' : 'No Migrado')}</span></td>
+                <td class="l"><span class="tag ${getEstatusTagClass(s.esMigrado ? 'Migrado' : (s.esDesestimado ? 'Desestimado' : 'Planificado'))}">${s.esMigrado ? 'Migrado' : (s.esDesestimado ? 'Desestimado' : 'No Migrado')}</span></td>
                 <td class="l"><span class="tag ${s.esEntregado ? 'mig' : 'pend'}">${s.esEntregado ? 'Entregado' : 'Pendiente'}</span></td>
                 <td class="l" style="font-size:12px;font-weight:600;color:${s.cumple ? 'var(--k-green)' : 'var(--k-alert)'};">${esc(diagTexto)}</td>
               </tr>
@@ -2716,12 +2742,18 @@ function renderCalendarioPage() {
   }
 
   const totInferiorComp = rowsOCInferior.reduce((a, b) => a + b.nComp, 0);
-  const planComp = rowsOCInferior.filter(r => r.estatus === 'Planificado').reduce((a, b) => a + b.nComp, 0);
-  const migComp = rowsOCInferior.filter(r => r.estatus === 'Migrado').reduce((a, b) => a + b.nComp, 0);
-  const pendComp = rowsOCInferior.filter(r => r.estatus === 'Por Definir').reduce((a, b) => a + b.nComp, 0);
-  const rbComp = rowsOCInferior.filter(r => r.estatus === 'Rollback').reduce((a, b) => a + b.nComp, 0);
-  const reprogComp = rowsOCInferior.filter(r => r.estatus === 'Reprogramado').reduce((a, b) => a + b.nComp, 0);
-  const desComp = rowsOCInferior.filter(r => r.estatus === 'Desestimado').reduce((a, b) => a + b.nComp, 0);
+  let pillsInferiorHtml = `<span class="stat-pill all ${state.calFiltroPillEstatus === '__ALL__' ? 'active' : ''}" onclick="seleccionarPillCalInferior('__ALL__')">Todos: ${totInferiorComp}</span>`;
+
+  const estMapCal = new Map();
+  rowsOCInferior.forEach(r => estMapCal.set(r.estatus, (estMapCal.get(r.estatus) || 0) + r.nComp));
+
+  ESTATUS_MIGRACION_LIST.forEach(est => {
+    const comp = estMapCal.get(est);
+    if (comp > 0) {
+      const cl = getEstatusTagClass(est);
+      pillsInferiorHtml += `<span class="stat-pill ${cl} ${state.calFiltroPillEstatus === est ? 'active' : ''}" onclick="seleccionarPillCalInferior('${est}')">${est}: ${comp}</span>`;
+    }
+  });
 
   let rowsParaTablaInferior = rowsOCInferior;
   if (state.calFiltroPillEstatus !== '__ALL__') {
@@ -2770,18 +2802,6 @@ function renderCalendarioPage() {
   const compMostradosInferior = ocsInferiorList.reduce((a, b) => a + b.totalComp, 0);
 
   window.curOcsInferiorList = ocsInferiorList;
-
-  let pillsInferiorHtml = `
-    <span class="stat-pill all ${state.calFiltroPillEstatus === '__ALL__' ? 'active' : ''}" onclick="seleccionarPillCalInferior('__ALL__')">
-      Todos: ${totInferiorComp}
-    </span>
-  `;
-  if (planComp > 0) pillsInferiorHtml += `<span class="stat-pill plan ${state.calFiltroPillEstatus === 'Planificado' ? 'active' : ''}" onclick="seleccionarPillCalInferior('Planificado')">Planificados: ${planComp}</span>`;
-  if (migComp > 0) pillsInferiorHtml += `<span class="stat-pill mig ${state.calFiltroPillEstatus === 'Migrado' ? 'active' : ''}" onclick="seleccionarPillCalInferior('Migrado')">Migrados: ${migComp}</span>`;
-  if (pendComp > 0) pillsInferiorHtml += `<span class="stat-pill pend ${state.calFiltroPillEstatus === 'Por Definir' ? 'active' : ''}" onclick="seleccionarPillCalInferior('Por Definir')">Por Definir: ${pendComp}</span>`;
-  if (rbComp > 0) pillsInferiorHtml += `<span class="stat-pill rb ${state.calFiltroPillEstatus === 'Rollback' ? 'active' : ''}" onclick="seleccionarPillCalInferior('Rollback')">Rollback: ${rbComp}</span>`;
-  if (reprogComp > 0) pillsInferiorHtml += `<span class="stat-pill reprog ${state.calFiltroPillEstatus === 'Reprogramado' ? 'active' : ''}" onclick="seleccionarPillCalInferior('Reprogramado')">Reprogramados: ${reprogComp}</span>`;
-  if (desComp > 0) pillsInferiorHtml += `<span class="stat-pill des ${state.calFiltroPillEstatus === 'Desestimado' ? 'active' : ''}" onclick="seleccionarPillCalInferior('Desestimado')">Desestimados: ${desComp}</span>`;
 
   $('#page').innerHTML = `
     <div class="tile" style="overflow: visible; margin-bottom: 20px;">
@@ -2902,7 +2922,7 @@ function renderCalendarioPage() {
 
      $('#tbBodyCalInferior').innerHTML = filtrados.map((item, idx) => {
         const tagClass = getEstadoOCClass(item.estadoOC);
-        const estatusClass = item.estatus === 'Migrado' ? 'mig' : (item.estatus === 'Planificado' ? 'plan' : (item.estatus === 'Desestimado' ? 'des' : (item.estatus === 'Rollback' ? 'rb' : 'pend')));
+        const estatusClass = getEstatusTagClass(item.estatus);
         
         return `
           <tr>
@@ -3062,29 +3082,18 @@ function drillGrupo(titulo, rows) {
   const servidoresUnicos = Array.from(new Set(rows.map(r => r.servidor))).length;
   const appsUnicas = Array.from(new Set(rows.map(r => r.siglas))).length;
 
-  const getTagClass = (e) => {
-    if (e === 'Migrado') return 'mig';
-    if (e === 'Planificado') return 'plan';
-    if (e === 'Rollback') return 'rb';
-    if (e === 'Desestimado') return 'des'; 
-    return 'pend';
-  };
+  let chipsHtml = `<span class="tag modal-chip active all" id="chipModal_ALL" onclick="filterModalByEstatus('__ALL__')" title="Ver todos los componentes">Todos: ${totComp}</span>`;
 
-  const estatusPosibles = ['Planificado', 'Por Definir', 'Rollback', 'Migrado', 'Reprogramado', 'Desestimado'];
+  const estMapMod = new Map();
+  rows.forEach(r => estMapMod.set(r.estatus, (estMapMod.get(r.estatus) || 0) + r.nComp));
 
-  const chipsHtml = `
-    <span class="tag modal-chip active all" id="chipModal_ALL" onclick="filterModalByEstatus('__ALL__')" title="Ver todos los componentes">
-      Todos: ${totComp}
-    </span>
-    ${estatusPosibles.map(e => {
-      const n = rows.filter(r => r.estatus === e).reduce((a, b) => a + b.nComp, 0);
-      if (n === 0) return '';
-      const c = getTagClass(e);
-      return `<span class="tag ${c} modal-chip" id="chipModal_${cleanKey(e)}" onclick="filterModalByEstatus('${e}')" title="Filtrar por ${e}">
-        ${e}: ${n}
-      </span>`;
-    }).join(' ')}
-  `;
+  ESTATUS_MIGRACION_LIST.forEach(est => {
+    const comp = estMapMod.get(est);
+    if (comp > 0) {
+      const c = getEstatusTagClass(est);
+      chipsHtml += `<span class="tag ${c} modal-chip" id="chipModal_${cleanKey(est)}" onclick="filterModalByEstatus('${est}')" title="Filtrar por ${est}">${est}: ${comp}</span>`;
+    }
+  });
 
   const modalHtml = `
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
@@ -3144,7 +3153,7 @@ function renderModalRows(rows) {
       <td class="l" style="font-size:12px;">${esc(r.subOrigen)}</td>
       <td class="l" style="font-size:12px;">${esc(r.soDestino)}</td>
       <td class="l" style="font-size:12px;">${esc(r.subDestino)}</td>
-      <td class="l"><span class="tag ${r.estatus === 'Migrado' ? 'mig' : (r.estatus === 'Planificado' ? 'plan' : (r.estatus === 'Desestimado' ? 'des' : (r.estatus === 'Rollback' ? 'rb' : 'pend')))}">${esc(r.estatus)}</span></td>
+      <td class="l"><span class="tag ${getEstatusTagClass(r.estatus)}">${esc(r.estatus)}</span></td>
     </tr>
   `).join('');
 }
@@ -3239,20 +3248,20 @@ function renderDetallePage() {
   window.invFiltroPill = window.invFiltroPill || '__ALL__';
 
   const totComp = rows.reduce((a, b) => a + b.nComp, 0);
-  const planComp = rows.filter(r => r.estatus === 'Planificado').reduce((a, b) => a + b.nComp, 0);
-  const migComp = rows.filter(r => r.estatus === 'Migrado').reduce((a, b) => a + b.nComp, 0);
-  const pendComp = rows.filter(r => r.estatus === 'Por Definir').reduce((a, b) => a + b.nComp, 0);
-  const rbComp = rows.filter(r => r.estatus === 'Rollback').reduce((a, b) => a + b.nComp, 0);
-  const reprogComp = rows.filter(r => r.estatus === 'Reprogramado').reduce((a, b) => a + b.nComp, 0);
-  const desComp = rows.filter(r => r.estatus === 'Desestimado').reduce((a, b) => a + b.nComp, 0);
 
   let pillsInvHtml = `<span class="stat-pill all ${window.invFiltroPill === '__ALL__' ? 'active' : ''}" onclick="setInvPill('__ALL__')">Todos: ${totComp}</span>`;
-  if (planComp > 0) pillsInvHtml += `<span class="stat-pill plan ${window.invFiltroPill === 'Planificado' ? 'active' : ''}" onclick="setInvPill('Planificado')">Planificados: ${planComp}</span>`;
-  if (migComp > 0) pillsInvHtml += `<span class="stat-pill mig ${window.invFiltroPill === 'Migrado' ? 'active' : ''}" onclick="setInvPill('Migrado')">Migrados: ${migComp}</span>`;
-  if (pendComp > 0) pillsInvHtml += `<span class="stat-pill pend ${window.invFiltroPill === 'Por Definir' ? 'active' : ''}" onclick="setInvPill('Por Definir')">Por Definir: ${pendComp}</span>`;
-  if (rbComp > 0) pillsInvHtml += `<span class="stat-pill rb ${window.invFiltroPill === 'Rollback' ? 'active' : ''}" onclick="setInvPill('Rollback')">Rollback: ${rbComp}</span>`;
-  if (reprogComp > 0) pillsInvHtml += `<span class="stat-pill reprog ${window.invFiltroPill === 'Reprogramado' ? 'active' : ''}" onclick="setInvPill('Reprogramado')">Reprogramados: ${reprogComp}</span>`;
-  if (desComp > 0) pillsInvHtml += `<span class="stat-pill des ${window.invFiltroPill === 'Desestimado' ? 'active' : ''}" onclick="setInvPill('Desestimado')">Desestimados: ${desComp}</span>`;
+
+  const estMapInv = new Map();
+  rows.forEach(r => estMapInv.set(r.estatus, (estMapInv.get(r.estatus) || 0) + r.nComp));
+
+  ESTATUS_MIGRACION_LIST.forEach(est => {
+    const comp = estMapInv.get(est);
+    if (comp > 0) {
+      const cl = getEstatusTagClass(est);
+      pillsInvHtml += `<span class="stat-pill ${cl} ${window.invFiltroPill === est ? 'active' : ''}" onclick="setInvPill('${est}')">${est}: ${comp}</span>`;
+    }
+  });
+
 
   $('#page').innerHTML = `
     <div class="tile" style="overflow: visible;">
@@ -3355,7 +3364,7 @@ function renderDetallePage() {
         <td class="l" style="font-size:12px;">${esc(r.subOrigen)}</td>
         <td class="l" style="font-size:12px;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(r.soDestino)}">${esc(r.soDestino)}</td>
         <td class="l" style="font-size:12px;">${esc(r.subDestino)}</td>
-        <td class="l"><span class="tag ${r.estatus === 'Migrado' ? 'mig' : (r.estatus === 'Planificado' ? 'plan' : (r.estatus === 'Desestimado' ? 'des' : (r.estatus === 'Rollback' ? 'rb' : 'pend')))}">${esc(r.estatus)}</span></td>
+        <td class="l"><span class="tag ${getEstatusTagClass(r.estatus)}">${esc(r.estatus)}</span></td>
       </tr>
     `).join('') + (filtrados.length > 300 ? '<tr><td colspan="16" class="l" style="text-align:center;color:#888;">Mostrando los primeros 300 registros... Exportar para ver completo.</td></tr>' : '');
 
