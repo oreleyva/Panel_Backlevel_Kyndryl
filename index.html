@@ -366,6 +366,15 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
             <option value="__ALL__">Todos</option>
           </select>
         </div>
+        
+        <div class="sl">
+          <label>Sist. Operativo</label>
+          <select id="sEquipoSO">
+            <option value="__ALL__">Todos</option>
+            <option value="Windows">Windows</option>
+            <option value="Linux">Linux (Unix/AIX)</option>
+          </select>
+        </div>
 
         <div class="sl"><label>Owner Kyndryl</label><select id="sLeader"><option value="__ALL__">Todos</option></select></div>
         <div class="sl"><label>Estado de OC</label><select id="sEstadoOC"><option value="__ALL__">Todos</option></select></div>
@@ -406,9 +415,72 @@ const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Se
 const MESES_CORTO_LOWER = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
 const ESTATUS_MIGRACION_LIST = ['Migrado', 'Planificado', 'Por Definir', 'Reprogramado', 'Rollback', 'Desestimado'];
 
+const drawLabelsPlugin = {
+  id: 'drawLabels',
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+    chart.data.datasets.forEach((dataset, i) => {
+      if (dataset.type === 'line') return;
+      const meta = chart.getDatasetMeta(i);
+      if (!meta.hidden) {
+        meta.data.forEach((element, index) => {
+          const dataString = dataset.data[index].toString();
+          if (dataString !== '0') {
+            ctx.fillStyle = '#1e293b';
+            ctx.font = '600 10.5px "Inter", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            const position = element.tooltipPosition();
+            ctx.fillText(dataString, position.x, position.y - 4);
+          }
+        });
+      }
+    });
+  }
+};
+Chart.register(drawLabelsPlugin);
+
 function getMetaMensual(anio, mesIdx0) {
   if (anio < 2026 || (anio === 2026 && mesIdx0 <= 6)) return 50;
   return 120;
+}
+
+function normalizarEstadoOC(raw) {
+  if (!raw) return 'Sin Estado OC';
+  let s = String(raw).trim().toLowerCase();
+  
+  s = s.replace(/[\.\-\_]/g, ' ').replace(/\s+/g, ' ').trim();
+  
+  if (s.includes('pend conf') || s.includes('pendiente conf')) return 'Pend Conf';
+  if (s.includes('satisfactorio') || s.includes('resuelto') || s.includes('cerrado')) return 'Satisfactorio';
+  if (s.includes('rfc')) return 'RFC';
+  if (s.includes('pir')) return 'PIR';
+  if (s.includes('desestimad')) return 'Desestimado';
+  if (s.includes('observad')) return 'Observado';
+  if (s.includes('rollback')) return 'Rollback';
+  if (s.includes('definici')) return 'En Definicion';
+  if (s.includes('aprobado')) return 'Aprobado';
+  if (s.includes('implement')) return 'Implementado';
+  if (s.includes('suspendid')) return 'Suspendido';
+  
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function normalizarPriorizadoQ(raw) {
+    if (!raw || String(raw).trim() === '' || String(raw).trim() === '—') return 'Sin Categoría';
+    let s = String(raw).trim().toLowerCase().replace(/\s+/g, ' ');
+
+    if(s.includes('extra') && s.includes('q4')) return 'Extras Q4';
+    if(s.includes('extra') && s.includes('q3')) return 'Extras Q3';
+    if(s.includes('extra') && s.includes('q2')) return 'Extras Q2';
+    if(s.includes('extra') && s.includes('q1')) return 'Extras Q1';
+
+    if((s.includes('prio') || s.includes('priorisario')) && s.includes('q4')) return 'Prioritario Q4';
+    if((s.includes('prio') || s.includes('priorisario')) && s.includes('q3')) return 'Prioritario Q3';
+    if((s.includes('prio') || s.includes('priorisario')) && s.includes('q2')) return 'Prioritario Q2';
+    if((s.includes('prio') || s.includes('priorisario')) && s.includes('q1')) return 'Prioritario Q1';
+
+    return String(raw).trim();
 }
 
 function getEstadoOCClass(raw) {
@@ -421,7 +493,7 @@ function getEstadoOCClass(raw) {
   if (s.includes('rollback')) return 'oc-rollback';
   if (s.includes('definici')) return 'oc-definicion';
   if (s.includes('conf')) return 'oc-pendconf';
-  if (s.includes('resuelto') || s.includes('satisfactorio') || s.includes('cerrado')) return 'oc-resuelto';
+  if (s.includes('satisfactorio') || s.includes('resuelto') || s.includes('cerrado')) return 'oc-resuelto';
   if (s.includes('aprobado')) return 'oc-aprobado';
   if (s.includes('implement')) return 'oc-implementado';
   return 'oc-default';
@@ -461,7 +533,7 @@ const state = {
   calSeleccionSemanaIdx: null,
   calSeleccionDia: null,
   calFiltroPillEstatus: '__ALL__',
-  filters: { leader: '__ALL__', estadoOC: '__ALL__', amb: '__ALL__', priorizadoQ: '__ALL__' },
+  filters: { leader: '__ALL__', estadoOC: '__ALL__', amb: '__ALL__', priorizadoQ: '__ALL__', equipoSO: '__ALL__' },
   aprovSortCol: 'pctAvance',
   aprovSortAsc: false
 };
@@ -642,14 +714,22 @@ async function processWorkbook(file) {
     };
 
     const fechaExacta = parseFecha(getVal('fechadeiniciomigracion', 'fechainiciomigracion', 'fechaejecucion'));
-    let semanaDate = parseFecha(getVal('semanadeplanificacion', 'semanaplanificacion', 'semanaplanificada'));
+    const semanaDateRaw = parseFecha(getVal('semanadeplanificacion', 'semanaplanificacion', 'semanaplanificada'));
     
-    if (!semanaDate && fechaExacta) {
+    // Candado Lógico Lunes-Domingo: Forzar que semanaDate siempre sea el Lunes exacto de esa semana
+    let semanaDate = null;
+    if (semanaDateRaw) {
+      const d = new Date(semanaDateRaw.getFullYear(), semanaDateRaw.getMonth(), semanaDateRaw.getDate());
+      let day = d.getDay();
+      let diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      semanaDate = new Date(d.setDate(diff));
+    } else if (fechaExacta) {
       const d = new Date(fechaExacta.getFullYear(), fechaExacta.getMonth(), fechaExacta.getDate());
       let day = d.getDay();
       let diff = d.getDate() - day + (day === 0 ? -6 : 1);
       semanaDate = new Date(d.setDate(diff));
     }
+    
     const fechaRef = fechaExacta || semanaDate;
 
     const horaIniRaw = getVal('horainiciomigracion', 'horainicio');
@@ -699,16 +779,16 @@ async function processWorkbook(file) {
       let dIdx = fechaExacta.getDay() - 1;
       if (dIdx === -1) dIdx = 6;
       diaNom = DIAS[dIdx];
-    } else if (semanaDate) {
-      let dIdx = semanaDate.getDay() - 1;
+    } else if (semanaDateRaw) {
+      let dIdx = semanaDateRaw.getDay() - 1;
       if (dIdx === -1) dIdx = 6;
       diaNom = DIAS[dIdx];
     }
 
-    const priorizadoQVal = String(getVal('priorizadoq', 'priorizado q') || '—').trim();
+    const priorizadoQVal = normalizarPriorizadoQ(getVal('priorizadoq', 'priorizado q'));
     const ownerKyndryl = String(getVal('ownerkyndryl', 'crewleader', 'responsableadministracion', 'owner') || 'Sin Asignar').trim();
     const ocNum = getVal('oc3migracion', 'oc3migracion', 'ocmigracion', 'oc3', 'oc(3)migracion', 'oc');
-    const ocEstado = getVal('estadooc3', 'estadooc', 'estadodelaoc');
+    const ocEstado = normalizarEstadoOC(getVal('estadooc3', 'estadooc', 'estadodelaoc'));
 
     const ticketUpg = getVal('ticketupgradecapacidades', 'ticketupgrade', 'upgradecapacidades');
     const estadoUpg = getVal('estadoticketupgradecapacidades', 'estadoticketupgrade', 'estadoupgrade');
@@ -767,8 +847,6 @@ async function processWorkbook(file) {
     }
     
     const componentesExtraidos = getNumStrict('componenteskyndryl', 'componenteskydryl', 'sumadecomponenteskyndryl', 'sumadecomponenteskydryl') || 0;
-    
-    // Anclaje numérico de fecha para poder ordenar columnas
     const curFechaNum = fechaExacta ? fechaExacta.getTime() : (semanaDate ? semanaDate.getTime() : Infinity);
 
     rows.push({
@@ -792,7 +870,7 @@ async function processWorkbook(file) {
       nComp: componentesExtraidos,
       estatus: estatusFinal,
       oc: ocNum ? String(ocNum).trim() : 'Sin OC',
-      estadoOC: ocEstado ? String(ocEstado).trim() : 'Sin Estado OC',
+      estadoOC: ocEstado,
       ticketUpg: ticketUpg != null && String(ticketUpg).trim() !== '' ? String(ticketUpg).trim() : 'No Aplica',
       estadoUpg: estadoUpg != null && String(estadoUpg).trim() !== '' ? String(estadoUpg).trim() : 'No Aplica',
       ticketAprov: ticketAprov != null && String(ticketAprov).trim() !== '' ? String(ticketAprov).trim() : 'Sin Ticket',
@@ -809,7 +887,7 @@ async function processWorkbook(file) {
       fechaNum: curFechaNum,
       semanaCompletaLbl: semanaDate ? formatSemanaCompleta(semanaDate) : 'Sin fecha',
       semanaRangoLbl: semanaDate ? formatSemanaRango(semanaDate) : (fechaExacta ? formatSemanaRango(fechaExacta) : 'Semana por Definir'),
-      fechaLbl: fechaExacta ? formatFechaVisual(fechaExacta) : (semanaDate ? formatFechaVisual(semanaDate) : 'Sin fecha'),
+      fechaLbl: fechaExacta ? formatFechaVisual(fechaExacta) : (semanaDateRaw ? formatFechaVisual(semanaDateRaw) : 'Sin fecha'),
       dia: diaNom,
       comentarios: String(getVal('comentariosmigracion', 'comentarios') || '').trim()
     });
@@ -1014,7 +1092,7 @@ function initSlicers() {
     if (!e.target.closest('#msEstatusContainer')) ddEstatus.classList.remove('open');
   });
 
-  const priorizados = Array.from(new Set(state.raw.map(r => r.priorizadoQ))).filter(x => x && x !== '—').sort();
+  const priorizados = Array.from(new Set(state.raw.map(r => r.priorizadoQ))).filter(x => x && x !== '—' && x !== 'Sin Categoría').sort();
   const owners = Array.from(new Set(state.raw.map(r => r.ownerKyndryl))).filter(Boolean).sort();
   const estadosOC = Array.from(new Set(state.raw.map(r => r.estadoOC))).filter(x => x && x !== 'Sin Estado OC').sort();
   const ambs = Array.from(new Set(state.raw.map(r => r.ambiente))).filter(Boolean).sort();
@@ -1059,6 +1137,8 @@ function applyFilters() {
   if (f.leader !== '__ALL__') list = list.filter(r => r.ownerKyndryl === f.leader);
   if (f.estadoOC !== '__ALL__') list = list.filter(r => r.estadoOC === f.estadoOC);
   if (f.amb !== '__ALL__') list = list.filter(r => r.ambiente === f.amb);
+  if (f.equipoSO !== '__ALL__') list = list.filter(r => r.equipoSO === f.equipoSO);
+  
   state.view = list;
 }
 
@@ -1251,7 +1331,6 @@ function renderCumplimientoPage() {
   });
   const semanasOrdenadas = Array.from(semMap.values()).sort((a, b) => a.time - b.time);
 
-  // NUEVA LÓGICA: Agrupación por Priorizado Q
   const prioMap = new Map();
   rows.forEach(r => {
     const p = (r.priorizadoQ && r.priorizadoQ !== '—') ? r.priorizadoQ : 'Sin Categoría';
@@ -3308,8 +3387,8 @@ function initEvents() {
     if (e.dataTransfer.files.length) processWorkbook(e.dataTransfer.files[0]);
   };
 
-  $$('.navbtn').forEach(btn => btn.onclick = () => {
-    $$('.navbtn').forEach(b => b.classList.remove('on'));
+  $$('.navbtn').forEach(btn => btn.onclick = () => {$$
+('.navbtn').forEach(b => b.classList.remove('on'));
     btn.classList.add('on');
     state.page = btn.dataset.pg;
     const titles = {
@@ -3331,6 +3410,7 @@ function initEvents() {
   bind('#sEstadoOC', 'estadoOC');
   bind('#sAmb', 'amb');
   bind('#sPriorizadoQ', 'priorizadoQ');
+  bind('#sEquipoSO', 'equipoSO');
 
   $('#btnReset').onclick = () => {
     for (const k in state.filters) state.filters[k] = '__ALL__';
@@ -3367,9 +3447,7 @@ function initEvents() {
 
     state.selectedEstatus.clear();
     $('#msEstatusDropdown').querySelectorAll('input').forEach(cb => cb.checked = false);
-    $('#msEstatusText').textContent = 'Todos los estatus';
-
-    $$('.slicers select').forEach(s => {
+    $('#msEstatusText').textContent = 'Todos los estatus';      $$('.slicers select').forEach(s => {
       if (s.id !== 'sAnioGlobal') s.value = '__ALL__';
     });
     renderApp();
