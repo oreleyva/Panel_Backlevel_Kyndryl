@@ -366,9 +366,13 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
         
         <div class="sl">
           <label>Priorizado Q</label>
-          <select id="sPriorizadoQ">
-            <option value="__ALL__">Todos</option>
-          </select>
+          <div class="ms-container" id="msPrioContainer">
+            <button type="button" class="ms-button" id="msPrioBtn">
+              <span id="msPrioText">Todas las cat.</span>
+              <span style="font-size:10px;margin-left:6px;">▼</span>
+            </button>
+            <div class="ms-dropdown" id="msPrioDropdown"></div>
+          </div>
         </div>
         
         <div class="sl">
@@ -484,18 +488,6 @@ function normalizarEstadoOC(raw) {
 
 function normalizarPriorizadoQ(raw) {
     if (!raw || String(raw).trim() === '' || String(raw).trim() === '—') return 'Sin Categoría';
-    let s = String(raw).trim().toLowerCase().replace(/\s+/g, ' ');
-
-    if(s.includes('extra') && s.includes('q4')) return 'Extras Q4';
-    if(s.includes('extra') && s.includes('q3')) return 'Extras Q3';
-    if(s.includes('extra') && s.includes('q2')) return 'Extras Q2';
-    if(s.includes('extra') && s.includes('q1')) return 'Extras Q1';
-
-    if((s.includes('prio') || s.includes('priorisario')) && s.includes('q4')) return 'Prioritario Q4';
-    if((s.includes('prio') || s.includes('priorisario')) && s.includes('q3')) return 'Prioritario Q3';
-    if((s.includes('prio') || s.includes('priorisario')) && s.includes('q2')) return 'Prioritario Q2';
-    if((s.includes('prio') || s.includes('priorisario')) && s.includes('q1')) return 'Prioritario Q1';
-
     return String(raw).trim();
 }
 
@@ -536,6 +528,7 @@ const state = {
   selectedQs: new Set(),
   selectedMeses: new Set(),
   selectedEstatus: new Set(),
+  selectedPriorizados: new Set(),
   searchOCQuery: '',
   searchFlujoQuery: '',
   filtroAlertaFlujo: '__ALL__',
@@ -549,7 +542,7 @@ const state = {
   calSeleccionSemanaIdx: null,
   calSeleccionDia: null,
   calFiltroPillEstatus: '__ALL__',
-  filters: { leader: '__ALL__', estadoOC: '__ALL__', amb: '__ALL__', priorizadoQ: '__ALL__', equipoSO: '__ALL__' },
+  filters: { leader: '__ALL__', estadoOC: '__ALL__', amb: '__ALL__', equipoSO: '__ALL__' },
   aprovSortCol: 'pctAvance',
   aprovSortAsc: false
 };
@@ -732,7 +725,6 @@ async function processWorkbook(file) {
     const fechaExacta = parseFecha(getVal('fechadeiniciomigracion', 'fechainiciomigracion', 'fechaejecucion'));
     const semanaDateRaw = parseFecha(getVal('semanadeplanificacion', 'semanaplanificacion', 'semanaplanificada'));
     
-    // Candado Lógico Lunes-Domingo: Forzar que semanaDate siempre sea el Lunes exacto de esa semana
     let semanaDate = null;
     if (semanaDateRaw) {
       const d = new Date(semanaDateRaw.getFullYear(), semanaDateRaw.getMonth(), semanaDateRaw.getDate());
@@ -971,6 +963,7 @@ function initSlicers() {
     e.stopPropagation();
     $('#msMesDropdown').classList.remove('open');
     $('#msEstatusDropdown').classList.remove('open');
+    $('#msPrioDropdown').classList.remove('open');
     ddQ.classList.toggle('open');
   };
 
@@ -1030,6 +1023,7 @@ function initSlicers() {
     e.stopPropagation();
     $('#msQDropdown').classList.remove('open');
     $('#msEstatusDropdown').classList.remove('open');
+    $('#msPrioDropdown').classList.remove('open');
     ddMes.classList.toggle('open');
   };
 
@@ -1084,6 +1078,7 @@ function initSlicers() {
     e.stopPropagation();
     $('#msQDropdown').classList.remove('open');
     $('#msMesDropdown').classList.remove('open');
+    $('#msPrioDropdown').classList.remove('open');
     ddEstatus.classList.toggle('open');
   };
 
@@ -1111,14 +1106,70 @@ function initSlicers() {
     $('#msEstatusText').textContent = 'Ningún estatus';
     renderApp();
   };
+  
+  const priorizadosList = Array.from(new Set(state.raw.map(r => r.priorizadoQ))).filter(x => x && x !== '—' && x !== 'Sin Categoría').sort();
+  const ddPrio = $('#msPrioDropdown');
+  ddPrio.innerHTML = `
+    <div style="padding:4px 6px;margin-bottom:6px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;">
+      <button type="button" class="btn sm ghost" style="padding:2px 6px;font-size:11px;" id="btnSelectAllPrio">Todos</button>
+      <button type="button" class="btn sm ghost" style="padding:2px 6px;font-size:11px;" id="btnClearPrio">Ninguno</button>
+    </div>
+    ${priorizadosList.map(p => `
+      <label class="ms-item">
+        <input type="checkbox" value="${esc(p)}" ${state.selectedPriorizados.has(p) ? 'checked' : ''}>
+        <span>${esc(p)}</span>
+      </label>
+    `).join('')}
+  `;
+
+  const updatePrioButtonText = () => {
+    if (state.selectedPriorizados.size === 0) $('#msPrioText').textContent = 'Todas las cat.';
+    else if (state.selectedPriorizados.size === priorizadosList.length) $('#msPrioText').textContent = `Todas (${priorizadosList.length})`;
+    else if (state.selectedPriorizados.size === 1) $('#msPrioText').textContent = Array.from(state.selectedPriorizados)[0];
+    else $('#msPrioText').textContent = `${state.selectedPriorizados.size} selec.`;
+  };
+  updatePrioButtonText();
+
+  $('#msPrioBtn').onclick = (e) => {
+    e.stopPropagation();
+    $('#msQDropdown').classList.remove('open');
+    $('#msMesDropdown').classList.remove('open');
+    $('#msEstatusDropdown').classList.remove('open');
+    ddPrio.classList.toggle('open');
+  };
+
+  ddPrio.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.onchange = () => {
+      if (cb.checked) state.selectedPriorizados.add(cb.value);
+      else state.selectedPriorizados.delete(cb.value);
+      updatePrioButtonText();
+      renderApp();
+    };
+  });
+
+  $('#btnSelectAllPrio').onclick = (e) => {
+    e.stopPropagation();
+    priorizadosList.forEach(p => state.selectedPriorizados.add(p));
+    ddPrio.querySelectorAll('input').forEach(cb => cb.checked = true);
+    updatePrioButtonText();
+    renderApp();
+  };
+
+  $('#btnClearPrio').onclick = (e) => {
+    e.stopPropagation();
+    state.selectedPriorizados = new Set(['__NONE__']);
+    ddPrio.querySelectorAll('input').forEach(cb => cb.checked = false);
+    $('#msPrioText').textContent = 'Ninguna';
+    renderApp();
+  };
 
   document.addEventListener('click', (e) => {
     if (!e.target.closest('#msQContainer')) ddQ.classList.remove('open');
     if (!e.target.closest('#msMesContainer')) ddMes.classList.remove('open');
     if (!e.target.closest('#msEstatusContainer')) ddEstatus.classList.remove('open');
+    if (!e.target.closest('#msPrioContainer')) ddPrio.classList.remove('open');
   });
 
-  const priorizados = Array.from(new Set(state.raw.map(r => r.priorizadoQ))).filter(x => x && x !== '—' && x !== 'Sin Categoría').sort();
   const owners = Array.from(new Set(state.raw.map(r => r.ownerKyndryl))).filter(Boolean).sort();
   const estadosOC = Array.from(new Set(state.raw.map(r => r.estadoOC))).filter(x => x && x !== 'Sin Estado OC').sort();
   const ambs = Array.from(new Set(state.raw.map(r => r.ambiente))).filter(Boolean).sort();
@@ -1127,7 +1178,6 @@ function initSlicers() {
     $(id).innerHTML = `<option value="__ALL__">Todos (${arr.length})</option>` + arr.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join('');
   };
 
-  populate('#sPriorizadoQ', priorizados);
   populate('#sLeader', owners);
   populate('#sEstadoOC', estadosOC);
   populate('#sAmb', ambs);
@@ -1158,8 +1208,13 @@ function applyFilters() {
   } else if (state.selectedEstatus.size > 0) {
     list = list.filter(r => state.selectedEstatus.has(r.estatus));
   }
+  
+  if (state.selectedPriorizados.has('__NONE__')) {
+    list = [];
+  } else if (state.selectedPriorizados.size > 0) {
+    list = list.filter(r => state.selectedPriorizados.has(r.priorizadoQ));
+  }
 
-  if (f.priorizadoQ !== '__ALL__') list = list.filter(r => r.priorizadoQ === f.priorizadoQ);
   if (f.leader !== '__ALL__') list = list.filter(r => r.ownerKyndryl === f.leader);
   if (f.estadoOC !== '__ALL__') list = list.filter(r => r.estadoOC === f.estadoOC);
   if (f.amb !== '__ALL__') list = list.filter(r => r.ambiente === f.amb);
@@ -3418,7 +3473,6 @@ function initEvents() {
   bind('#sLeader', 'leader');
   bind('#sEstadoOC', 'estadoOC');
   bind('#sAmb', 'amb');
-  bind('#sPriorizadoQ', 'priorizadoQ');
   bind('#sEquipoSO', 'equipoSO');
 
   $('#btnReset').onclick = () => {
@@ -3456,7 +3510,12 @@ function initEvents() {
 
     state.selectedEstatus.clear();
     $('#msEstatusDropdown').querySelectorAll('input').forEach(cb => cb.checked = false);
-    $('#msEstatusText').textContent = 'Todos los estatus';      $$('.slicers select').forEach(s => {
+    $('#msEstatusText').textContent = 'Todos los estatus';      
+    
+    state.selectedPriorizados.clear();
+    if ($('#msPrioDropdown')) {
+      $('#msPrioDropdown').querySelectorAll('input').forEach(cb => cb.checked = false);
+      $('#msPrioText').textContent = 'Todas las cat.';     }      $$('.slicers select').forEach(s => {
       if (s.id !== 'sAnioGlobal') s.value = '__ALL__';
     });
     renderApp();
