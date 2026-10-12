@@ -171,10 +171,19 @@ table.dt td { padding: 8px 12px; border-bottom: 1px solid var(--k-border-subtle)
 table.dt td.l { text-align: left; font-weight: 500; }
 table.dt tbody tr:hover { background: #F8FAFC; cursor: pointer; }
 
-/* ESTILOS PARA ORDENAMIENTO DE TABLAS */
+/* ESTILOS PARA ORDENAMIENTO Y BADGES DE INTENTOS */
 table.dt th.sortable { cursor: pointer; transition: all 0.2s ease; user-select: none; }
 table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
 .sort-icon { display: inline-block; width: 12px; margin-left: 4px; color: var(--k-red); font-size: 10.5px; }
+
+.intento-badge {
+  display: inline-block; background: #F1F5F9; color: #475569;
+  border: 1px solid #CBD5E1; padding: 2.5px 6.5px; border-radius: 5px;
+  font-size: 10px; font-weight: 800; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.intento-badge.multiple {
+  background: #FEF3C7; color: #B45309; border-color: #F59E0B;
+}
 
 .prog-bar-container { background: #E2E8F0; border-radius: 6px; overflow: hidden; height: 14px; width: 110px; display: inline-block; vertical-align: middle; margin-right: 6px; }
 .prog-bar-fill { height: 100%; background: var(--k-green); border-radius: 6px; transition: width 0.3s ease; }
@@ -433,6 +442,21 @@ function getEstatusTagClass(est) {
   if (e.includes('rollback')) return 'rb';
   if (e.includes('reprogram')) return 'reprog';
   return 'pend'; 
+}
+
+function getIntentoBadge(intento) {
+  if (!intento) return '';
+  const s = String(intento).toLowerCase();
+  const isFirst = s.includes('1er') || s === '1' || s.includes('primer');
+  return `<span class="intento-badge ${isFirst ? '' : 'multiple'}">${esc(intento)}</span>`;
+}
+
+function normalizarIntento(raw) {
+  if (!raw) return '1er Intento';
+  let s = String(raw).trim();
+  if (s === '' || s === '-' || s === '—') return '1er Intento';
+  if (!isNaN(s)) return s + '° Intento';
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 const drawLabelsPlugin = {
@@ -797,6 +821,7 @@ async function processWorkbook(file) {
     const ownerKyndryl = String(getVal('ownerkyndryl', 'crewleader', 'responsableadministracion', 'owner') || 'Sin Asignar').trim();
     const ocNum = getVal('oc3migracion', 'oc3migracion', 'ocmigracion', 'oc3', 'oc(3)migracion', 'oc');
     const ocEstado = normalizarEstadoOC(getVal('estadooc3', 'estadooc', 'estadodelaoc'));
+    const intentoVal = normalizarIntento(getVal('intentos', 'intento'));
 
     const ticketUpg = getVal('ticketupgradecapacidades', 'ticketupgrade', 'upgradecapacidades');
     const estadoUpg = getVal('estadoticketupgradecapacidades', 'estadoticketupgrade', 'estadoupgrade');
@@ -841,6 +866,7 @@ async function processWorkbook(file) {
     else if (valForecastLower.includes('desestimad')) estatusFinal = 'Desestimado';
     else if (valForecastLower.includes('rollback')) estatusFinal = 'Rollback';
     else if (valForecastLower.includes('reprogram')) estatusFinal = 'Reprogramado';
+    else if (valForecastLower.includes('suspendid')) estatusFinal = 'Suspendido';
     else if (valForecastEC !== '' && valForecastEC !== '-' && valForecastEC !== '—') {
       estatusFinal = valForecastEC.charAt(0).toUpperCase() + valForecastEC.slice(1);
     }
@@ -887,6 +913,7 @@ async function processWorkbook(file) {
       equipoSO: equipoSO,
       nComp: componentesExtraidos,
       estatus: estatusFinal,
+      intento: intentoVal,
       oc: ocNum ? String(ocNum).trim() : 'Sin OC',
       estadoOC: ocEstado,
       ticketUpg: ticketUpg != null && String(ticketUpg).trim() !== '' ? String(ticketUpg).trim() : 'No Aplica',
@@ -1226,13 +1253,19 @@ function applyFilters() {
 function renderApp() {
   applyFilters();
 
-  const tot = state.view.reduce((a, b) => a + b.nComp, 0);
+  const totRegistros = state.view.reduce((a, b) => a + b.nComp, 0);
+  
+  // EXCLUSIÓN: No contabilizar estados fallidos/suspendidos para el alcance real
+  const estadosExcluidos = ['Rollback', 'Reprogramado', 'Suspendido'];
+  const totEfectivo = state.view.filter(r => !estadosExcluidos.includes(r.estatus)).reduce((a, b) => a + b.nComp, 0);
+  
   const mig = state.view.filter(r => r.estatus === 'Migrado').reduce((a, b) => a + b.nComp, 0);
 
   const qsStr = Array.from(state.selectedQs).join(', ') || 'Todos';
   const anioStr = state.selectedAnio !== '__ALL__' ? `Año: ${state.selectedAnio} · ` : '';
-  $('#navFoot').innerHTML = `<b>${fmt(tot)}</b> componentes en ámbito<br>${fmt(mig)} cerrados (${pct1(pct(mig, tot))})`;
-  $('#pgSub').textContent = `${anioStr}Trimestres: ${qsStr} · ${fmt(tot)} componentes totales · ${fmt(new Set(state.view.map(r=>r.servidor)).size)} servidores`;
+  
+  $('#navFoot').innerHTML = `<b>${fmt(totEfectivo)}</b> comp. en alcance<br>${fmt(mig)} cerrados (${pct1(pct(mig, totEfectivo))})`;
+  $('#pgSub').textContent = `${anioStr}Trimestres: ${qsStr} · Alcance Efectivo: ${fmt(totEfectivo)} comp. (${fmt(totRegistros)} totales) · ${fmt(new Set(state.view.map(r=>r.servidor)).size)} servidores`;
 
   destroyCharts();
 
@@ -1297,6 +1330,7 @@ window.sortModal = function(col) {
 function renderCumplimientoPage() {
   const rows = state.view;
   const mesMap = new Map();
+  const estadosExcluidos = ['Rollback', 'Reprogramado', 'Suspendido'];
   
   rows.forEach(r => {
     let mNom = r.mes;
@@ -1335,7 +1369,8 @@ function renderCumplimientoPage() {
       key: m.label,
       label: m.label,
       mesNombre: m.mesOriginal,
-      plan: m.planFijo != null ? m.planFijo : m.rows.reduce((a, b) => a + b.nComp, 0),
+      // Aplicamos la exclusión de intentos fallidos al cálculo planificado
+      plan: m.planFijo != null ? m.planFijo : m.rows.filter(r => !estadosExcluidos.includes(r.estatus)).reduce((a, b) => a + b.nComp, 0),
       meta: m.metaFija,
       migReal: m.rows.filter(r => r.estatus === 'Migrado').reduce((a, b) => a + b.nComp, 0),
       rowsMes: m.rows
@@ -1403,6 +1438,7 @@ function renderCumplimientoPage() {
       });
     }
     const s = semMap.get(t);
+    // Para el gráfico de barras por semana sumaremos el esfuerzo crudo como referencia de trabajo
     s.total += r.nComp;
     if (r.estatus === 'Migrado') s.migrados += r.nComp;
     if (r.esEntregado && r.estatus === 'Migrado') s.entregados += r.nComp;
@@ -1426,7 +1462,6 @@ function renderCumplimientoPage() {
     }
   });
   const prioData = Array.from(prioMap.values()).sort((a,b) => (b.atendidos + b.pendientes) - (a.atendidos + a.pendientes));
-
 
   $('#page').innerHTML = `
     <div class="section-label-bar">📌 Métricas Base del Servicio (Valores Crudos)</div>
@@ -1909,6 +1944,7 @@ function renderFlujoE2EPage() {
             <tr>
               <th class="l">Alerta E2E</th>
               <th class="l">Servidor</th>
+              <th class="l">Intento</th>
               <th class="l">Sigla</th>
               <th class="l">Owner Kyndryl</th>
               <th class="l" style="background:#0F3A70;">Ticket Upgrade Capacidades</th>
@@ -1959,6 +1995,7 @@ function renderFlujoE2EPage() {
         <tr onclick="drillFlujoPorIdx(${idx})">
           <td class="l">${badgeHtml}</td>
           <td class="l mono" style="font-weight:700;">${esc(d.servidor)}</td>
+          <td class="l">${getIntentoBadge(d.intento)}</td>
           <td class="l mono">${esc(d.siglas)}</td>
           <td class="l"><b>${esc(d.ownerKyndryl)}</b></td>
           <td class="l mono" style="font-weight:700;color:var(--k-navy);">${esc(d.ticketUpg)}</td>
@@ -1970,7 +2007,7 @@ function renderFlujoE2EPage() {
           <td class="l" style="font-size:12px;font-weight:600;color:${d.alertaNivel === 'rojo' ? '#BE123C' : (d.alertaNivel === 'naranja' ? '#C2410C' : '#334155')}">${esc(d.diagnostico)}</td>
         </tr>
       `;
-    }).join('') + (filtrados.length > 350 ? `<tr><td colspan="11" class="l" style="text-align:center;padding:12px;color:#888;">Mostrando las primeras 350 alertas...</td></tr>` : '');
+    }).join('') + (filtrados.length > 350 ? `<tr><td colspan="12" class="l" style="text-align:center;padding:12px;color:#888;">Mostrando las primeras 350 alertas...</td></tr>` : '');
   };
 
   const bindCardClick = (cardId, targetAlerta) => {
@@ -2828,6 +2865,7 @@ function renderCalendarioPage() {
         srvSet: new Set(),
         fechasSet: new Set(), 
         ambientesSet: new Set(),
+        intentosSet: new Set(), // Extraer todos los intentos para esta OC unificada
         minFechaNum: r.fechaDate ? r.fechaDate.getTime() : (r.semanaDate ? r.semanaDate.getTime() : Infinity),
         totalComp: 0,
         rows: []
@@ -2836,6 +2874,7 @@ function renderCalendarioPage() {
     const item = ocInferiorMap.get(ocKey);
     item.totalComp += r.nComp;
     item.srvSet.add(r.servidor);
+    if (r.intento) item.intentosSet.add(r.intento);
     if (r.fechaLbl && r.fechaLbl !== 'Sin fecha') item.fechasSet.add(r.fechaLbl);
     if (r.siglas && r.siglas !== 'S/S') item.appSet.add(r.siglas);
     if (r.ambiente && r.ambiente !== '—') item.ambientesSet.add(r.ambiente);
@@ -2851,6 +2890,7 @@ function renderCalendarioPage() {
       ambientesStr: Array.from(item.ambientesSet).join(', ') || '—',
       appsStr: Array.from(item.appSet).join(', ') || 'S/S',
       fechasStr: Array.from(item.fechasSet).join('<br>') || 'Sin fecha',
+      intentoStr: Array.from(item.intentosSet).join(', ') || '1er Intento',
       srvCount: item.srvSet.size
   }));
 
@@ -2925,6 +2965,7 @@ function renderCalendarioPage() {
               <th class="l sortable" onclick="setCalSort('oc')" title="Clic para ordenar">OC Migración <span id="sc_oc" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setCalSort('estadoOC')" title="Clic para ordenar">Estado de la OC <span id="sc_estadoOC" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setCalSort('estatus')" title="Clic para ordenar">Estatus Migración <span id="sc_estatus" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setCalSort('intentoStr')" title="Clic para ordenar">Intento <span id="sc_intentoStr" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setCalSort('owner')" title="Clic para ordenar">Owner Kyndryl <span id="sc_owner" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setCalSort('ambientesStr')" title="Clic para ordenar">Ambiente <span id="sc_ambientesStr" class="sort-icon"></span></th>
               <th class="sortable" onclick="setCalSort('srvCount')" title="Clic para ordenar">Servidores <span id="sc_srvCount" class="sort-icon"></span></th>
@@ -2984,6 +3025,7 @@ function renderCalendarioPage() {
             <td class="l mono"><b>${esc(item.oc)}</b></td>
             <td class="l"><span class="tag ${tagClass}">${esc(item.estadoOC)}</span></td>
             <td class="l"><span class="tag ${estatusClass}">${esc(item.estatus)}</span></td>
+            <td class="l">${getIntentoBadge(item.intentoStr)}</td>
             <td class="l"><b>${esc(item.owner)}</b></td>
             <td class="l">${esc(item.ambientesStr)}</td>
             <td class="num"><span class="srv-badge">${item.srvCount} srv</span></td>
@@ -2995,7 +3037,7 @@ function renderCalendarioPage() {
             </td>
           </tr>
         `;
-     }).join('') || `<tr><td colspan="10" class="l" style="text-align:center;padding:24px;color:#888;">No hay órdenes de cambio bajo la selección actual.</td></tr>`;
+     }).join('') || `<tr><td colspan="11" class="l" style="text-align:center;padding:24px;color:#888;">No hay órdenes de cambio bajo la selección actual.</td></tr>`;
 
      $$('.sort-icon').forEach(el => {
         if (el.id && el.id.startsWith('sc_')) el.textContent = '';
@@ -3163,6 +3205,7 @@ function drillGrupo(titulo, rows) {
             <th class="l sortable" onclick="sortModal('siglas')" title="Clic para ordenar">Sigla <span id="ms_siglas" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('app')" title="Clic para ordenar">Aplicación <span id="ms_app" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('servidor')" title="Clic para ordenar">Servidor <span id="ms_servidor" class="sort-icon modal-sort-icon"></span></th>
+            <th class="l sortable" onclick="sortModal('intento')" title="Clic para ordenar">Intento <span id="ms_intento" class="sort-icon modal-sort-icon"></span></th>
             <th class="sortable" onclick="sortModal('nComp')" title="Clic para ordenar">Comp. <span id="ms_nComp" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('ambiente')" title="Clic para ordenar">Ambiente <span id="ms_ambiente" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('priorizadoQ')" title="Clic para ordenar">Priorizado Q <span id="ms_priorizadoQ" class="sort-icon modal-sort-icon"></span></th>
@@ -3196,6 +3239,7 @@ function renderModalRows(rows) {
       <td class="l mono"><b>${esc(r.siglas)}</b></td>
       <td class="l" style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.app)}</td>
       <td class="l mono" style="font-weight:700;">${esc(r.servidor)}</td>
+      <td class="l">${getIntentoBadge(r.intento)}</td>
       <td class="num" style="font-weight:700;color:var(--k-red);">${r.nComp}</td>
       <td class="l">${esc(r.ambiente)}</td>
       <td class="l" style="font-size:12px;font-weight:600;color:var(--k-navy);">${esc(r.priorizadoQ)}</td>
@@ -3275,6 +3319,7 @@ function openModal(title, sub, bodyHtml, exportData) {
       'Equipo': r.equipoSO,
       'Priorizado Q': r.priorizadoQ,
       'Trimestre': r.qIbk, 'Mes': r.mes, 'Sigla': r.siglas, 'Aplicación': r.app, 'Servidor': r.servidor,
+      'Intento': r.intento,
       '# Componentes': r.nComp, 'Ambiente': r.ambiente, 'Owner Kyndryl': r.ownerKyndryl,
       'Estado Entrega': r.esEntregado ? 'Entregado' : 'Pendiente',
       'Motivo No Entrega': r.motivoNoEntrega,
@@ -3341,6 +3386,7 @@ function renderDetallePage() {
               <th class="l sortable" onclick="setInvSort('siglas')">Sigla <span id="si_siglas" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('app')">Aplicación <span id="si_app" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('servidor')">Servidor <span id="si_servidor" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setInvSort('intento')">Intento <span id="si_intento" class="sort-icon"></span></th>
               <th class="sortable" onclick="setInvSort('nComp')">Comp. <span id="si_nComp" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('ambiente')">Ambiente <span id="si_ambiente" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('priorizadoQ')">Priorizado Q <span id="si_priorizadoQ" class="sort-icon"></span></th>
@@ -3408,6 +3454,7 @@ function renderDetallePage() {
         <td class="l mono"><b>${esc(r.siglas)}</b></td>
         <td class="l" style="max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(r.app)}">${esc(r.app)}</td>
         <td class="l mono" style="font-weight:700;">${esc(r.servidor)}</td>
+        <td class="l">${getIntentoBadge(r.intento)}</td>
         <td class="num" style="font-weight:700;color:var(--k-red);">${r.nComp}</td>
         <td class="l">${esc(r.ambiente)}</td>
         <td class="l" style="font-size:12px;font-weight:600;color:var(--k-navy);">${esc(r.priorizadoQ)}</td>
@@ -3421,7 +3468,7 @@ function renderDetallePage() {
         <td class="l" style="font-size:12px;">${esc(r.subDestino)}</td>
         <td class="l"><span class="tag ${getEstatusTagClass(r.estatus)}">${esc(r.estatus)}</span></td>
       </tr>
-    `).join('') + (filtrados.length > 300 ? '<tr><td colspan="16" class="l" style="text-align:center;color:#888;">Mostrando los primeros 300 registros... Exportar para ver completo.</td></tr>' : '');
+    `).join('') + (filtrados.length > 300 ? '<tr><td colspan="17" class="l" style="text-align:center;color:#888;">Mostrando los primeros 300 registros... Exportar para ver completo.</td></tr>' : '');
 
     $$('.sort-icon').forEach(el => { if(el.id && el.id.startsWith('si_')) el.textContent = ''; });
     const activeIcon = $('#si_' + window.invSortCol);
@@ -3528,6 +3575,7 @@ function initEvents() {
       'Equipo': r.equipoSO,
       'Priorizado Q': r.priorizadoQ,
       'Trimestre': r.qIbk, 'Mes': r.mes, 'Sigla': r.siglas, 'Aplicación': r.app, 'Servidor': r.servidor,
+      'Intento': r.intento,
       '# Componentes': r.nComp, 'Ambiente': r.ambiente, 'Owner Kyndryl': r.ownerKyndryl,
       'Estado Entrega': r.esEntregado ? 'Entregado' : 'Pendiente',
       'Motivo No Entrega': r.motivoNoEntrega,
