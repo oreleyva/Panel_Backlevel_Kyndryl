@@ -171,19 +171,10 @@ table.dt td { padding: 8px 12px; border-bottom: 1px solid var(--k-border-subtle)
 table.dt td.l { text-align: left; font-weight: 500; }
 table.dt tbody tr:hover { background: #F8FAFC; cursor: pointer; }
 
-/* ESTILOS PARA ORDENAMIENTO Y BADGES DE INTENTOS */
+/* ESTILOS PARA ORDENAMIENTO DE TABLAS */
 table.dt th.sortable { cursor: pointer; transition: all 0.2s ease; user-select: none; }
 table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
 .sort-icon { display: inline-block; width: 12px; margin-left: 4px; color: var(--k-red); font-size: 10.5px; }
-
-.intento-badge {
-  display: inline-block; background: #F1F5F9; color: #475569;
-  border: 1px solid #CBD5E1; padding: 2.5px 6.5px; border-radius: 5px;
-  font-size: 10px; font-weight: 800; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.04em;
-}
-.intento-badge.multiple {
-  background: #FEF3C7; color: #B45309; border-color: #F59E0B;
-}
 
 .prog-bar-container { background: #E2E8F0; border-radius: 6px; overflow: hidden; height: 14px; width: 110px; display: inline-block; vertical-align: middle; margin-right: 6px; }
 .prog-bar-fill { height: 100%; background: var(--k-green); border-radius: 6px; transition: width 0.3s ease; }
@@ -196,7 +187,6 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
 .tag.pend { border-color: var(--k-amber); background: rgba(217,119,6,0.1); color: var(--k-amber); }
 .tag.rb { border-color: var(--k-alert); background: rgba(225,29,72,0.1); color: var(--k-alert); }
 .tag.des { border-color: #94A3B8; background: #F1F5F9; color: #475569; }
-.tag.prop { border-color: #8B5CF6; background: rgba(139,92,246,0.12); color: #7C3AED; }
 .tag.listo-cierre { border-color: var(--k-green); background: #DCFCE7; color: #15803D; font-weight: 800; }
 .tag.incompleto { border-color: var(--k-amber); background: #FEF3C7; color: #B45309; }
 
@@ -209,7 +199,6 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
 .modal-chip.active.pend { background: var(--k-amber) !important; color: #FFFFFF !important; }
 .modal-chip.active.rb { background: var(--k-alert) !important; color: #FFFFFF !important; }
 .modal-chip.active.des { background: #475569 !important; color: #FFFFFF !important; }
-.modal-chip.active.prop { background: #7C3AED !important; color: #FFFFFF !important; }
 
 .stat-pill { 
   display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700; border: 1px solid transparent; cursor: pointer; user-select: none; transition: all 0.16s ease;
@@ -221,7 +210,6 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
 .stat-pill.rb { background: rgba(225,29,72,0.12); color: var(--k-alert); border-color: rgba(225,29,72,0.35); }
 .stat-pill.reprog { background: rgba(202,138,4,0.12); color: #A16207; border-color: rgba(202,138,4,0.35); }
 .stat-pill.des { background: rgba(100,116,139,0.12); color: #475569; border-color: rgba(100,116,139,0.35); }
-.stat-pill.prop { background: rgba(139,92,246,0.12); color: #7C3AED; border-color: rgba(139,92,246,0.35); }
 .stat-pill.all { background: #FFFFFF; color: var(--k-charcoal); border-color: var(--k-border); font-weight: 800; }
 
 .stat-pill.active { box-shadow: 0 0 0 2px var(--k-charcoal) !important; font-weight: 800; transform: scale(1.03); }
@@ -231,7 +219,6 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
 .stat-pill.active.rb { background: var(--k-alert) !important; color: #fff !important; }
 .stat-pill.active.reprog { background: #A16207 !important; color: #fff !important; }
 .stat-pill.active.des { background: #475569 !important; color: #fff !important; }
-.stat-pill.active.prop { background: #7C3AED !important; color: #fff !important; }
 .stat-pill.active.all { background: var(--k-charcoal) !important; color: #fff !important; }
 
 .alerta-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 5px; font-size: 11px; font-weight: 800; border: 1px solid; white-space: nowrap; }
@@ -328,6 +315,11 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
         <span>Inventario de Servidores<small>Detalle de componentes</small></span>
       </button>
+      <!-- NUEVA PESTAÑA RESUMEN COMPONENTES -->
+      <button class="navbtn" data-pg="resumen-comp">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+        <span>Resumen de Componentes<small>Kyndryl vs Arquitectura</small></span>
+      </button>
     </div>
     <div class="foot" id="navFoot"></div>
   </aside>
@@ -375,13 +367,9 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
         
         <div class="sl">
           <label>Priorizado Q</label>
-          <div class="ms-container" id="msPrioContainer">
-            <button type="button" class="ms-button" id="msPrioBtn">
-              <span id="msPrioText">Todas las cat.</span>
-              <span style="font-size:10px;margin-left:6px;">▼</span>
-            </button>
-            <div class="ms-dropdown" id="msPrioDropdown"></div>
-          </div>
+          <select id="sPriorizadoQ">
+            <option value="__ALL__">Todos</option>
+          </select>
         </div>
         
         <div class="sl">
@@ -430,38 +418,13 @@ const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', '
 const MESES_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
 const MESES_CORTO_LOWER = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
-const ESTATUS_MIGRACION_LIST = ['Migrado', 'Planificado', 'Propuesto', 'Por Definir', 'Reprogramado', 'Rollback', 'Desestimado'];
+const ESTATUS_MIGRACION_LIST = ['Migrado', 'Planificado', 'Por Definir', 'Reprogramado', 'Rollback', 'Desestimado'];
 
-function getEstatusTagClass(est) {
-  if (!est) return 'pend';
-  const e = est.toLowerCase();
-  if (e.includes('migrad')) return 'mig';
-  if (e.includes('planific')) return 'plan';
-  if (e.includes('propuest')) return 'prop';
-  if (e.includes('desestimad')) return 'des';
-  if (e.includes('rollback')) return 'rb';
-  if (e.includes('reprogram')) return 'reprog';
-  return 'pend'; 
-}
-
-function getIntentoBadge(intento) {
-  if (!intento) return '';
-  const s = String(intento).toLowerCase();
-  const isFirst = s.includes('1er') || s === '1' || s.includes('primer');
-  return `<span class="intento-badge ${isFirst ? '' : 'multiple'}">${esc(intento)}</span>`;
-}
-
-function normalizarIntento(raw) {
-  if (!raw) return '1er Intento';
-  let s = String(raw).trim();
-  if (s === '' || s === '-' || s === '—') return '1er Intento';
-  if (!isNaN(s)) return s + '° Intento';
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
+// Dibuja los números sobre las barras, saltando gráficas de tipo dona (para que no se ensucie visualmente)
 const drawLabelsPlugin = {
   id: 'drawLabels',
   afterDatasetsDraw(chart) {
+    if (chart.config.type === 'doughnut' || chart.config.type === 'pie') return;
     const { ctx } = chart;
     chart.data.datasets.forEach((dataset, i) => {
       if (dataset.type === 'line') return;
@@ -489,10 +452,10 @@ function getMetaMensual(anio, mesIdx0) {
   return 120;
 }
 
+// NORMALIZACIÓN DE ESTADO OC
 function normalizarEstadoOC(raw) {
   if (!raw) return 'Sin Estado OC';
   let s = String(raw).trim().toLowerCase();
-  
   s = s.replace(/[\.\-\_]/g, ' ').replace(/\s+/g, ' ').trim();
   
   if (s.includes('pend conf') || s.includes('pendiente conf')) return 'Pend Conf';
@@ -510,8 +473,21 @@ function normalizarEstadoOC(raw) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+// NORMALIZACIÓN DE PRIORIZADO Q
 function normalizarPriorizadoQ(raw) {
     if (!raw || String(raw).trim() === '' || String(raw).trim() === '—') return 'Sin Categoría';
+    let s = String(raw).trim().toLowerCase().replace(/\s+/g, ' ');
+
+    if(s.includes('extra') && s.includes('q4')) return 'Extras Q4';
+    if(s.includes('extra') && s.includes('q3')) return 'Extras Q3';
+    if(s.includes('extra') && s.includes('q2')) return 'Extras Q2';
+    if(s.includes('extra') && s.includes('q1')) return 'Extras Q1';
+
+    if((s.includes('prio') || s.includes('priorisario')) && s.includes('q4')) return 'Prioritario Q4';
+    if((s.includes('prio') || s.includes('priorisario')) && s.includes('q3')) return 'Prioritario Q3';
+    if((s.includes('prio') || s.includes('priorisario')) && s.includes('q2')) return 'Prioritario Q2';
+    if((s.includes('prio') || s.includes('priorisario')) && s.includes('q1')) return 'Prioritario Q1';
+
     return String(raw).trim();
 }
 
@@ -552,7 +528,6 @@ const state = {
   selectedQs: new Set(),
   selectedMeses: new Set(),
   selectedEstatus: new Set(),
-  selectedPriorizados: new Set(),
   searchOCQuery: '',
   searchFlujoQuery: '',
   filtroAlertaFlujo: '__ALL__',
@@ -566,7 +541,7 @@ const state = {
   calSeleccionSemanaIdx: null,
   calSeleccionDia: null,
   calFiltroPillEstatus: '__ALL__',
-  filters: { leader: '__ALL__', estadoOC: '__ALL__', amb: '__ALL__', equipoSO: '__ALL__' },
+  filters: { leader: '__ALL__', estadoOC: '__ALL__', amb: '__ALL__', priorizadoQ: '__ALL__', equipoSO: '__ALL__' },
   aprovSortCol: 'pctAvance',
   aprovSortAsc: false
 };
@@ -821,7 +796,6 @@ async function processWorkbook(file) {
     const ownerKyndryl = String(getVal('ownerkyndryl', 'crewleader', 'responsableadministracion', 'owner') || 'Sin Asignar').trim();
     const ocNum = getVal('oc3migracion', 'oc3migracion', 'ocmigracion', 'oc3', 'oc(3)migracion', 'oc');
     const ocEstado = normalizarEstadoOC(getVal('estadooc3', 'estadooc', 'estadodelaoc'));
-    const intentoVal = normalizarIntento(getVal('intentos', 'intento'));
 
     const ticketUpg = getVal('ticketupgradecapacidades', 'ticketupgrade', 'upgradecapacidades');
     const estadoUpg = getVal('estadoticketupgradecapacidades', 'estadoticketupgrade', 'estadoupgrade');
@@ -835,6 +809,7 @@ async function processWorkbook(file) {
     const subOrigenCompleto = (subOrigen !== '—' && subOrigen !== '') ? (subOrigen + (verOrigen ? ` ${verOrigen}` : '')) : '—';
     const soDestinoRaw = getVal('sistemaoperativodestino', 'sodestino');
     const soDestino = soDestinoRaw ? String(soDestinoRaw).trim() : '—';
+    const servidorDestino = String(getVal('servidordestino', 'hostdestino', 'targetserver', 'servidor destino', 'host destino', 'servidor dest') || '—').trim();
     
     const bdDestino = getVal('bd');
     const wmeDestino = getVal('wmeiis', 'wme');
@@ -856,24 +831,13 @@ async function processWorkbook(file) {
                         etiquetaCategoria.toLowerCase().includes('conforme') || 
                         fechaEntregaIBK !== null;
 
-    const valForecastEC = String(getVal('forecastestado', 'forecast-estado') || '').trim();
-    const valForecastLower = valForecastEC.toLowerCase();
+    const valForecastEC = String(getVal('forecastestado', 'forecast-estado') || '').trim().toLowerCase();
     let estatusFinal = 'Por Definir';
-    
-    if (valForecastLower.includes('migrad')) estatusFinal = 'Migrado';
-    else if (valForecastLower.includes('planific') || valForecastLower.includes('aprobado')) estatusFinal = 'Planificado';
-    else if (valForecastLower.includes('propuest')) estatusFinal = 'Propuesto';
-    else if (valForecastLower.includes('desestimad')) estatusFinal = 'Desestimado';
-    else if (valForecastLower.includes('rollback')) estatusFinal = 'Rollback';
-    else if (valForecastLower.includes('reprogram')) estatusFinal = 'Reprogramado';
-    else if (valForecastLower.includes('suspendid')) estatusFinal = 'Suspendido';
-    else if (valForecastEC !== '' && valForecastEC !== '-' && valForecastEC !== '—') {
-      estatusFinal = valForecastEC.charAt(0).toUpperCase() + valForecastEC.slice(1);
-    }
-    
-    if (!ESTATUS_MIGRACION_LIST.includes(estatusFinal)) {
-      ESTATUS_MIGRACION_LIST.push(estatusFinal); 
-    }
+    if (valForecastEC.includes('migrad')) estatusFinal = 'Migrado';
+    else if (valForecastEC.includes('planific') || valForecastEC.includes('aprobado')) estatusFinal = 'Planificado';
+    else if (valForecastEC.includes('desestimad')) estatusFinal = 'Desestimado';
+    else if (valForecastEC.includes('rollback')) estatusFinal = 'Rollback';
+    else if (valForecastEC.includes('reprogram')) estatusFinal = 'Reprogramado';
 
     const srvCumpleCierreAprov = (estatusFinal === 'Migrado') && esEntregado;
 
@@ -891,6 +855,8 @@ async function processWorkbook(file) {
     }
     
     const componentesExtraidos = getNumStrict('componenteskyndryl', 'componenteskydryl', 'sumadecomponenteskyndryl', 'sumadecomponenteskydryl') || 0;
+    const componentesExtArq = getNumStrict('componentesarquitectura', 'componentearquitectura', 'sumadecomponentesarquitectura') || 0;
+    
     const curFechaNum = fechaExacta ? fechaExacta.getTime() : (semanaDate ? semanaDate.getTime() : Infinity);
 
     rows.push({
@@ -901,7 +867,8 @@ async function processWorkbook(file) {
       mes: mesNom,
       siglas: String(getVal('siglas', 'sigla') || 'S/S').trim(),
       app: String(getVal('nombredelaaplicacion', 'aplicacion', 'app') || 'Sin Aplicación').trim(),
-      servidor: String(getVal('servidor', 'host', 'hostname') || 'Sin Servidor').trim(),
+      servidor: String(getVal('servidor', 'host', 'hostname', 'servidor origen', 'host origen') || 'Sin Servidor').trim(),
+      servidorDestino: servidorDestino,
       ambiente: String(getVal('ambiente', 'env') || 'PRD').toUpperCase().trim(),
       crew: String(getVal('crew', 'dominio') || 'Sin Asignar').trim(),
       ownerKyndryl: ownerKyndryl,
@@ -912,8 +879,8 @@ async function processWorkbook(file) {
       subDestino: subDestino,
       equipoSO: equipoSO,
       nComp: componentesExtraidos,
+      nCompArq: componentesExtArq,
       estatus: estatusFinal,
-      intento: intentoVal,
       oc: ocNum ? String(ocNum).trim() : 'Sin OC',
       estadoOC: ocEstado,
       ticketUpg: ticketUpg != null && String(ticketUpg).trim() !== '' ? String(ticketUpg).trim() : 'No Aplica',
@@ -990,7 +957,6 @@ function initSlicers() {
     e.stopPropagation();
     $('#msMesDropdown').classList.remove('open');
     $('#msEstatusDropdown').classList.remove('open');
-    $('#msPrioDropdown').classList.remove('open');
     ddQ.classList.toggle('open');
   };
 
@@ -1050,7 +1016,6 @@ function initSlicers() {
     e.stopPropagation();
     $('#msQDropdown').classList.remove('open');
     $('#msEstatusDropdown').classList.remove('open');
-    $('#msPrioDropdown').classList.remove('open');
     ddMes.classList.toggle('open');
   };
 
@@ -1105,7 +1070,6 @@ function initSlicers() {
     e.stopPropagation();
     $('#msQDropdown').classList.remove('open');
     $('#msMesDropdown').classList.remove('open');
-    $('#msPrioDropdown').classList.remove('open');
     ddEstatus.classList.toggle('open');
   };
 
@@ -1133,70 +1097,14 @@ function initSlicers() {
     $('#msEstatusText').textContent = 'Ningún estatus';
     renderApp();
   };
-  
-  const priorizadosList = Array.from(new Set(state.raw.map(r => r.priorizadoQ))).filter(x => x && x !== '—' && x !== 'Sin Categoría').sort();
-  const ddPrio = $('#msPrioDropdown');
-  ddPrio.innerHTML = `
-    <div style="padding:4px 6px;margin-bottom:6px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;">
-      <button type="button" class="btn sm ghost" style="padding:2px 6px;font-size:11px;" id="btnSelectAllPrio">Todos</button>
-      <button type="button" class="btn sm ghost" style="padding:2px 6px;font-size:11px;" id="btnClearPrio">Ninguno</button>
-    </div>
-    ${priorizadosList.map(p => `
-      <label class="ms-item">
-        <input type="checkbox" value="${esc(p)}" ${state.selectedPriorizados.has(p) ? 'checked' : ''}>
-        <span>${esc(p)}</span>
-      </label>
-    `).join('')}
-  `;
-
-  const updatePrioButtonText = () => {
-    if (state.selectedPriorizados.size === 0) $('#msPrioText').textContent = 'Todas las cat.';
-    else if (state.selectedPriorizados.size === priorizadosList.length) $('#msPrioText').textContent = `Todas (${priorizadosList.length})`;
-    else if (state.selectedPriorizados.size === 1) $('#msPrioText').textContent = Array.from(state.selectedPriorizados)[0];
-    else $('#msPrioText').textContent = `${state.selectedPriorizados.size} selec.`;
-  };
-  updatePrioButtonText();
-
-  $('#msPrioBtn').onclick = (e) => {
-    e.stopPropagation();
-    $('#msQDropdown').classList.remove('open');
-    $('#msMesDropdown').classList.remove('open');
-    $('#msEstatusDropdown').classList.remove('open');
-    ddPrio.classList.toggle('open');
-  };
-
-  ddPrio.querySelectorAll('input[type=checkbox]').forEach(cb => {
-    cb.onchange = () => {
-      if (cb.checked) state.selectedPriorizados.add(cb.value);
-      else state.selectedPriorizados.delete(cb.value);
-      updatePrioButtonText();
-      renderApp();
-    };
-  });
-
-  $('#btnSelectAllPrio').onclick = (e) => {
-    e.stopPropagation();
-    priorizadosList.forEach(p => state.selectedPriorizados.add(p));
-    ddPrio.querySelectorAll('input').forEach(cb => cb.checked = true);
-    updatePrioButtonText();
-    renderApp();
-  };
-
-  $('#btnClearPrio').onclick = (e) => {
-    e.stopPropagation();
-    state.selectedPriorizados = new Set(['__NONE__']);
-    ddPrio.querySelectorAll('input').forEach(cb => cb.checked = false);
-    $('#msPrioText').textContent = 'Ninguna';
-    renderApp();
-  };
 
   document.addEventListener('click', (e) => {
     if (!e.target.closest('#msQContainer')) ddQ.classList.remove('open');
     if (!e.target.closest('#msMesContainer')) ddMes.classList.remove('open');
     if (!e.target.closest('#msEstatusContainer')) ddEstatus.classList.remove('open');
-    if (!e.target.closest('#msPrioContainer')) ddPrio.classList.remove('open');
   });
 
+  const priorizados = Array.from(new Set(state.raw.map(r => r.priorizadoQ))).filter(x => x && x !== '—' && x !== 'Sin Categoría').sort();
   const owners = Array.from(new Set(state.raw.map(r => r.ownerKyndryl))).filter(Boolean).sort();
   const estadosOC = Array.from(new Set(state.raw.map(r => r.estadoOC))).filter(x => x && x !== 'Sin Estado OC').sort();
   const ambs = Array.from(new Set(state.raw.map(r => r.ambiente))).filter(Boolean).sort();
@@ -1205,6 +1113,7 @@ function initSlicers() {
     $(id).innerHTML = `<option value="__ALL__">Todos (${arr.length})</option>` + arr.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join('');
   };
 
+  populate('#sPriorizadoQ', priorizados);
   populate('#sLeader', owners);
   populate('#sEstadoOC', estadosOC);
   populate('#sAmb', ambs);
@@ -1235,13 +1144,8 @@ function applyFilters() {
   } else if (state.selectedEstatus.size > 0) {
     list = list.filter(r => state.selectedEstatus.has(r.estatus));
   }
-  
-  if (state.selectedPriorizados.has('__NONE__')) {
-    list = [];
-  } else if (state.selectedPriorizados.size > 0) {
-    list = list.filter(r => state.selectedPriorizados.has(r.priorizadoQ));
-  }
 
+  if (f.priorizadoQ !== '__ALL__') list = list.filter(r => r.priorizadoQ === f.priorizadoQ);
   if (f.leader !== '__ALL__') list = list.filter(r => r.ownerKyndryl === f.leader);
   if (f.estadoOC !== '__ALL__') list = list.filter(r => r.estadoOC === f.estadoOC);
   if (f.amb !== '__ALL__') list = list.filter(r => r.ambiente === f.amb);
@@ -1253,76 +1157,249 @@ function applyFilters() {
 function renderApp() {
   applyFilters();
 
-  const totRegistros = state.view.reduce((a, b) => a + b.nComp, 0);
-  
-  // EXCLUSIÓN: No contabilizar estados fallidos/suspendidos para el alcance real
-  const estadosExcluidos = ['Rollback', 'Reprogramado', 'Suspendido'];
-  const totEfectivo = state.view.filter(r => !estadosExcluidos.includes(r.estatus)).reduce((a, b) => a + b.nComp, 0);
-  
+  const tot = state.view.reduce((a, b) => a + b.nComp, 0);
   const mig = state.view.filter(r => r.estatus === 'Migrado').reduce((a, b) => a + b.nComp, 0);
 
   const qsStr = Array.from(state.selectedQs).join(', ') || 'Todos';
   const anioStr = state.selectedAnio !== '__ALL__' ? `Año: ${state.selectedAnio} · ` : '';
-  
-  $('#navFoot').innerHTML = `<b>${fmt(totEfectivo)}</b> comp. en alcance<br>${fmt(mig)} cerrados (${pct1(pct(mig, totEfectivo))})`;
-  $('#pgSub').textContent = `${anioStr}Trimestres: ${qsStr} · Alcance Efectivo: ${fmt(totEfectivo)} comp. (${fmt(totRegistros)} totales) · ${fmt(new Set(state.view.map(r=>r.servidor)).size)} servidores`;
+  $('#navFoot').innerHTML = `<b>${fmt(tot)}</b> componentes en ámbito<br>${fmt(mig)} cerrados (${pct1(pct(mig, tot))})`;
+  $('#pgSub').textContent = `${anioStr}Trimestres: ${qsStr} · ${fmt(tot)} componentes totales · ${fmt(new Set(state.view.map(r=>r.servidor)).size)} servidores`;
 
-  destroyCharts();
+  for (const k in state.charts) {
+    if (state.charts[k]) state.charts[k].destroy();
+  }
+  state.charts = {};
 
   if (state.page === 'cumplimiento') renderCumplimientoPage();
   else if (state.page === 'flujo-e2e') renderFlujoE2EPage();
   else if (state.page === 'entregas') renderEntregasPage();
   else if (state.page === 'cierre-aprov') renderCierreAprovPage();
   else if (state.page === 'calendario') renderCalendarioPage();
+  else if (state.page === 'resumen-comp') renderResumenCompPage();
   else renderDetallePage();
 }
 
-function destroyCharts() {
-  for (const k in state.charts) {
-    if (state.charts[k]) state.charts[k].destroy();
-  }
-  state.charts = {};
-}
-
 /* -------------------------------------------------------------
-   MODAL DE ORDENAMIENTO (SORT) GLOBAL
+   VISTA NUEVA: RESUMEN DE COMPONENTES (Kyndryl vs Arquitectura)
 ------------------------------------------------------------- */
-window.modalSortCol = null;
-window.modalSortAsc = true;
-
-window.sortModal = function(col) {
-  if (window.modalSortCol === col) {
-    window.modalSortAsc = !window.modalSortAsc;
-  } else {
-    window.modalSortCol = col;
-    window.modalSortAsc = true;
-  }
+function renderResumenCompPage() {
+  // Lógica de Deduplicación por "Servidor + Siglas"
+  // Si un mismo server+app tiene Rollback y luego Migrado, nos quedamos solo con Migrado.
+  const prio = { 'Migrado': 6, 'Desestimado': 5, 'Planificado': 4, 'Reprogramado': 3, 'Por Definir': 2, 'Rollback': 1 };
   
-  const sortFn = (a, b) => {
-    let valA = a[col];
-    let valB = b[col];
-    
-    if (typeof valA === 'string') valA = valA.toLowerCase();
-    if (typeof valB === 'string') valB = valB.toLowerCase();
-    
-    if (valA == null) valA = '';
-    if (valB == null) valB = '';
+  const unitMap = new Map();
+  state.view.forEach(r => {
+     const key = r.servidor + '___' + r.siglas;
+     if (!unitMap.has(key)) {
+         unitMap.set(key, r);
+     } else {
+         const existing = unitMap.get(key);
+         const valE = prio[existing.estatus] || 0;
+         const valR = prio[r.estatus] || 0;
+         if (valR > valE) {
+             unitMap.set(key, r);
+         } else if (valR === valE && r.fechaNum !== Infinity && existing.fechaNum !== Infinity) {
+             if (r.fechaNum > existing.fechaNum) unitMap.set(key, r);
+         }
+     }
+  });
+  const uniqueRows = Array.from(unitMap.values());
 
-    if (valA < valB) return window.modalSortAsc ? -1 : 1;
-    if (valA > valB) return window.modalSortAsc ? 1 : -1;
-    return 0;
+  let totK = 0, migK = 0, pendK = 0;
+  let totA = 0, migA = 0, pendA = 0;
+
+  const labels = ['Migrado', 'Planificado', 'Reprogramado', 'Por Definir', 'Rollback', 'Desestimado'];
+  const stats = {};
+  labels.forEach(l => stats[l] = { k: 0, a: 0, srv: new Set() });
+
+  uniqueRows.forEach(r => {
+     totK += r.nComp;
+     totA += (r.nCompArq || 0);
+
+     const st = stats[r.estatus];
+     if (st) {
+       st.k += r.nComp;
+       st.a += (r.nCompArq || 0);
+       st.srv.add(r.servidor);
+     }
+
+     if (r.estatus === 'Migrado') {
+       migK += r.nComp; migA += (r.nCompArq || 0);
+     } else if (r.estatus !== 'Desestimado') {
+       pendK += r.nComp; pendA += (r.nCompArq || 0);
+     }
+  });
+
+  window.resumenUniqueRows = uniqueRows;
+  window.resumenFiltroEstatus = '__ALL__';
+
+  $('#page').innerHTML = `
+    <div class="section-label-bar">📦 Resumen Global de Componentes Únicos (Deduplicados)</div>
+    <div class="row r-4">
+      <div class="tile kpi navy">
+        <div class="lbl">Total Comp. Kyndryl</div>
+        <div class="val">${fmt(totK)}</div>
+        <div class="sub">Columna "Componentes Kyndryl"</div>
+      </div>
+      <div class="tile kpi amber">
+        <div class="lbl">Pendientes Kyndryl</div>
+        <div class="val" style="color:var(--k-amber);">${fmt(pendK)}</div>
+        <div class="sub">Faltan pasar a estatus 'Migrado'</div>
+      </div>
+      <div class="tile kpi blue">
+        <div class="lbl">Total Comp. Arquitectura</div>
+        <div class="val">${fmt(totA)}</div>
+        <div class="sub">Columna "Componentes Arquitectura"</div>
+      </div>
+      <div class="tile kpi amber">
+        <div class="lbl">Pendientes Arquitectura</div>
+        <div class="val" style="color:var(--k-amber);">${fmt(pendA)}</div>
+        <div class="sub">Faltan pasar a estatus 'Migrado'</div>
+      </div>
+    </div>
+
+    <div class="row r-2">
+      <div class="tile" style="border: 1.5px solid #CBD5E1; border-radius: 16px;">
+        <div class="th">
+           <div>
+              <h3>Avance Componentes Kyndryl</h3>
+              <div class="sb">Haz clic en los colores para filtrar la tabla inferior</div>
+           </div>
+        </div>
+        <div class="cbox" style="min-height: 250px;"><canvas id="cKyndryl"></canvas></div>
+      </div>
+      <div class="tile" style="border: 1.5px solid #CBD5E1; border-radius: 16px;">
+        <div class="th">
+           <div>
+              <h3>Avance Componentes Arquitectura</h3>
+              <div class="sb">Haz clic en los colores para filtrar la tabla inferior</div>
+           </div>
+        </div>
+        <div class="cbox" style="min-height: 250px;"><canvas id="cArq"></canvas></div>
+      </div>
+    </div>
+
+    <div class="row r-1">
+      <div class="tile" style="border: 1.5px solid #CBD5E1; border-radius: 16px;">
+         <div class="sticky-oc-header" style="margin-top: 0; margin-bottom: 12px; background: #F8FAFC; border-radius: 8px 8px 0 0;">
+           <div>
+             <h3 style="font-size:16px;margin:0 0 2px 0;">Auditoría de Componentes Asignados por Servidor</h3>
+             <div class="sb" id="lblResumenFiltro">Viendo: Todos los componentes (Deduplicados)</div>
+           </div>
+           <button class="btn sm ghost" onclick="filterResumenTable('__ALL__')">Quitar Filtros</button>
+         </div>
+         <div class="tw" style="max-height: 400px; border-radius: 0 0 8px 8px;">
+            <table class="dt">
+              <thead>
+                 <tr>
+                   <th class="l sortable" onclick="setResumenSort('servidor')">Srv. Origen <span id="sr_servidor" class="sort-icon"></span></th>
+                   <th class="l sortable" onclick="setResumenSort('servidorDestino')">Srv. Destino <span id="sr_servidorDestino" class="sort-icon"></span></th>
+                   <th class="l sortable" onclick="setResumenSort('app')">Aplicación <span id="sr_app" class="sort-icon"></span></th>
+                   <th class="l sortable" onclick="setResumenSort('estatus')">Estatus Migración <span id="sr_estatus" class="sort-icon"></span></th>
+                   <th class="sortable" style="background:#0F3A70; color:#fff;" onclick="setResumenSort('nComp')">Comp. Kyndryl <span id="sr_nComp" class="sort-icon"></span></th>
+                   <th class="sortable" style="background:#0284C7; color:#fff;" onclick="setResumenSort('nCompArq')">Comp. Arq <span id="sr_nCompArq" class="sort-icon"></span></th>
+                 </tr>
+              </thead>
+              <tbody id="tbBodyResumen"></tbody>
+            </table>
+         </div>
+      </div>
+    </div>
+  `;
+
+  const bgColors = ['#059669', '#0284C7', '#D97706', '#94A3B8', '#E11D48', '#475569'];
+
+  const ctxK = $('#cKyndryl').getContext('2d');
+  state.charts['cKyndryl'] = new Chart(ctxK, {
+     type: 'doughnut',
+     data: {
+       labels: labels,
+       datasets: [{ data: labels.map(l => stats[l].k), backgroundColor: bgColors, borderWidth: 2, borderColor: '#fff' }]
+     },
+     options: { 
+       maintainAspectRatio: false, cutout: '60%',
+       plugins: { 
+         legend: { position: 'right', labels: { font: { weight: '600', size: 11 } } },
+         tooltip: { callbacks: { label: c => ` ${c.raw} comp. Kyndryl (${stats[c.label].srv.size} servidores)` } }
+       },
+       onClick: (evt, activeEls) => {
+         if (!activeEls || !activeEls.length) return;
+         window.filterResumenTable(labels[activeEls[0].index]);
+       }
+     }
+  });
+
+  const ctxA = $('#cArq').getContext('2d');
+  state.charts['cArq'] = new Chart(ctxA, {
+     type: 'doughnut',
+     data: {
+       labels: labels,
+       datasets: [{ data: labels.map(l => stats[l].a), backgroundColor: bgColors, borderWidth: 2, borderColor: '#fff' }]
+     },
+     options: { 
+       maintainAspectRatio: false, cutout: '60%',
+       plugins: { 
+         legend: { position: 'right', labels: { font: { weight: '600', size: 11 } } },
+         tooltip: { callbacks: { label: c => ` ${c.raw} comp. Arq (${stats[c.label].srv.size} servidores)` } }
+       },
+       onClick: (evt, activeEls) => {
+         if (!activeEls || !activeEls.length) return;
+         window.filterResumenTable(labels[activeEls[0].index]);
+       }
+     }
+  });
+
+  window.resumenSortCol = 'nComp';
+  window.resumenSortAsc = false;
+
+  window.setResumenSort = (col) => {
+    if (window.resumenSortCol === col) window.resumenSortAsc = !window.resumenSortAsc;
+    else { window.resumenSortCol = col; window.resumenSortAsc = false; }
+    window.filterResumenTable(window.resumenFiltroEstatus);
   };
-  
-  window.modalCurrentRows.sort(sortFn);
-  window.modalFilteredRows.sort(sortFn);
-  
-  const tbody = document.getElementById('modalTableBody');
-  if (tbody) tbody.innerHTML = renderModalRows(window.modalFilteredRows);
-  
-  document.querySelectorAll('.modal-sort-icon').forEach(el => el.textContent = '');
-  const activeIcon = document.getElementById('ms_' + col);
-  if (activeIcon) activeIcon.textContent = window.modalSortAsc ? '▲' : '▼';
-};
+
+  window.filterResumenTable = (estatus) => {
+      window.resumenFiltroEstatus = estatus;
+      let fr = window.resumenUniqueRows;
+      if (estatus !== '__ALL__') fr = fr.filter(r => r.estatus === estatus);
+
+      fr.sort((a, b) => {
+         let valA = a[window.resumenSortCol];
+         let valB = b[window.resumenSortCol];
+         if (typeof valA === 'string') valA = valA.toLowerCase();
+         if (typeof valB === 'string') valB = valB.toLowerCase();
+         if (valA == null) valA = '';
+         if (valB == null) valB = '';
+         if (valA < valB) return window.resumenSortAsc ? -1 : 1;
+         if (valA > valB) return window.resumenSortAsc ? 1 : -1;
+         return 0;
+      });
+
+      const lbl = estatus === '__ALL__' ? 'Todos los estatus' : estatus;
+      const tSrv = new Set(fr.map(r=>r.servidor)).size;
+      const sumK = fr.reduce((a,b)=>a+b.nComp, 0);
+      const sumA = fr.reduce((a,b)=>a+(b.nCompArq||0), 0);
+
+      $('#lblResumenFiltro').innerHTML = `Viendo: <b>${lbl}</b> · ${sumK} comp. Kyndryl · ${sumA} comp. Arq · ${tSrv} servidores`;
+
+      $('#tbBodyResumen').innerHTML = fr.map(r => `
+          <tr>
+            <td class="l mono" style="font-weight:700;">${esc(r.servidor)}</td>
+            <td class="l mono" style="font-weight:700;color:var(--k-navy);">${esc(r.servidorDestino)}</td>
+            <td class="l" style="max-width:240px; white-space: normal; word-wrap: break-word;">${esc(r.app)}</td>
+            <td class="l"><span class="tag ${r.estatus === 'Migrado' ? 'mig' : (r.estatus === 'Planificado' ? 'plan' : (r.estatus === 'Desestimado' ? 'des' : (r.estatus === 'Rollback' ? 'rb' : 'pend')))}">${esc(r.estatus)}</span></td>
+            <td class="num" style="font-weight:700;color:var(--k-charcoal);">${r.nComp}</td>
+            <td class="num" style="font-weight:700;color:var(--k-blue);">${r.nCompArq || 0}</td>
+          </tr>
+      `).join('') || `<tr><td colspan="6" class="l" style="text-align:center;padding:20px;color:#888;">No hay registros para este filtro.</td></tr>`;
+
+      $$('.sort-icon').forEach(el => { if(el.id && el.id.startsWith('sr_')) el.textContent = ''; });
+      const activeIcon = $('#sr_' + window.resumenSortCol);
+      if (activeIcon) activeIcon.textContent = window.resumenSortAsc ? '▲' : '▼';
+  };
+
+  window.filterResumenTable('__ALL__');
+}
 
 /* -------------------------------------------------------------
    VISTA 1: NIVEL DE CUMPLIMIENTO
@@ -1330,7 +1407,6 @@ window.sortModal = function(col) {
 function renderCumplimientoPage() {
   const rows = state.view;
   const mesMap = new Map();
-  const estadosExcluidos = ['Rollback', 'Reprogramado', 'Suspendido'];
   
   rows.forEach(r => {
     let mNom = r.mes;
@@ -1369,8 +1445,7 @@ function renderCumplimientoPage() {
       key: m.label,
       label: m.label,
       mesNombre: m.mesOriginal,
-      // Aplicamos la exclusión de intentos fallidos al cálculo planificado
-      plan: m.planFijo != null ? m.planFijo : m.rows.filter(r => !estadosExcluidos.includes(r.estatus)).reduce((a, b) => a + b.nComp, 0),
+      plan: m.planFijo != null ? m.planFijo : m.rows.reduce((a, b) => a + b.nComp, 0),
       meta: m.metaFija,
       migReal: m.rows.filter(r => r.estatus === 'Migrado').reduce((a, b) => a + b.nComp, 0),
       rowsMes: m.rows
@@ -1398,7 +1473,7 @@ function renderCumplimientoPage() {
   const entregadosRows = rows.filter(r => r.esEntregado && r.estatus === 'Migrado');
   const entregadosComp = entregadosRows.reduce((a, b) => a + b.nComp, 0);
   const noEntregadosRows = migradosRows.filter(r => !r.esEntregado);
-  const noEntregadosComp = noEntregadosRows.filter(r => r.estatus === 'Migrado').reduce((a, b) => a + b.nComp, 0);
+  const noEntregadosComp = noEntregadosRows.reduce((a, b) => a + b.nComp, 0);
 
   const rollbacksRows = rows.filter(r => r.estatus === 'Rollback');
   const rollbacksComp = rollbacksRows.reduce((a, b) => a + b.nComp, 0);
@@ -1417,6 +1492,21 @@ function renderCumplimientoPage() {
   const motivosSorted = Array.from(motivosMap.entries()).sort((a, b) => b[1] - a[1]);
   const motivosLabels = motivosSorted.map(x => x[0]);
   const motivosValues = motivosSorted.map(x => x[1]);
+
+  const prioMap = new Map();
+  rows.forEach(r => {
+    const p = (r.priorizadoQ && r.priorizadoQ !== '—') ? r.priorizadoQ : 'Sin Categoría';
+    if(!prioMap.has(p)) prioMap.set(p, { label: p, atendidos: 0, pendientes: 0, rowsAtendidos: [], rowsPendientes: [] });
+    const node = prioMap.get(p);
+    if(r.estatus === 'Migrado') {
+        node.atendidos += r.nComp;
+        node.rowsAtendidos.push(r);
+    } else {
+        node.pendientes += r.nComp;
+        node.rowsPendientes.push(r);
+    }
+  });
+  const prioData = Array.from(prioMap.values()).sort((a,b) => (b.atendidos + b.pendientes) - (a.atendidos + a.pendientes));
 
   const semMap = new Map();
   rows.forEach(r => {
@@ -1438,7 +1528,6 @@ function renderCumplimientoPage() {
       });
     }
     const s = semMap.get(t);
-    // Para el gráfico de barras por semana sumaremos el esfuerzo crudo como referencia de trabajo
     s.total += r.nComp;
     if (r.estatus === 'Migrado') s.migrados += r.nComp;
     if (r.esEntregado && r.estatus === 'Migrado') s.entregados += r.nComp;
@@ -1447,21 +1536,6 @@ function renderCumplimientoPage() {
     s.rows.push(r);
   });
   const semanasOrdenadas = Array.from(semMap.values()).sort((a, b) => a.time - b.time);
-
-  const prioMap = new Map();
-  rows.forEach(r => {
-    const p = (r.priorizadoQ && r.priorizadoQ !== '—') ? r.priorizadoQ : 'Sin Categoría';
-    if(!prioMap.has(p)) prioMap.set(p, { label: p, atendidos: 0, pendientes: 0, rowsAtendidos: [], rowsPendientes: [] });
-    const node = prioMap.get(p);
-    if(r.estatus === 'Migrado') {
-        node.atendidos += r.nComp;
-        node.rowsAtendidos.push(r);
-    } else {
-        node.pendientes += r.nComp;
-        node.rowsPendientes.push(r);
-    }
-  });
-  const prioData = Array.from(prioMap.values()).sort((a,b) => (b.atendidos + b.pendientes) - (a.atendidos + a.pendientes));
 
   $('#page').innerHTML = `
     <div class="section-label-bar">📌 Métricas Base del Servicio (Valores Crudos)</div>
@@ -1944,7 +2018,6 @@ function renderFlujoE2EPage() {
             <tr>
               <th class="l">Alerta E2E</th>
               <th class="l">Servidor</th>
-              <th class="l">Intento</th>
               <th class="l">Sigla</th>
               <th class="l">Owner Kyndryl</th>
               <th class="l" style="background:#0F3A70;">Ticket Upgrade Capacidades</th>
@@ -1995,7 +2068,6 @@ function renderFlujoE2EPage() {
         <tr onclick="drillFlujoPorIdx(${idx})">
           <td class="l">${badgeHtml}</td>
           <td class="l mono" style="font-weight:700;">${esc(d.servidor)}</td>
-          <td class="l">${getIntentoBadge(d.intento)}</td>
           <td class="l mono">${esc(d.siglas)}</td>
           <td class="l"><b>${esc(d.ownerKyndryl)}</b></td>
           <td class="l mono" style="font-weight:700;color:var(--k-navy);">${esc(d.ticketUpg)}</td>
@@ -2007,7 +2079,7 @@ function renderFlujoE2EPage() {
           <td class="l" style="font-size:12px;font-weight:600;color:${d.alertaNivel === 'rojo' ? '#BE123C' : (d.alertaNivel === 'naranja' ? '#C2410C' : '#334155')}">${esc(d.diagnostico)}</td>
         </tr>
       `;
-    }).join('') + (filtrados.length > 350 ? `<tr><td colspan="12" class="l" style="text-align:center;padding:12px;color:#888;">Mostrando las primeras 350 alertas...</td></tr>` : '');
+    }).join('') + (filtrados.length > 350 ? `<tr><td colspan="11" class="l" style="text-align:center;padding:12px;color:#888;">Mostrando las primeras 350 alertas...</td></tr>` : '');
   };
 
   const bindCardClick = (cardId, targetAlerta) => {
@@ -2673,7 +2745,7 @@ function drillTicketAprovDetalle(ticketNum) {
                 <td class="l mono">${esc(s.sigla)}</td>
                 <td class="l">${esc(s.app)}</td>
                 <td class="l">${esc(s.ambiente)}</td>
-                <td class="l"><span class="tag ${getEstatusTagClass(s.esMigrado ? 'Migrado' : (s.esDesestimado ? 'Desestimado' : 'Planificado'))}">${s.esMigrado ? 'Migrado' : (s.esDesestimado ? 'Desestimado' : 'No Migrado')}</span></td>
+                <td class="l"><span class="tag ${s.esMigrado ? 'mig' : (s.esDesestimado ? 'des' : 'plan')}">${s.esMigrado ? 'Migrado' : (s.esDesestimado ? 'Desestimado' : 'No Migrado')}</span></td>
                 <td class="l"><span class="tag ${s.esEntregado ? 'mig' : 'pend'}">${s.esEntregado ? 'Entregado' : 'Pendiente'}</span></td>
                 <td class="l" style="font-size:12px;font-weight:600;color:${s.cumple ? 'var(--k-green)' : 'var(--k-alert)'};">${esc(diagTexto)}</td>
               </tr>
@@ -2834,18 +2906,12 @@ function renderCalendarioPage() {
   }
 
   const totInferiorComp = rowsOCInferior.reduce((a, b) => a + b.nComp, 0);
-  let pillsInferiorHtml = `<span class="stat-pill all ${state.calFiltroPillEstatus === '__ALL__' ? 'active' : ''}" onclick="seleccionarPillCalInferior('__ALL__')">Todos: ${totInferiorComp}</span>`;
-
-  const estMapCal = new Map();
-  rowsOCInferior.forEach(r => estMapCal.set(r.estatus, (estMapCal.get(r.estatus) || 0) + r.nComp));
-
-  ESTATUS_MIGRACION_LIST.forEach(est => {
-    const comp = estMapCal.get(est);
-    if (comp > 0) {
-      const cl = getEstatusTagClass(est);
-      pillsInferiorHtml += `<span class="stat-pill ${cl} ${state.calFiltroPillEstatus === est ? 'active' : ''}" onclick="seleccionarPillCalInferior('${est}')">${est}: ${comp}</span>`;
-    }
-  });
+  const planComp = rowsOCInferior.filter(r => r.estatus === 'Planificado').reduce((a, b) => a + b.nComp, 0);
+  const migComp = rowsOCInferior.filter(r => r.estatus === 'Migrado').reduce((a, b) => a + b.nComp, 0);
+  const pendComp = rowsOCInferior.filter(r => r.estatus === 'Por Definir').reduce((a, b) => a + b.nComp, 0);
+  const rbComp = rowsOCInferior.filter(r => r.estatus === 'Rollback').reduce((a, b) => a + b.nComp, 0);
+  const reprogComp = rowsOCInferior.filter(r => r.estatus === 'Reprogramado').reduce((a, b) => a + b.nComp, 0);
+  const desComp = rowsOCInferior.filter(r => r.estatus === 'Desestimado').reduce((a, b) => a + b.nComp, 0);
 
   let rowsParaTablaInferior = rowsOCInferior;
   if (state.calFiltroPillEstatus !== '__ALL__') {
@@ -2865,7 +2931,6 @@ function renderCalendarioPage() {
         srvSet: new Set(),
         fechasSet: new Set(), 
         ambientesSet: new Set(),
-        intentosSet: new Set(), // Extraer todos los intentos para esta OC unificada
         minFechaNum: r.fechaDate ? r.fechaDate.getTime() : (r.semanaDate ? r.semanaDate.getTime() : Infinity),
         totalComp: 0,
         rows: []
@@ -2874,7 +2939,6 @@ function renderCalendarioPage() {
     const item = ocInferiorMap.get(ocKey);
     item.totalComp += r.nComp;
     item.srvSet.add(r.servidor);
-    if (r.intento) item.intentosSet.add(r.intento);
     if (r.fechaLbl && r.fechaLbl !== 'Sin fecha') item.fechasSet.add(r.fechaLbl);
     if (r.siglas && r.siglas !== 'S/S') item.appSet.add(r.siglas);
     if (r.ambiente && r.ambiente !== '—') item.ambientesSet.add(r.ambiente);
@@ -2890,13 +2954,24 @@ function renderCalendarioPage() {
       ambientesStr: Array.from(item.ambientesSet).join(', ') || '—',
       appsStr: Array.from(item.appSet).join(', ') || 'S/S',
       fechasStr: Array.from(item.fechasSet).join('<br>') || 'Sin fecha',
-      intentoStr: Array.from(item.intentosSet).join(', ') || '1er Intento',
       srvCount: item.srvSet.size
   }));
 
   const compMostradosInferior = ocsInferiorList.reduce((a, b) => a + b.totalComp, 0);
 
   window.curOcsInferiorList = ocsInferiorList;
+
+  let pillsInferiorHtml = `
+    <span class="stat-pill all ${state.calFiltroPillEstatus === '__ALL__' ? 'active' : ''}" onclick="seleccionarPillCalInferior('__ALL__')">
+      Todos: ${totInferiorComp}
+    </span>
+  `;
+  if (planComp > 0) pillsInferiorHtml += `<span class="stat-pill plan ${state.calFiltroPillEstatus === 'Planificado' ? 'active' : ''}" onclick="seleccionarPillCalInferior('Planificado')">Planificados: ${planComp}</span>`;
+  if (migComp > 0) pillsInferiorHtml += `<span class="stat-pill mig ${state.calFiltroPillEstatus === 'Migrado' ? 'active' : ''}" onclick="seleccionarPillCalInferior('Migrado')">Migrados: ${migComp}</span>`;
+  if (pendComp > 0) pillsInferiorHtml += `<span class="stat-pill pend ${state.calFiltroPillEstatus === 'Por Definir' ? 'active' : ''}" onclick="seleccionarPillCalInferior('Por Definir')">Por Definir: ${pendComp}</span>`;
+  if (rbComp > 0) pillsInferiorHtml += `<span class="stat-pill rb ${state.calFiltroPillEstatus === 'Rollback' ? 'active' : ''}" onclick="seleccionarPillCalInferior('Rollback')">Rollback: ${rbComp}</span>`;
+  if (reprogComp > 0) pillsInferiorHtml += `<span class="stat-pill reprog ${state.calFiltroPillEstatus === 'Reprogramado' ? 'active' : ''}" onclick="seleccionarPillCalInferior('Reprogramado')">Reprogramados: ${reprogComp}</span>`;
+  if (desComp > 0) pillsInferiorHtml += `<span class="stat-pill des ${state.calFiltroPillEstatus === 'Desestimado' ? 'active' : ''}" onclick="seleccionarPillCalInferior('Desestimado')">Desestimados: ${desComp}</span>`;
 
   $('#page').innerHTML = `
     <div class="tile" style="overflow: visible; margin-bottom: 20px;">
@@ -2965,7 +3040,6 @@ function renderCalendarioPage() {
               <th class="l sortable" onclick="setCalSort('oc')" title="Clic para ordenar">OC Migración <span id="sc_oc" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setCalSort('estadoOC')" title="Clic para ordenar">Estado de la OC <span id="sc_estadoOC" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setCalSort('estatus')" title="Clic para ordenar">Estatus Migración <span id="sc_estatus" class="sort-icon"></span></th>
-              <th class="l sortable" onclick="setCalSort('intentoStr')" title="Clic para ordenar">Intento <span id="sc_intentoStr" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setCalSort('owner')" title="Clic para ordenar">Owner Kyndryl <span id="sc_owner" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setCalSort('ambientesStr')" title="Clic para ordenar">Ambiente <span id="sc_ambientesStr" class="sort-icon"></span></th>
               <th class="sortable" onclick="setCalSort('srvCount')" title="Clic para ordenar">Servidores <span id="sc_srvCount" class="sort-icon"></span></th>
@@ -3018,14 +3092,13 @@ function renderCalendarioPage() {
 
      $('#tbBodyCalInferior').innerHTML = filtrados.map((item, idx) => {
         const tagClass = getEstadoOCClass(item.estadoOC);
-        const estatusClass = getEstatusTagClass(item.estatus);
+        const estatusClass = item.estatus === 'Migrado' ? 'mig' : (item.estatus === 'Planificado' ? 'plan' : (item.estatus === 'Desestimado' ? 'des' : (item.estatus === 'Rollback' ? 'rb' : 'pend')));
         
         return `
           <tr>
             <td class="l mono"><b>${esc(item.oc)}</b></td>
             <td class="l"><span class="tag ${tagClass}">${esc(item.estadoOC)}</span></td>
             <td class="l"><span class="tag ${estatusClass}">${esc(item.estatus)}</span></td>
-            <td class="l">${getIntentoBadge(item.intentoStr)}</td>
             <td class="l"><b>${esc(item.owner)}</b></td>
             <td class="l">${esc(item.ambientesStr)}</td>
             <td class="num"><span class="srv-badge">${item.srvCount} srv</span></td>
@@ -3037,7 +3110,7 @@ function renderCalendarioPage() {
             </td>
           </tr>
         `;
-     }).join('') || `<tr><td colspan="11" class="l" style="text-align:center;padding:24px;color:#888;">No hay órdenes de cambio bajo la selección actual.</td></tr>`;
+     }).join('') || `<tr><td colspan="10" class="l" style="text-align:center;padding:24px;color:#888;">No hay órdenes de cambio bajo la selección actual.</td></tr>`;
 
      $$('.sort-icon').forEach(el => {
         if (el.id && el.id.startsWith('sc_')) el.textContent = '';
@@ -3179,18 +3252,29 @@ function drillGrupo(titulo, rows) {
   const servidoresUnicos = Array.from(new Set(rows.map(r => r.servidor))).length;
   const appsUnicas = Array.from(new Set(rows.map(r => r.siglas))).length;
 
-  let chipsHtml = `<span class="tag modal-chip active all" id="chipModal_ALL" onclick="filterModalByEstatus('__ALL__')" title="Ver todos los componentes">Todos: ${totComp}</span>`;
+  const getTagClass = (e) => {
+    if (e === 'Migrado') return 'mig';
+    if (e === 'Planificado') return 'plan';
+    if (e === 'Rollback') return 'rb';
+    if (e === 'Desestimado') return 'des'; 
+    return 'pend';
+  };
 
-  const estMapMod = new Map();
-  rows.forEach(r => estMapMod.set(r.estatus, (estMapMod.get(r.estatus) || 0) + r.nComp));
+  const estatusPosibles = ['Planificado', 'Por Definir', 'Rollback', 'Migrado', 'Reprogramado', 'Desestimado'];
 
-  ESTATUS_MIGRACION_LIST.forEach(est => {
-    const comp = estMapMod.get(est);
-    if (comp > 0) {
-      const c = getEstatusTagClass(est);
-      chipsHtml += `<span class="tag ${c} modal-chip" id="chipModal_${cleanKey(est)}" onclick="filterModalByEstatus('${est}')" title="Filtrar por ${est}">${est}: ${comp}</span>`;
-    }
-  });
+  const chipsHtml = `
+    <span class="tag modal-chip active all" id="chipModal_ALL" onclick="filterModalByEstatus('__ALL__')" title="Ver todos los componentes">
+      Todos: ${totComp}
+    </span>
+    ${estatusPosibles.map(e => {
+      const n = rows.filter(r => r.estatus === e).reduce((a, b) => a + b.nComp, 0);
+      if (n === 0) return '';
+      const c = getTagClass(e);
+      return `<span class="tag ${c} modal-chip" id="chipModal_${cleanKey(e)}" onclick="filterModalByEstatus('${e}')" title="Filtrar por ${e}">
+        ${e}: ${n}
+      </span>`;
+    }).join(' ')}
+  `;
 
   const modalHtml = `
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
@@ -3204,9 +3288,10 @@ function drillGrupo(titulo, rows) {
             <th class="l sortable" onclick="sortModal('equipoSO')" title="Clic para ordenar">Equipo <span id="ms_equipoSO" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('siglas')" title="Clic para ordenar">Sigla <span id="ms_siglas" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('app')" title="Clic para ordenar">Aplicación <span id="ms_app" class="sort-icon modal-sort-icon"></span></th>
-            <th class="l sortable" onclick="sortModal('servidor')" title="Clic para ordenar">Servidor <span id="ms_servidor" class="sort-icon modal-sort-icon"></span></th>
-            <th class="l sortable" onclick="sortModal('intento')" title="Clic para ordenar">Intento <span id="ms_intento" class="sort-icon modal-sort-icon"></span></th>
-            <th class="sortable" onclick="sortModal('nComp')" title="Clic para ordenar">Comp. <span id="ms_nComp" class="sort-icon modal-sort-icon"></span></th>
+            <th class="l sortable" onclick="sortModal('servidor')" title="Clic para ordenar">Srv. Origen <span id="ms_servidor" class="sort-icon modal-sort-icon"></span></th>
+            <th class="l sortable" onclick="sortModal('servidorDestino')" title="Clic para ordenar">Srv. Destino <span id="ms_servidorDestino" class="sort-icon modal-sort-icon"></span></th>
+            <th class="sortable" onclick="sortModal('nComp')" title="Clic para ordenar">Comp. Kyndryl <span id="ms_nComp" class="sort-icon modal-sort-icon"></span></th>
+            <th class="sortable" onclick="sortModal('nCompArq')" title="Clic para ordenar">Comp. Arq <span id="ms_nCompArq" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('ambiente')" title="Clic para ordenar">Ambiente <span id="ms_ambiente" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('priorizadoQ')" title="Clic para ordenar">Priorizado Q <span id="ms_priorizadoQ" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('ownerKyndryl')" title="Clic para ordenar">Owner Kyndryl <span id="ms_ownerKyndryl" class="sort-icon modal-sort-icon"></span></th>
@@ -3237,22 +3322,23 @@ function renderModalRows(rows) {
     <tr>
       <td class="l"><span class="team-badge ${r.equipoSO === 'Windows' ? 'windows' : 'linux'}">${r.equipoSO === 'Windows' ? '🪟 Windows' : '🐧 Linux'}</span></td>
       <td class="l mono"><b>${esc(r.siglas)}</b></td>
-      <td class="l" style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.app)}</td>
+      <td class="l" style="min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.app)}</td>
       <td class="l mono" style="font-weight:700;">${esc(r.servidor)}</td>
-      <td class="l">${getIntentoBadge(r.intento)}</td>
+      <td class="l mono" style="font-weight:700;color:var(--k-navy);">${esc(r.servidorDestino)}</td>
       <td class="num" style="font-weight:700;color:var(--k-red);">${r.nComp}</td>
+      <td class="num" style="font-weight:700;color:var(--k-blue);">${r.nCompArq || 0}</td>
       <td class="l">${esc(r.ambiente)}</td>
       <td class="l" style="font-size:12px;font-weight:600;color:var(--k-navy);">${esc(r.priorizadoQ)}</td>
       <td class="l"><b>${esc(r.ownerKyndryl)}</b></td>
       <td class="l"><span class="tag ${r.esEntregado ? 'mig' : 'pend'}">${r.esEntregado ? 'Entregado' : 'Pendiente'}</span></td>
-      <td class="l" style="font-size:12px;font-weight:600;color:${r.esEntregado ? 'var(--k-green)' : 'var(--k-alert)'};">${esc(r.motivoNoEntrega)}</td>
+      <td class="l" style="font-size:12px;font-weight:600;color:${r.esEntregado ? 'var(--k-green)' : 'var(--k-alert)'}; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.motivoNoEntrega)}</td>
       <td class="l mono">${esc(r.oc)}</td>
       <td class="l"><span class="tag ${getEstadoOCClass(r.estadoOC)}">${esc(r.estadoOC)}</span></td>
-      <td class="l" style="font-size:12px;">${esc(r.soOrigen)}</td>
-      <td class="l" style="font-size:12px;">${esc(r.subOrigen)}</td>
-      <td class="l" style="font-size:12px;">${esc(r.soDestino)}</td>
-      <td class="l" style="font-size:12px;">${esc(r.subDestino)}</td>
-      <td class="l"><span class="tag ${getEstatusTagClass(r.estatus)}">${esc(r.estatus)}</span></td>
+      <td class="l" style="font-size:12px; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.soOrigen)}</td>
+      <td class="l" style="font-size:12px; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.subOrigen)}</td>
+      <td class="l" style="font-size:12px; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.soDestino)}</td>
+      <td class="l" style="font-size:12px; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.subDestino)}</td>
+      <td class="l"><span class="tag ${r.estatus === 'Migrado' ? 'mig' : (r.estatus === 'Planificado' ? 'plan' : (r.estatus === 'Desestimado' ? 'des' : (r.estatus === 'Rollback' ? 'rb' : 'pend')))}">${esc(r.estatus)}</span></td>
     </tr>
   `).join('');
 }
@@ -3318,13 +3404,14 @@ function openModal(title, sub, bodyHtml, exportData) {
     const ws = XLSX.utils.json_to_sheet(dataToExport.map(r => ({
       'Equipo': r.equipoSO,
       'Priorizado Q': r.priorizadoQ,
-      'Trimestre': r.qIbk, 'Mes': r.mes, 'Sigla': r.siglas, 'Aplicación': r.app, 'Servidor': r.servidor,
-      'Intento': r.intento,
-      '# Componentes': r.nComp, 'Ambiente': r.ambiente, 'Owner Kyndryl': r.ownerKyndryl,
+      'Trimestre': r.qIbk, 'Mes': r.mes, 'Sigla': r.siglas, 'Aplicación': r.app, 
+      'Servidor Origen': r.servidor, 'Servidor Destino': r.servidorDestino,
+      '# Componentes Kyndryl': r.nComp, '# Componentes Arquitectura': r.nCompArq, 
+      'Ambiente': r.ambiente, 'Owner Kyndryl': r.ownerKyndryl,
       'Estado Entrega': r.esEntregado ? 'Entregado' : 'Pendiente',
       'Motivo No Entrega': r.motivoNoEntrega,
       'Ticket Aprovisionamiento': r.ticketAprov,
-      'OC Migración': r.oc, 'Estado OC': r.estadoOC, 'Fecha': r.fechaLbl,
+      'OC Migración': r.oc, 'Estado OC': r.estadoOC, 'Fecha Planificada': r.fechaLbl,
       'Horario': r.rangoHorario,
       'S.O Origen': r.soOrigen, 'Subsistema Origen': r.subOrigen,
       'S.O Destino': r.soDestino, 'Subsistema Destino': r.subDestino,
@@ -3348,20 +3435,20 @@ function renderDetallePage() {
   window.invFiltroPill = window.invFiltroPill || '__ALL__';
 
   const totComp = rows.reduce((a, b) => a + b.nComp, 0);
+  const planComp = rows.filter(r => r.estatus === 'Planificado').reduce((a, b) => a + b.nComp, 0);
+  const migComp = rows.filter(r => r.estatus === 'Migrado').reduce((a, b) => a + b.nComp, 0);
+  const pendComp = rows.filter(r => r.estatus === 'Por Definir').reduce((a, b) => a + b.nComp, 0);
+  const rbComp = rows.filter(r => r.estatus === 'Rollback').reduce((a, b) => a + b.nComp, 0);
+  const reprogComp = rows.filter(r => r.estatus === 'Reprogramado').reduce((a, b) => a + b.nComp, 0);
+  const desComp = rows.filter(r => r.estatus === 'Desestimado').reduce((a, b) => a + b.nComp, 0);
 
   let pillsInvHtml = `<span class="stat-pill all ${window.invFiltroPill === '__ALL__' ? 'active' : ''}" onclick="setInvPill('__ALL__')">Todos: ${totComp}</span>`;
-
-  const estMapInv = new Map();
-  rows.forEach(r => estMapInv.set(r.estatus, (estMapInv.get(r.estatus) || 0) + r.nComp));
-
-  ESTATUS_MIGRACION_LIST.forEach(est => {
-    const comp = estMapInv.get(est);
-    if (comp > 0) {
-      const cl = getEstatusTagClass(est);
-      pillsInvHtml += `<span class="stat-pill ${cl} ${window.invFiltroPill === est ? 'active' : ''}" onclick="setInvPill('${est}')">${est}: ${comp}</span>`;
-    }
-  });
-
+  if (planComp > 0) pillsInvHtml += `<span class="stat-pill plan ${window.invFiltroPill === 'Planificado' ? 'active' : ''}" onclick="setInvPill('Planificado')">Planificados: ${planComp}</span>`;
+  if (migComp > 0) pillsInvHtml += `<span class="stat-pill mig ${window.invFiltroPill === 'Migrado' ? 'active' : ''}" onclick="setInvPill('Migrado')">Migrados: ${migComp}</span>`;
+  if (pendComp > 0) pillsInvHtml += `<span class="stat-pill pend ${window.invFiltroPill === 'Por Definir' ? 'active' : ''}" onclick="setInvPill('Por Definir')">Por Definir: ${pendComp}</span>`;
+  if (rbComp > 0) pillsInvHtml += `<span class="stat-pill rb ${window.invFiltroPill === 'Rollback' ? 'active' : ''}" onclick="setInvPill('Rollback')">Rollback: ${rbComp}</span>`;
+  if (reprogComp > 0) pillsInvHtml += `<span class="stat-pill reprog ${window.invFiltroPill === 'Reprogramado' ? 'active' : ''}" onclick="setInvPill('Reprogramado')">Reprogramados: ${reprogComp}</span>`;
+  if (desComp > 0) pillsInvHtml += `<span class="stat-pill des ${window.invFiltroPill === 'Desestimado' ? 'active' : ''}" onclick="setInvPill('Desestimado')">Desestimados: ${desComp}</span>`;
 
   $('#page').innerHTML = `
     <div class="tile" style="overflow: visible;">
@@ -3385,9 +3472,10 @@ function renderDetallePage() {
               <th class="l sortable" onclick="setInvSort('equipoSO')">Equipo <span id="si_equipoSO" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('siglas')">Sigla <span id="si_siglas" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('app')">Aplicación <span id="si_app" class="sort-icon"></span></th>
-              <th class="l sortable" onclick="setInvSort('servidor')">Servidor <span id="si_servidor" class="sort-icon"></span></th>
-              <th class="l sortable" onclick="setInvSort('intento')">Intento <span id="si_intento" class="sort-icon"></span></th>
-              <th class="sortable" onclick="setInvSort('nComp')">Comp. <span id="si_nComp" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setInvSort('servidor')">Srv. Origen <span id="si_servidor" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setInvSort('servidorDestino')">Srv. Destino <span id="si_servidorDestino" class="sort-icon"></span></th>
+              <th class="sortable" onclick="setInvSort('nComp')">Comp. Kyndryl <span id="si_nComp" class="sort-icon"></span></th>
+              <th class="sortable" onclick="setInvSort('nCompArq')">Comp. Arq <span id="si_nCompArq" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('ambiente')">Ambiente <span id="si_ambiente" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('priorizadoQ')">Priorizado Q <span id="si_priorizadoQ" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('ownerKyndryl')">Owner <span id="si_ownerKyndryl" class="sort-icon"></span></th>
@@ -3427,7 +3515,7 @@ function renderDetallePage() {
     }
 
     if (qText) {
-      filtrados = filtrados.filter(r => norm(`${r.siglas} ${r.app} ${r.servidor} ${r.ownerKyndryl} ${r.oc} ${r.estadoOC} ${r.soOrigen} ${r.soDestino} ${r.priorizadoQ}`).includes(qText));
+      filtrados = filtrados.filter(r => norm(`${r.siglas} ${r.app} ${r.servidor} ${r.servidorDestino} ${r.ownerKyndryl} ${r.oc} ${r.estadoOC} ${r.soOrigen} ${r.soDestino} ${r.priorizadoQ}`).includes(qText));
     }
 
     filtrados.sort((a, b) => {
@@ -3452,23 +3540,24 @@ function renderDetallePage() {
       <tr>
         <td class="l"><span class="team-badge ${r.equipoSO === 'Windows' ? 'windows' : 'linux'}">${r.equipoSO === 'Windows' ? '🪟 Windows' : '🐧 Linux'}</span></td>
         <td class="l mono"><b>${esc(r.siglas)}</b></td>
-        <td class="l" style="max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(r.app)}">${esc(r.app)}</td>
+        <td class="l" style="min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.app)}</td>
         <td class="l mono" style="font-weight:700;">${esc(r.servidor)}</td>
-        <td class="l">${getIntentoBadge(r.intento)}</td>
+        <td class="l mono" style="font-weight:700;color:var(--k-navy);">${esc(r.servidorDestino)}</td>
         <td class="num" style="font-weight:700;color:var(--k-red);">${r.nComp}</td>
+        <td class="num" style="font-weight:700;color:var(--k-blue);">${r.nCompArq || 0}</td>
         <td class="l">${esc(r.ambiente)}</td>
         <td class="l" style="font-size:12px;font-weight:600;color:var(--k-navy);">${esc(r.priorizadoQ)}</td>
         <td class="l"><b>${esc(r.ownerKyndryl)}</b></td>
         <td class="l mono">${esc(r.oc)}</td>
         <td class="l"><span class="tag ${getEstadoOCClass(r.estadoOC)}">${esc(r.estadoOC)}</span></td>
         <td class="l mono" style="font-size:12px;white-space:nowrap;">${esc(r.fechaLbl)}</td>
-        <td class="l" style="font-size:12px;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(r.soOrigen)}">${esc(r.soOrigen)}</td>
-        <td class="l" style="font-size:12px;">${esc(r.subOrigen)}</td>
-        <td class="l" style="font-size:12px;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(r.soDestino)}">${esc(r.soDestino)}</td>
-        <td class="l" style="font-size:12px;">${esc(r.subDestino)}</td>
-        <td class="l"><span class="tag ${getEstatusTagClass(r.estatus)}">${esc(r.estatus)}</span></td>
+        <td class="l" style="font-size:12px; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.soOrigen)}</td>
+        <td class="l" style="font-size:12px; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.subOrigen)}</td>
+        <td class="l" style="font-size:12px; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.soDestino)}</td>
+        <td class="l" style="font-size:12px; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.subDestino)}</td>
+        <td class="l"><span class="tag ${r.estatus === 'Migrado' ? 'mig' : (r.estatus === 'Planificado' ? 'plan' : (r.estatus === 'Desestimado' ? 'des' : (r.estatus === 'Rollback' ? 'rb' : 'pend')))}">${esc(r.estatus)}</span></td>
       </tr>
-    `).join('') + (filtrados.length > 300 ? '<tr><td colspan="17" class="l" style="text-align:center;color:#888;">Mostrando los primeros 300 registros... Exportar para ver completo.</td></tr>' : '');
+    `).join('') + (filtrados.length > 300 ? '<tr><td colspan="18" class="l" style="text-align:center;color:#888;">Mostrando los primeros 300 registros... Exportar para ver completo.</td></tr>' : '');
 
     $$('.sort-icon').forEach(el => { if(el.id && el.id.startsWith('si_')) el.textContent = ''; });
     const activeIcon = $('#si_' + window.invSortCol);
@@ -3498,8 +3587,8 @@ function initEvents() {
     if (e.dataTransfer.files.length) processWorkbook(e.dataTransfer.files[0]);
   };
 
-  $$('.navbtn').forEach(btn => btn.onclick = () => {$$
-('.navbtn').forEach(b => b.classList.remove('on'));
+  $$('.navbtn').forEach(btn => btn.onclick = () => {
+    $$('.navbtn').forEach(b => b.classList.remove('on'));
     btn.classList.add('on');
     state.page = btn.dataset.pg;
     const titles = {
@@ -3508,7 +3597,8 @@ function initEvents() {
       entregas: '✅ Avance de Entregas (Servidores Migrados)',
       'cierre-aprov': '🎯 Gestión de Entregables (Tickets Cerrados)',
       calendario: '📅 Plan de Ejecución de Migraciones y Control de OC',
-      detalle: '🖥️ Inventario de Servidores y Componentes'
+      detalle: '🖥️ Inventario Completo de Componentes y Servidores',
+      'resumen-comp': '📦 Resumen Global de Componentes (Kyndryl vs Arquitectura)'
     };
     $('#pgTitle').textContent = titles[state.page];
     renderApp();
@@ -3520,6 +3610,7 @@ function initEvents() {
   bind('#sLeader', 'leader');
   bind('#sEstadoOC', 'estadoOC');
   bind('#sAmb', 'amb');
+  bind('#sPriorizadoQ', 'priorizadoQ');
   bind('#sEquipoSO', 'equipoSO');
 
   $('#btnReset').onclick = () => {
@@ -3557,12 +3648,9 @@ function initEvents() {
 
     state.selectedEstatus.clear();
     $('#msEstatusDropdown').querySelectorAll('input').forEach(cb => cb.checked = false);
-    $('#msEstatusText').textContent = 'Todos los estatus';      
-    
-    state.selectedPriorizados.clear();
-    if ($('#msPrioDropdown')) {
-      $('#msPrioDropdown').querySelectorAll('input').forEach(cb => cb.checked = false);
-      $('#msPrioText').textContent = 'Todas las cat.';     }      $$('.slicers select').forEach(s => {
+    $('#msEstatusText').textContent = 'Todos los estatus';
+
+    $$('.slicers select').forEach(s => {
       if (s.id !== 'sAnioGlobal') s.value = '__ALL__';
     });
     renderApp();
@@ -3574,13 +3662,14 @@ function initEvents() {
     const ws = XLSX.utils.json_to_sheet(state.view.map(r => ({
       'Equipo': r.equipoSO,
       'Priorizado Q': r.priorizadoQ,
-      'Trimestre': r.qIbk, 'Mes': r.mes, 'Sigla': r.siglas, 'Aplicación': r.app, 'Servidor': r.servidor,
-      'Intento': r.intento,
-      '# Componentes': r.nComp, 'Ambiente': r.ambiente, 'Owner Kyndryl': r.ownerKyndryl,
+      'Trimestre': r.qIbk, 'Mes': r.mes, 'Sigla': r.siglas, 'Aplicación': r.app, 
+      'Servidor Origen': r.servidor, 'Servidor Destino': r.servidorDestino,
+      '# Componentes Kyndryl': r.nComp, '# Componentes Arquitectura': r.nCompArq, 
+      'Ambiente': r.ambiente, 'Owner Kyndryl': r.ownerKyndryl,
       'Estado Entrega': r.esEntregado ? 'Entregado' : 'Pendiente',
       'Motivo No Entrega': r.motivoNoEntrega,
       'Ticket Aprovisionamiento': r.ticketAprov,
-      'OC Migración': r.oc, 'Estado OC': r.estadoOC, 'Fecha': r.fechaLbl,
+      'OC Migración': r.oc, 'Estado OC': r.estadoOC, 'Fecha Planificada': r.fechaLbl,
       'Horario': r.rangoHorario,
       'S.O Origen': r.soOrigen, 'Subsistema Origen': r.subOrigen,
       'S.O Destino': r.soDestino, 'Subsistema Destino': r.subDestino,
