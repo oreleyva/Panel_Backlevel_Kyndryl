@@ -28,6 +28,7 @@
   --k-navy: #0F3A70;
   --k-gray: #94A3B8;
   --k-alert: #E11D48;
+  --k-purple: #8B5CF6;
   --nav-w: 265px;
 }
 * { box-sizing: border-box; }
@@ -125,6 +126,7 @@ select:focus, input:focus { outline: 2px solid rgba(255,70,45,0.4); outline-offs
 .kpi.blue { border-left-color: var(--k-blue); }
 .kpi.navy { border-left-color: var(--k-navy); }
 .kpi.alert { border-left-color: var(--k-alert); }
+.kpi.purple { border-left-color: var(--k-purple); }
 
 .kpi-clickable { cursor: pointer; transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease; user-select: none; }
 .kpi-clickable:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08); }
@@ -189,6 +191,7 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
 .tag.des { border-color: #94A3B8; background: #F1F5F9; color: #475569; }
 .tag.listo-cierre { border-color: var(--k-green); background: #DCFCE7; color: #15803D; font-weight: 800; }
 .tag.incompleto { border-color: var(--k-amber); background: #FEF3C7; color: #B45309; }
+.tag.purple { border-color: var(--k-purple); background: rgba(139, 92, 246, 0.1); color: var(--k-purple); }
 
 .modal-chip { cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); user-select: none; border-width: 1.5px !important; padding: 4px 10px; font-size: 11.5px; opacity: 0.8; }
 .modal-chip:hover { filter: brightness(0.9); opacity: 1; transform: translateY(-1px); }
@@ -315,7 +318,6 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
         <span>Inventario de Servidores<small>Detalle de componentes</small></span>
       </button>
-      <!-- NUEVA PESTAÑA RESUMEN COMPONENTES -->
       <button class="navbtn" data-pg="resumen-comp">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
         <span>Resumen de Componentes<small>Kyndryl vs Arquitectura</small></span>
@@ -411,7 +413,8 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
 const KC = {
   red: '#FF462D', redDark: '#C92A15', charcoal: '#141414', slate: '#1E1E22',
   green: '#059669', greenDark: '#047857', amber: '#D97706', blue: '#0284C7',
-  navy: '#0F3A70', gray: '#94A3B8', alert: '#E11D48', orange: '#EA580C', yellow: '#EAB308'
+  navy: '#0F3A70', gray: '#94A3B8', alert: '#E11D48', orange: '#EA580C', yellow: '#EAB308',
+  purple: '#8B5CF6'
 };
 
 const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
@@ -420,7 +423,7 @@ const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Se
 const MESES_CORTO_LOWER = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
 const ESTATUS_MIGRACION_LIST = ['Migrado', 'Planificado', 'Por Definir', 'Reprogramado', 'Rollback', 'Desestimado'];
 
-// Dibuja los números sobre las barras, saltando gráficas de tipo dona (para que no se ensucie visualmente)
+// Dibuja los números sobre las barras, saltando gráficas de tipo dona
 const drawLabelsPlugin = {
   id: 'drawLabels',
   afterDatasetsDraw(chart) {
@@ -452,7 +455,6 @@ function getMetaMensual(anio, mesIdx0) {
   return 120;
 }
 
-// NORMALIZACIÓN DE ESTADO OC
 function normalizarEstadoOC(raw) {
   if (!raw) return 'Sin Estado OC';
   let s = String(raw).trim().toLowerCase();
@@ -473,7 +475,6 @@ function normalizarEstadoOC(raw) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-// NORMALIZACIÓN DE PRIORIZADO Q
 function normalizarPriorizadoQ(raw) {
     if (!raw || String(raw).trim() === '' || String(raw).trim() === '—') return 'Sin Categoría';
     let s = String(raw).trim().toLowerCase().replace(/\s+/g, ' ');
@@ -520,6 +521,14 @@ function normalizarTextoMotivo(str) {
   if (!s || s === '—' || s === '-') return 'Pendiente de validación formal IBK';
   const sLower = s.toLowerCase();
   return sLower.charAt(0).toUpperCase() + sLower.slice(1);
+}
+
+// LECTURA DE COLUMNA EJECUCION FDS
+function clasificarFDS(str) {
+  if (!str) return 'Regular';
+  const s = String(str).trim().toLowerCase();
+  if (s === 'si' || s === 'sí' || s.includes('fds')) return 'FDS';
+  return 'Regular';
 }
 
 const state = {
@@ -811,6 +820,9 @@ async function processWorkbook(file) {
     const soDestino = soDestinoRaw ? String(soDestinoRaw).trim() : '—';
     const servidorDestino = String(getVal('servidordestino', 'hostdestino', 'targetserver', 'servidor destino', 'host destino', 'servidor dest') || '—').trim();
     
+    // LECTURA DE COLUMNA TPO (Tipo de Plataforma)
+    const tpo = String(getVal('tpo', 'tipo') || '—').trim();
+
     const bdDestino = getVal('bd');
     const wmeDestino = getVal('wmeiis', 'wme');
     let subDestino = '—';
@@ -826,6 +838,9 @@ async function processWorkbook(file) {
     const estadoSubCat = String(getVal('estadosubcategoria', 'subcategoria', 'motivonoentrega') || '').trim();
     const fechaEntregaIBK = parseFecha(getVal('fechaentregaibk', 'fechaentrega'));
     
+    // NUEVO: Lectura de Ejecucion FDS
+    const ejecFDS = clasificarFDS(getVal('ejecucionfds', 'ejecucion fds', 'ejecución fds', 'fds'));
+
     const esEntregado = etiquetaCategoria.toLowerCase().includes('entregad') || 
                         etiquetaCategoria.toLowerCase().includes('aceptad') || 
                         etiquetaCategoria.toLowerCase().includes('conforme') || 
@@ -867,6 +882,7 @@ async function processWorkbook(file) {
       mes: mesNom,
       siglas: String(getVal('siglas', 'sigla') || 'S/S').trim(),
       app: String(getVal('nombredelaaplicacion', 'aplicacion', 'app') || 'Sin Aplicación').trim(),
+      tpo: tpo,
       servidor: String(getVal('servidor', 'host', 'hostname', 'servidor origen', 'host origen') || 'Sin Servidor').trim(),
       servidorDestino: servidorDestino,
       ambiente: String(getVal('ambiente', 'env') || 'PRD').toUpperCase().trim(),
@@ -881,6 +897,7 @@ async function processWorkbook(file) {
       nComp: componentesExtraidos,
       nCompArq: componentesExtArq,
       estatus: estatusFinal,
+      ejecFDS: ejecFDS,
       oc: ocNum ? String(ocNum).trim() : 'Sin OC',
       estadoOC: ocEstado,
       ticketUpg: ticketUpg != null && String(ticketUpg).trim() !== '' ? String(ticketUpg).trim() : 'No Aplica',
@@ -1160,9 +1177,11 @@ function renderApp() {
   const tot = state.view.reduce((a, b) => a + b.nComp, 0);
   const mig = state.view.filter(r => r.estatus === 'Migrado').reduce((a, b) => a + b.nComp, 0);
 
+  const totA = state.view.reduce((a, b) => a + (b.nCompArq || 0), 0);
+
   const qsStr = Array.from(state.selectedQs).join(', ') || 'Todos';
   const anioStr = state.selectedAnio !== '__ALL__' ? `Año: ${state.selectedAnio} · ` : '';
-  $('#navFoot').innerHTML = `<b>${fmt(tot)}</b> componentes en ámbito<br>${fmt(mig)} cerrados (${pct1(pct(mig, tot))})`;
+  $('#navFoot').innerHTML = `<b>${fmt(tot)}</b> comp. Kyndryl | <b>${fmt(totA)}</b> comp. Arq<br>${fmt(mig)} Kyndryl migrados (${pct1(pct(mig, tot))})`;
   $('#pgSub').textContent = `${anioStr}Trimestres: ${qsStr} · ${fmt(tot)} componentes totales · ${fmt(new Set(state.view.map(r=>r.servidor)).size)} servidores`;
 
   for (const k in state.charts) {
@@ -1181,10 +1200,10 @@ function renderApp() {
 
 /* -------------------------------------------------------------
    VISTA NUEVA: RESUMEN DE COMPONENTES (Kyndryl vs Arquitectura)
+   * Deduplicación por "Servidor + Siglas"
+   * División de Pendientes en (Regular) vs (FDS)
 ------------------------------------------------------------- */
 function renderResumenCompPage() {
-  // Lógica de Deduplicación por "Servidor + Siglas"
-  // Si un mismo server+app tiene Rollback y luego Migrado, nos quedamos solo con Migrado.
   const prio = { 'Migrado': 6, 'Desestimado': 5, 'Planificado': 4, 'Reprogramado': 3, 'Por Definir': 2, 'Rollback': 1 };
   
   const unitMap = new Map();
@@ -1205,33 +1224,47 @@ function renderResumenCompPage() {
   });
   const uniqueRows = Array.from(unitMap.values());
 
-  let totK = 0, migK = 0, pendK = 0;
-  let totA = 0, migA = 0, pendA = 0;
+  let totK = 0, migK = 0, pendK_Reg = 0, pendK_Fds = 0;
+  let totA = 0, migA = 0, pendA_Reg = 0, pendA_Fds = 0;
 
-  const labels = ['Migrado', 'Planificado', 'Reprogramado', 'Por Definir', 'Rollback', 'Desestimado'];
+  const labels = ['Migrado', 'Pendiente (Regular)', 'Pendiente (FDS)', 'Desestimado'];
   const stats = {};
-  labels.forEach(l => stats[l] = { k: 0, a: 0, srv: new Set() });
+  labels.forEach(l => stats[l] = { k: 0, a: 0, srv: new Set(), rows: [] });
 
   uniqueRows.forEach(r => {
      totK += r.nComp;
      totA += (r.nCompArq || 0);
 
-     const st = stats[r.estatus];
-     if (st) {
-       st.k += r.nComp;
-       st.a += (r.nCompArq || 0);
-       st.srv.add(r.servidor);
+     let targetLabel = 'Migrado';
+     if (r.estatus === 'Desestimado') {
+         targetLabel = 'Desestimado';
+     } else if (r.estatus !== 'Migrado') {
+         targetLabel = r.ejecFDS === 'FDS' ? 'Pendiente (FDS)' : 'Pendiente (Regular)';
      }
+
+     const st = stats[targetLabel];
+     st.k += r.nComp;
+     st.a += (r.nCompArq || 0);
+     st.srv.add(r.servidor);
+     st.rows.push(r);
 
      if (r.estatus === 'Migrado') {
        migK += r.nComp; migA += (r.nCompArq || 0);
      } else if (r.estatus !== 'Desestimado') {
-       pendK += r.nComp; pendA += (r.nCompArq || 0);
+       if (r.ejecFDS === 'FDS') {
+           pendK_Fds += r.nComp; pendA_Fds += (r.nCompArq || 0);
+       } else {
+           pendK_Reg += r.nComp; pendA_Reg += (r.nCompArq || 0);
+       }
      }
   });
 
+  const totalPendientesKyndryl = pendK_Reg + pendK_Fds;
+  const totalPendientesArq = pendA_Reg + pendA_Fds;
+
+  window.resumenStats = stats;
   window.resumenUniqueRows = uniqueRows;
-  window.resumenFiltroEstatus = '__ALL__';
+  window.resumenFiltroCategory = '__ALL__';
 
   $('#page').innerHTML = `
     <div class="section-label-bar">📦 Resumen Global de Componentes Únicos (Deduplicados)</div>
@@ -1243,8 +1276,8 @@ function renderResumenCompPage() {
       </div>
       <div class="tile kpi amber">
         <div class="lbl">Pendientes Kyndryl</div>
-        <div class="val" style="color:var(--k-amber);">${fmt(pendK)}</div>
-        <div class="sub">Faltan pasar a estatus 'Migrado'</div>
+        <div class="val" style="color:var(--k-amber);">${fmt(totalPendientesKyndryl)}</div>
+        <div class="sub">${fmt(pendK_Reg)} en Días Regulares · ${fmt(pendK_Fds)} en Fines de Semana</div>
       </div>
       <div class="tile kpi blue">
         <div class="lbl">Total Comp. Arquitectura</div>
@@ -1253,8 +1286,8 @@ function renderResumenCompPage() {
       </div>
       <div class="tile kpi amber">
         <div class="lbl">Pendientes Arquitectura</div>
-        <div class="val" style="color:var(--k-amber);">${fmt(pendA)}</div>
-        <div class="sub">Faltan pasar a estatus 'Migrado'</div>
+        <div class="val" style="color:var(--k-amber);">${fmt(totalPendientesArq)}</div>
+        <div class="sub">${fmt(pendA_Reg)} en Días Regulares · ${fmt(pendA_Fds)} en Fines de Semana</div>
       </div>
     </div>
 
@@ -1280,6 +1313,19 @@ function renderResumenCompPage() {
     </div>
 
     <div class="row r-1">
+      <div class="tile" style="border: 1.5px solid #CBD5E1; border-radius: 16px; background: #F8FAFC;">
+        <div class="th" style="margin-bottom: 0;">
+           <div>
+              <h3 style="color: var(--k-navy);">Resumen Analítico de Aplicaciones Pendientes</h3>
+           </div>
+        </div>
+        <div id="narrativeSummary" style="font-size: 13.5px; line-height: 1.6; color: var(--k-charcoal); margin-top: 10px; padding: 12px; background: #FFFFFF; border: 1px solid var(--k-border); border-radius: 8px;">
+          Cargando resumen...
+        </div>
+      </div>
+    </div>
+
+    <div class="row r-1">
       <div class="tile" style="border: 1.5px solid #CBD5E1; border-radius: 16px;">
          <div class="sticky-oc-header" style="margin-top: 0; margin-bottom: 12px; background: #F8FAFC; border-radius: 8px 8px 0 0;">
            <div>
@@ -1288,14 +1334,15 @@ function renderResumenCompPage() {
            </div>
            <button class="btn sm ghost" onclick="filterResumenTable('__ALL__')">Quitar Filtros</button>
          </div>
-         <div class="tw" style="max-height: 400px; border-radius: 0 0 8px 8px;">
+         <div class="tw" style="max-height: 500px; border-radius: 0 0 8px 8px;">
             <table class="dt">
               <thead>
                  <tr>
                    <th class="l sortable" onclick="setResumenSort('servidor')">Srv. Origen <span id="sr_servidor" class="sort-icon"></span></th>
                    <th class="l sortable" onclick="setResumenSort('servidorDestino')">Srv. Destino <span id="sr_servidorDestino" class="sort-icon"></span></th>
-                   <th class="l sortable" onclick="setResumenSort('app')">Aplicación <span id="sr_app" class="sort-icon"></span></th>
+                   <th class="l">Resumen del Componente (TPO / SO / APP / SubSist)</th>
                    <th class="l sortable" onclick="setResumenSort('estatus')">Estatus Migración <span id="sr_estatus" class="sort-icon"></span></th>
+                   <th class="l sortable" onclick="setResumenSort('ejecFDS')">Días de Ejecución <span id="sr_ejecFDS" class="sort-icon"></span></th>
                    <th class="sortable" style="background:#0F3A70; color:#fff;" onclick="setResumenSort('nComp')">Comp. Kyndryl <span id="sr_nComp" class="sort-icon"></span></th>
                    <th class="sortable" style="background:#0284C7; color:#fff;" onclick="setResumenSort('nCompArq')">Comp. Arq <span id="sr_nCompArq" class="sort-icon"></span></th>
                  </tr>
@@ -1307,7 +1354,7 @@ function renderResumenCompPage() {
     </div>
   `;
 
-  const bgColors = ['#059669', '#0284C7', '#D97706', '#94A3B8', '#E11D48', '#475569'];
+  const bgColors = ['#059669', '#D97706', '#8B5CF6', '#94A3B8'];
 
   const ctxK = $('#cKyndryl').getContext('2d');
   state.charts['cKyndryl'] = new Chart(ctxK, {
@@ -1355,13 +1402,16 @@ function renderResumenCompPage() {
   window.setResumenSort = (col) => {
     if (window.resumenSortCol === col) window.resumenSortAsc = !window.resumenSortAsc;
     else { window.resumenSortCol = col; window.resumenSortAsc = false; }
-    window.filterResumenTable(window.resumenFiltroEstatus);
+    window.filterResumenTable(window.resumenFiltroCategory);
   };
 
-  window.filterResumenTable = (estatus) => {
-      window.resumenFiltroEstatus = estatus;
+  window.filterResumenTable = (category) => {
+      window.resumenFiltroCategory = category;
       let fr = window.resumenUniqueRows;
-      if (estatus !== '__ALL__') fr = fr.filter(r => r.estatus === estatus);
+      
+      if (category !== '__ALL__') {
+          fr = window.resumenStats[category].rows;
+      }
 
       fr.sort((a, b) => {
          let valA = a[window.resumenSortCol];
@@ -1375,29 +1425,88 @@ function renderResumenCompPage() {
          return 0;
       });
 
-      const lbl = estatus === '__ALL__' ? 'Todos los estatus' : estatus;
+      const lbl = category === '__ALL__' ? 'Todos los estatus' : category;
       const tSrv = new Set(fr.map(r=>r.servidor)).size;
       const sumK = fr.reduce((a,b)=>a+b.nComp, 0);
       const sumA = fr.reduce((a,b)=>a+(b.nCompArq||0), 0);
 
       $('#lblResumenFiltro').innerHTML = `Viendo: <b>${lbl}</b> · ${sumK} comp. Kyndryl · ${sumA} comp. Arq · ${tSrv} servidores`;
 
-      $('#tbBodyResumen').innerHTML = fr.map(r => `
-          <tr>
-            <td class="l mono" style="font-weight:700;">${esc(r.servidor)}</td>
-            <td class="l mono" style="font-weight:700;color:var(--k-navy);">${esc(r.servidorDestino)}</td>
-            <td class="l" style="max-width:240px; white-space: normal; word-wrap: break-word;">${esc(r.app)}</td>
-            <td class="l"><span class="tag ${r.estatus === 'Migrado' ? 'mig' : (r.estatus === 'Planificado' ? 'plan' : (r.estatus === 'Desestimado' ? 'des' : (r.estatus === 'Rollback' ? 'rb' : 'pend')))}">${esc(r.estatus)}</span></td>
-            <td class="num" style="font-weight:700;color:var(--k-charcoal);">${r.nComp}</td>
-            <td class="num" style="font-weight:700;color:var(--k-blue);">${r.nCompArq || 0}</td>
-          </tr>
-      `).join('') || `<tr><td colspan="6" class="l" style="text-align:center;padding:20px;color:#888;">No hay registros para este filtro.</td></tr>`;
+      $('#tbBodyResumen').innerHTML = fr.map(r => {
+          const badgeEjecucion = r.ejecFDS === 'FDS' ? `<span class="tag purple">Solo Fines de Semana (Sáb/Dom)</span>` : `<span class="tag plan" style="background:#F1F5F9; color:#475569; border-color:#CBD5E1;">Días Particulares (Regulares)</span>`;
+          
+          let resumenTexto = `<div style="font-size:12px; color:var(--k-text-muted); line-height: 1.4;">`;
+          resumenTexto += `<b>TPO:</b> ${esc(r.tpo)}<br>`;
+          resumenTexto += `<b>S.O Origen:</b> ${esc(r.soOrigen)}<br>`;
+          if (r.soDestino && r.soDestino !== '—') resumenTexto += `<b>S.O Destino:</b> ${esc(r.soDestino)}<br>`;
+          resumenTexto += `<b>SubSistema / App:</b> ${esc(r.subOrigen)} ➔ ${esc(r.app)}<br>`;
+          resumenTexto += `</div>`;
+
+          return `
+            <tr>
+              <td class="l mono" style="font-weight:700;">${esc(r.servidor)}</td>
+              <td class="l mono" style="font-weight:700;color:var(--k-navy);">${esc(r.servidorDestino)}</td>
+              <td class="l">${resumenTexto}</td>
+              <td class="l"><span class="tag ${r.estatus === 'Migrado' ? 'mig' : (r.estatus === 'Planificado' ? 'plan' : (r.estatus === 'Desestimado' ? 'des' : (r.estatus === 'Rollback' ? 'rb' : 'pend')))}">${esc(r.estatus)}</span></td>
+              <td class="l">${badgeEjecucion}</td>
+              <td class="num" style="font-weight:800;color:var(--k-charcoal);font-size:14.5px;">${r.nComp}</td>
+              <td class="num" style="font-weight:800;color:var(--k-blue);font-size:14.5px;">${r.nCompArq || 0}</td>
+            </tr>
+          `;
+      }).join('') || `<tr><td colspan="7" class="l" style="text-align:center;padding:20px;color:#888;">No hay registros para este filtro.</td></tr>`;
 
       $$('.sort-icon').forEach(el => { if(el.id && el.id.startsWith('sr_')) el.textContent = ''; });
       const activeIcon = $('#sr_' + window.resumenSortCol);
       if (activeIcon) activeIcon.textContent = window.resumenSortAsc ? '▲' : '▼';
   };
 
+  // Función para generar la narrativa
+  const generateNarrative = () => {
+    let html = '';
+    const extractApps = (rowsArr) => {
+        const appCounts = {};
+        rowsArr.forEach(r => {
+            if(r.siglas && r.siglas !== 'S/S') {
+                appCounts[r.siglas] = (appCounts[r.siglas] || 0) + r.nComp;
+            }
+        });
+        const sorted = Object.entries(appCounts).sort((a,b) => b[1] - a[1]);
+        if(sorted.length === 0) return 'Ninguna sigla específica identificada.';
+        return sorted.map(s => `<b>${s[0]}</b> (${s[1]} comp.)`).join(', ');
+    };
+
+    const fdsRows = window.resumenStats['Pendiente (FDS)'].rows;
+    const fdsK = window.resumenStats['Pendiente (FDS)'].k;
+    
+    if (fdsRows.length > 0) {
+        html += `<div style="margin-bottom: 12px;">`;
+        html += `<span class="tag purple" style="margin-bottom:6px; display:inline-block;">Requerimiento: Fines de Semana (Sábado/Domingo)</span><br>`;
+        html += `Actualmente hay <b>${fdsK} componentes Kyndryl</b> retenidos o planificados estrictamente para fines de semana. Las aplicaciones (Siglas) que conforman esta bolsa son: ${extractApps(fdsRows)}.`;
+        html += `</div>`;
+    } else {
+        html += `<div style="margin-bottom: 12px; color: var(--k-green);">✅ No hay componentes pendientes que requieran ejecución exclusiva en fines de semana.</div>`;
+    }
+
+    const regRows = window.resumenStats['Pendiente (Regular)'].rows;
+    const regK = window.resumenStats['Pendiente (Regular)'].k;
+    
+    if (regRows.length > 0) {
+        html += `<div>`;
+        html += `<span class="tag plan" style="background:#F1F5F9; color:#475569; border-color:#CBD5E1; margin-bottom:6px; display:inline-block;">Requerimiento: Días Regulares (Lunes a Viernes)</span><br>`;
+        html += `Por otro lado, existen <b>${regK} componentes Kyndryl</b> pendientes que están habilitados para trabajarse en días particulares (horario regular). Las aplicaciones involucradas son: ${extractApps(regRows)}.`;
+        html += `</div>`;
+    } else {
+        html += `<div style="color: var(--k-green);">✅ No hay componentes pendientes para ejecución en días regulares.</div>`;
+    }
+
+    if (fdsRows.length === 0 && regRows.length === 0) {
+        html = `<b>¡Excelente!</b> No hay componentes Kyndryl pendientes en el radar bajo los filtros actuales. Todo se encuentra migrado o desestimado.`;
+    }
+
+    $('#narrativeSummary').innerHTML = html;
+  };
+
+  generateNarrative();
   window.filterResumenTable('__ALL__');
 }
 
@@ -3025,7 +3134,7 @@ function renderCalendarioPage() {
         <div>
           <span style="font-weight:800;color:var(--k-charcoal);font-size:14.5px;">📋 Control de Órdenes de Cambio (OC): ${esc(tituloInferior)}</span>
           <span style="font-size:12.5px;color:var(--k-text-muted);font-weight:600;margin-left:8px;">
-            (${fmt(compMostradosInferior)} de ${fmt(totInferiorComp)} componentes · ${ocsInferiorList.length} OCs)
+            (${fmt(compMostradosInferior)} de ${fmt(totInferiorComp)} components · ${ocsInferiorList.length} OCs)
           </span>
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
@@ -3413,6 +3522,7 @@ function openModal(title, sub, bodyHtml, exportData) {
       'Ticket Aprovisionamiento': r.ticketAprov,
       'OC Migración': r.oc, 'Estado OC': r.estadoOC, 'Fecha Planificada': r.fechaLbl,
       'Horario': r.rangoHorario,
+      'Ejecucion FDS': r.ejecFDS,
       'S.O Origen': r.soOrigen, 'Subsistema Origen': r.subOrigen,
       'S.O Destino': r.soDestino, 'Subsistema Destino': r.subDestino,
       'Estatus': r.estatus, 'Comentarios': r.comentarios
@@ -3671,6 +3781,7 @@ function initEvents() {
       'Ticket Aprovisionamiento': r.ticketAprov,
       'OC Migración': r.oc, 'Estado OC': r.estadoOC, 'Fecha Planificada': r.fechaLbl,
       'Horario': r.rangoHorario,
+      'Ejecucion FDS': r.ejecFDS,
       'S.O Origen': r.soOrigen, 'Subsistema Origen': r.subOrigen,
       'S.O Destino': r.soDestino, 'Subsistema Destino': r.subDestino,
       'Estatus': r.estatus, 'Comentarios': r.comentarios
