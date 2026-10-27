@@ -1379,7 +1379,7 @@ function renderResumenCompPage() {
               <h3 style="color: var(--k-navy);">Resumen Analítico de Aplicaciones Pendientes</h3>
            </div>
         </div>
-        <div id="narrativeSummary" style="font-size: 13.5px; line-height: 1.6; color: var(--k-charcoal); margin-top: 10px; padding: 12px; background: #FFFFFF; border: 1px solid var(--k-border); border-radius: 8px;">
+        <div id="narrativeSummary" style="margin-top: 10px;">
           Cargando resumen...
         </div>
       </div>
@@ -1520,52 +1520,159 @@ function renderResumenCompPage() {
       if (activeIcon) activeIcon.textContent = window.resumenSortAsc ? '▲' : '▼';
   };
 
-  // Función para generar la narrativa
+  // Resumen tabular de pendientes consolidado por servidor, con filtro local y exportacion.
+  // Si un servidor tiene varias SIGLAS/aplicaciones, se combinan en una sola fila.
   const generateNarrative = () => {
-    let html = '';
-    const extractApps = (rowsArr) => {
-        const appCounts = {};
-        rowsArr.forEach(r => {
-            if(r.siglas && r.siglas !== 'S/S') {
-                appCounts[r.siglas] = (appCounts[r.siglas] || 0) + r.nComp;
-            }
-        });
-        const sorted = Object.entries(appCounts).sort((a,b) => b[1] - a[1]);
-        if(sorted.length === 0) return 'Ninguna sigla específica identificada.';
-        return sorted.map(s => `<b>${s[0]}</b> (${s[1]} comp.)`).join(', ');
+    const fdsRows = window.resumenStats['Pendiente (FDS)'].rows;
+    const regRows = window.resumenStats['Pendiente (Regular)'].rows;
+    const pendientesBase = [
+      ...fdsRows.map(r => ({ ...r, tipoPendienteResumen: 'FDS' })),
+      ...regRows.map(r => ({ ...r, tipoPendienteResumen: 'Regular' }))
+    ];
+
+    if (typeof window.resumenPendFiltro === 'undefined') window.resumenPendFiltro = '__ALL__';
+
+    const buildResumenPendientes = (filtro) => {
+      const pendientes = filtro === '__ALL__'
+        ? pendientesBase
+        : pendientesBase.filter(r => r.tipoPendienteResumen === filtro);
+
+      const srvMap = new Map();
+      pendientes.forEach(r => {
+        const key = r.servidor;
+        if (!srvMap.has(key)) {
+          srvMap.set(key, {
+            servidor: r.servidor,
+            destinos: new Set(),
+            apps: new Map(),
+            tipos: new Set(),
+            estatus: new Set(),
+            nComp: 0,
+            nCompArq: 0
+          });
+        }
+        const item = srvMap.get(key);
+        if (r.servidorDestino && r.servidorDestino !== '—') item.destinos.add(r.servidorDestino);
+        if (r.tipoPendienteResumen) item.tipos.add(r.tipoPendienteResumen);
+        if (r.estatus) item.estatus.add(r.estatus);
+
+        const sigla = (r.siglas && r.siglas !== 'S/S') ? r.siglas : 'S/S';
+        const app = (r.app && r.app !== 'Sin Aplicación') ? r.app : 'Sin Aplicación';
+        const appKey = `${sigla}___${app}`;
+        if (!item.apps.has(appKey)) item.apps.set(appKey, { sigla, app, nComp: 0, nCompArq: 0 });
+        const appItem = item.apps.get(appKey);
+        appItem.nComp += r.nComp || 0;
+        appItem.nCompArq += r.nCompArq || 0;
+        item.nComp += r.nComp || 0;
+        item.nCompArq += r.nCompArq || 0;
+      });
+
+      return Array.from(srvMap.values()).sort((a, b) => {
+        const aFds = a.tipos.has('FDS') ? 0 : 1;
+        const bFds = b.tipos.has('FDS') ? 0 : 1;
+        if (aFds !== bFds) return aFds - bFds;
+        return b.nComp - a.nComp || a.servidor.localeCompare(b.servidor);
+      });
     };
 
-    const fdsRows = window.resumenStats['Pendiente (FDS)'].rows;
-    const fdsK = window.resumenStats['Pendiente (FDS)'].k;
-    
-    if (fdsRows.length > 0) {
-        html += `<div style="margin-bottom: 12px;">`;
-        html += `<span class="tag purple" style="margin-bottom:6px; display:inline-block;">Requerimiento: Fines de Semana (Sábado/Domingo)</span><br>`;
-        html += `Actualmente hay <b>${fdsK} componentes Kyndryl</b> retenidos o planificados estrictamente para fines de semana. Las aplicaciones (Siglas) que conforman esta bolsa son: ${extractApps(fdsRows)}.`;
-        html += `</div>`;
-    } else {
-        html += `<div style="margin-bottom: 12px; color: var(--k-green);">✅ No hay componentes pendientes que requieran ejecución exclusiva en fines de semana.</div>`;
-    }
+    window.renderResumenPendientesTable = () => {
+      const filtro = window.resumenPendFiltro || '__ALL__';
+      const resumenServidores = buildResumenPendientes(filtro);
+      window.resumenPendientesExportRows = resumenServidores;
 
-    const regRows = window.resumenStats['Pendiente (Regular)'].rows;
-    const regK = window.resumenStats['Pendiente (Regular)'].k;
-    
-    if (regRows.length > 0) {
-        html += `<div>`;
-        html += `<span class="tag plan" style="background:#F1F5F9; color:#475569; border-color:#CBD5E1; margin-bottom:6px; display:inline-block;">Requerimiento: Días Regulares (Lunes a Viernes)</span><br>`;
-        html += `Por otro lado, existen <b>${regK} componentes Kyndryl</b> pendientes que están habilitados para trabajarse en días particulares (horario regular). Las aplicaciones involucradas son: ${extractApps(regRows)}.`;
-        html += `</div>`;
-    } else {
-        html += `<div style="color: var(--k-green);">✅ No hay componentes pendientes para ejecución en días regulares.</div>`;
-    }
+      const totalK = resumenServidores.reduce((a,b) => a + b.nComp, 0);
+      const totalA = resumenServidores.reduce((a,b) => a + b.nCompArq, 0);
+      const fdsSrv = resumenServidores.filter(x => x.tipos.has('FDS')).length;
+      const regSrv = resumenServidores.filter(x => x.tipos.has('Regular')).length;
 
-    if (fdsRows.length === 0 && regRows.length === 0) {
-        html = `<b>¡Excelente!</b> No hay componentes Kyndryl pendientes en el radar bajo los filtros actuales. Todo se encuentra migrado o desestimado.`;
-    }
+      const rowsHtml = resumenServidores.map(item => {
+        const tipoHtml = Array.from(item.tipos).map(tipo => tipo === 'FDS'
+          ? `<span class="tag purple">FDS</span>`
+          : `<span class="tag plan" style="background:#F1F5F9;color:#475569;border-color:#CBD5E1;">Regular</span>`
+        ).join(' ');
 
-    $('#narrativeSummary').innerHTML = html;
+        const appsHtml = Array.from(item.apps.values())
+          .sort((a,b) => b.nComp - a.nComp || a.sigla.localeCompare(b.sigla))
+          .map(a => `<div style="padding:3px 0;border-bottom:1px dashed #E2E8F0;"><b class="mono" style="color:var(--k-navy);">${esc(a.sigla)}</b> <span style="color:var(--k-text-muted);">— ${esc(a.app)}</span> <span style="font-size:11px;color:var(--k-text-muted);white-space:nowrap;">(${fmt(a.nComp)} K / ${fmt(a.nCompArq)} Arq)</span></div>`)
+          .join('');
+
+        const estatusHtml = Array.from(item.estatus).map(e => `<span class="tag ${e === 'Migrado' ? 'mig' : (e === 'Planificado' ? 'plan' : (e === 'Desestimado' ? 'des' : (e === 'Rollback' ? 'rb' : 'pend')))}">${esc(e)}</span>`).join(' ');
+
+        return `<tr>
+          <td class="l">${tipoHtml}</td>
+          <td class="l mono" style="font-weight:800;">${esc(item.servidor)}</td>
+          <td class="l mono" style="font-weight:700;color:var(--k-navy);">${esc(Array.from(item.destinos).join(', ') || '—')}</td>
+          <td class="l" style="min-width:300px;">${appsHtml}</td>
+          <td class="num" style="font-weight:800;color:var(--k-charcoal);">${fmt(item.nComp)}</td>
+          <td class="num" style="font-weight:800;color:var(--k-blue);">${fmt(item.nCompArq)}</td>
+          <td class="l">${estatusHtml}</td>
+        </tr>`;
+      }).join('') || `<tr><td colspan="7" class="l" style="text-align:center;padding:24px;color:#888;">No hay servidores pendientes para el filtro seleccionado.</td></tr>`;
+
+      const labelFiltro = filtro === '__ALL__' ? 'Todos' : filtro;
+      $('#narrativeSummary').innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+          <div>
+            <div style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--k-text-muted);margin-bottom:5px;">Filtrar tipo de ejecución</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn sm ${filtro === '__ALL__' ? '' : 'ghost'}" onclick="setResumenPendFiltro('__ALL__')">Todos</button>
+              <button class="btn sm ${filtro === 'FDS' ? '' : 'ghost'}" onclick="setResumenPendFiltro('FDS')">FDS</button>
+              <button class="btn sm ${filtro === 'Regular' ? '' : 'ghost'}" onclick="setResumenPendFiltro('Regular')">Regular</button>
+            </div>
+          </div>
+          <button class="btn green sm" onclick="exportResumenPendientes()">Exportar Excel · ${esc(labelFiltro)}</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <span class="stat-pill all">${fmt(resumenServidores.length)} servidores mostrados</span>
+          <span class="stat-pill" style="background:rgba(139,92,246,.10);color:var(--k-purple);border-color:rgba(139,92,246,.30);">${fmt(fdsSrv)} servidores FDS</span>
+          <span class="stat-pill plan">${fmt(regSrv)} servidores regulares</span>
+          <span class="stat-pill all">${fmt(totalK)} comp. Kyndryl</span>
+          <span class="stat-pill all">${fmt(totalA)} comp. Arquitectura</span>
+        </div>
+        <div class="tw" style="max-height:420px;background:#fff;">
+          <table class="dt">
+            <thead><tr>
+              <th class="l">Ejecución</th>
+              <th class="l">Srv. Origen</th>
+              <th class="l">Srv. Destino</th>
+              <th class="l">SIGLA(s) / Aplicación(es)</th>
+              <th>Comp. Kyndryl</th>
+              <th>Comp. Arq</th>
+              <th class="l">Estatus</th>
+            </tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </div>
+        <div style="font-size:11.5px;color:var(--k-text-muted);margin-top:8px;">Filtro activo: <b>${esc(labelFiltro)}</b>. La exportación contiene exactamente los servidores que se muestran en esta tabla. Si un servidor tiene varias SIGLAS/aplicaciones, se consolidan en una sola fila.</div>`;
+    };
+
+    window.setResumenPendFiltro = (filtro) => {
+      window.resumenPendFiltro = filtro;
+      window.renderResumenPendientesTable();
+    };
+
+    window.exportResumenPendientes = () => {
+      const data = window.resumenPendientesExportRows || [];
+      const wb = XLSX.utils.book_new();
+      const exportRows = data.map(item => ({
+        'Tipo de Ejecución': Array.from(item.tipos).join(', '),
+        'Servidor Origen': item.servidor,
+        'Servidor Destino': Array.from(item.destinos).join(', ') || '—',
+        'SIGLA(s) / Aplicación(es)': Array.from(item.apps.values()).map(a => `${a.sigla} - ${a.app}`).join(' | '),
+        'Detalle Componentes por Aplicación': Array.from(item.apps.values()).map(a => `${a.sigla}: ${a.nComp} Kyndryl / ${a.nCompArq} Arquitectura`).join(' | '),
+        'Componentes Kyndryl': item.nComp,
+        'Componentes Arquitectura': item.nCompArq,
+        'Estatus': Array.from(item.estatus).join(', ')
+      }));
+      const ws = XLSX.utils.json_to_sheet(exportRows);
+      ws['!cols'] = [{wch:18},{wch:22},{wch:28},{wch:55},{wch:65},{wch:22},{wch:25},{wch:28}];
+      XLSX.utils.book_append_sheet(wb, ws, 'Pendientes');
+      const sufijo = window.resumenPendFiltro === '__ALL__' ? 'Todos' : window.resumenPendFiltro;
+      XLSX.writeFile(wb, `Kyndryl_Resumen_Pendientes_${sufijo}.xlsx`);
+    };
+
+    window.renderResumenPendientesTable();
   };
-
   generateNarrative();
   window.filterResumenTable('__ALL__');
 }
@@ -2813,6 +2920,19 @@ function renderEntregasPage() {
   const entComp = entregadosServers.reduce((a, b) => a + b.nComp, 0);
   const pendComp = pendientesServers.reduce((a, b) => a + b.nComp, 0);
 
+  const getTicketsUnicos = (servers) => new Set(
+    servers.flatMap(s => s.rows)
+      .map(r => String(r.ticketAprov || '').trim())
+      .filter(t => t && t !== 'Sin Ticket' && t !== '-' && !t.toLowerCase().includes('no aplica'))
+  );
+  const ticketsEntregados = getTicketsUnicos(entregadosServers);
+  const ticketsPendientes = getTicketsUnicos(pendientesServers);
+  const ticketsTotales = getTicketsUnicos(allMigServers);
+
+  const entregadosDetailRows = entregadosServers.flatMap(s => s.rows);
+  const pendientesDetailRows = pendientesServers.flatMap(s => s.rows);
+  const allDetailRows = allMigServers.flatMap(s => s.rows);
+
   const semanasVersusData = semanasEntregas.map(sem => {
     const migCompSem = sem.rows.reduce((a, b) => a + b.nComp, 0);
     const entCompSem = sem.rows.filter(r => r.esEntregado).reduce((a, b) => a + b.nComp, 0);
@@ -2833,19 +2953,19 @@ function renderEntregasPage() {
       <div class="tile kpi green kpi-clickable" onclick="drillKpiServidoresEntregados()" title="Clic para ver servidores formalmente entregados">
         <div class="lbl">Servidores Entregados</div>
         <div class="val">${fmt(entSrv)} <span style="font-size:16px;color:var(--k-text-muted);">/ ${fmt(totSrv)}</span></div>
-        <div class="sub">${fmt(entComp)} de ${fmt(totComp)} componentes · <b>Clic para ver</b></div>
+        <div class="sub">${fmt(entComp)} de ${fmt(totComp)} componentes · <b>${fmt(ticketsEntregados.size)} tickets</b> · Clic para ver detalle</div>
       </div>
 
       <div class="tile kpi amber kpi-clickable" onclick="drillKpiServidoresPendientes()" title="Clic para ver servidores pendientes de entrega">
         <div class="lbl">Pendientes de Entrega</div>
         <div class="val">${fmt(pendSrv)}</div>
-        <div class="sub">${fmt(pendComp)} componentes por entregar a IBK · <b>Clic para ver</b></div>
+        <div class="sub">${fmt(pendComp)} componentes · <b>${fmt(ticketsPendientes.size)} tickets</b> asociados · Clic para ver detalle</div>
       </div>
 
       <div class="tile kpi kpi-clickable" onclick="drillKpiConsolidadoEntregas()" title="Clic para auditar todo el avance">
         <div class="lbl">Avance de Entregas (Servidores)</div>
         <div class="val">${pct1(pctAvanceSrv)}</div>
-        <div class="sub">Tasa de formalización de entrega</div>
+        <div class="sub">${fmt(ticketsEntregados.size)} de ${fmt(ticketsTotales.size)} tickets asociados a servidores migrados</div>
       </div>
 
       <div class="tile kpi blue kpi-clickable" onclick="drillKpiConsolidadoEntregas()" title="Clic para auditar componentes">
@@ -2882,6 +3002,23 @@ function renderEntregasPage() {
           </div>
         </div>
         <div class="cbox" style="min-height: 310px;"><canvas id="cEntregasVersusChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="row r-1" id="entregasDetalleSection">
+      <div class="tile" style="border:1.5px solid #CBD5E1;border-radius:16px;">
+        <div class="th" style="align-items:center;">
+          <div>
+            <h3 id="entregasDetalleTitle">Detalle de Entregas</h3>
+            <div class="sb" id="entregasDetalleSub">Selecciona una tarjeta superior o una barra del gráfico para consultar el detalle aquí.</div>
+          </div>
+          <button class="btn ghost sm" id="btnLimpiarDetalleEntregas">Limpiar detalle</button>
+        </div>
+        <div id="entregasDetalleContent" style="padding:10px 0;color:var(--k-text-muted);">
+          <div style="padding:28px;text-align:center;background:#F8FAFC;border:1px dashed var(--k-border);border-radius:8px;">
+            El detalle seleccionado aparecerá en esta sección sin abrir ventanas emergentes.
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -2962,7 +3099,7 @@ function renderEntregasPage() {
         } else if (dsIdx === 0) {
           tipo = 'Migrados de la Semana';
         }
-        drillGrupo(`Avance: ${semItem.fullLabel || 'Semana Operativa'} (${tipo})`, targetRows);
+        mostrarDetalleEntregas(`Avance: ${semItem.fullLabel || 'Semana Operativa'} (${tipo})`, targetRows);
       }
     }
   });
@@ -2972,24 +3109,74 @@ function renderEntregasPage() {
     renderEntregasPage();
   };
 
-  window.curEntregadosRows = migRows.filter(r => r.esEntregado);
-  window.curPendientesRows = migRows.filter(r => !r.esEntregado);
-  window.curMigRows = migRows;
+  window.curEntregadosRows = entregadosDetailRows;
+  window.curPendientesRows = pendientesDetailRows;
+  window.curMigRows = allDetailRows;
+  window.curEntregadosSrvCount = entSrv;
+  window.curPendientesSrvCount = pendSrv;
+
+  $('#btnLimpiarDetalleEntregas').onclick = () => {
+    $('#entregasDetalleTitle').textContent = 'Detalle de Entregas';
+    $('#entregasDetalleSub').textContent = 'Selecciona una tarjeta superior o una barra del gráfico para consultar el detalle aquí.';
+    $('#entregasDetalleContent').innerHTML = `<div style="padding:28px;text-align:center;background:#F8FAFC;border:1px dashed var(--k-border);border-radius:8px;">El detalle seleccionado aparecerá en esta sección sin abrir ventanas emergentes.</div>`;
+  };
+}
+
+function mostrarDetalleEntregas(titulo, rows) {
+  if (!rows) rows = [];
+  const srvCount = new Set(rows.map(r => r.servidor)).size;
+  const compCount = rows.reduce((a,b) => a + b.nComp, 0);
+  const ticketSet = new Set(rows.map(r => String(r.ticketAprov || '').trim()).filter(t => t && t !== 'Sin Ticket' && t !== '-' && !t.toLowerCase().includes('no aplica')));
+  const ticketCount = ticketSet.size;
+
+  $('#entregasDetalleTitle').textContent = titulo;
+  $('#entregasDetalleSub').innerHTML = `<b>${fmt(srvCount)}</b> servidores · <b>${fmt(compCount)}</b> componentes · <b>${fmt(ticketCount)}</b> tickets de aprovisionamiento únicos · ${fmt(rows.length)} relaciones`;
+
+  const content = rows.length ? `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+      <span class="stat-pill all">Servidores: ${fmt(srvCount)}</span>
+      <span class="stat-pill mig">Componentes: ${fmt(compCount)}</span>
+      <span class="stat-pill plan">Tickets: ${fmt(ticketCount)}</span>
+    </div>
+    <div class="tw" style="max-height:520px;">
+      <table class="dt">
+        <thead><tr>
+          <th class="l">Servidor</th><th class="l">Sigla</th><th class="l">Aplicación</th>
+          <th>Componentes</th><th class="l">Ticket Aprovisionamiento</th><th class="l">Estado Aprov.</th>
+          <th class="l">Owner Kyndryl</th><th class="l">Estado Entrega</th><th class="l">Estatus Migración</th>
+        </tr></thead>
+        <tbody>${rows.map(r => `
+          <tr>
+            <td class="l mono"><b>${esc(r.servidor)}</b></td>
+            <td class="l mono">${esc(r.siglas)}</td>
+            <td class="l">${esc(r.app)}</td>
+            <td class="num"><b>${fmt(r.nComp)}</b></td>
+            <td class="l mono" style="color:var(--k-navy);font-weight:700;">${esc(r.ticketAprov)}</td>
+            <td class="l">${esc(r.estadoAprov)}</td>
+            <td class="l"><b>${esc(r.ownerKyndryl)}</b></td>
+            <td class="l"><span class="tag ${r.esEntregado ? 'mig' : 'pend'}">${r.esEntregado ? 'Entregado' : 'Pendiente'}</span></td>
+            <td class="l"><span class="tag ${r.estatus === 'Migrado' ? 'mig' : (r.estatus === 'Desestimado' ? 'des' : 'plan')}">${esc(r.estatus)}</span></td>
+          </tr>`).join('')}</tbody>
+      </table>
+    </div>` : `<div style="padding:24px;text-align:center;color:var(--k-text-muted);">No hay registros para esta selección.</div>`;
+  $('#entregasDetalleContent').innerHTML = content;
+  const sec = $('#entregasDetalleSection');
+  if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function drillKpiServidoresEntregados() {
   const rows = window.curEntregadosRows || [];
-  drillGrupo(`Servidores Formalmente Entregados (${rows.length} registros)`, rows);
+  mostrarDetalleEntregas(`Servidores Formalmente Entregados`, rows);
 }
 
 function drillKpiServidoresPendientes() {
   const rows = window.curPendientesRows || [];
-  drillGrupo(`Servidores Migrados Pendientes de Entrega (${rows.length} registros)`, rows);
+  mostrarDetalleEntregas(`Servidores Migrados Pendientes de Entrega`, rows);
 }
 
 function drillKpiConsolidadoEntregas() {
   const rows = window.curMigRows || [];
-  drillGrupo(`Consolidado de Entregas de Servidores (${rows.length} registros)`, rows);
+  mostrarDetalleEntregas(`Consolidado de Entregas de Servidores`, rows);
 }
 
 /* -------------------------------------------------------------
