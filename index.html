@@ -298,6 +298,10 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
         <span>Nivel de Cumplimiento<small>Métricas Base y KPIs Salud</small></span>
       </button>
+      <button class="navbtn" data-pg="cumplimiento-arq">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+        <span>Nivel de Cumplimiento Arquitectura<small>Métricas Base y KPIs Arquitectura</small></span>
+      </button>
       <button class="navbtn" data-pg="flujo-e2e">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         <span>Flujo E2E y Alertas OC<small>Upgrade Capacidades ➔ Aprov ➔ OC</small></span>
@@ -1245,6 +1249,7 @@ function renderApp() {
   state.charts = {};
 
   if (state.page === 'cumplimiento') renderCumplimientoPage();
+  else if (state.page === 'cumplimiento-arq') renderCumplimientoArquitecturaPage();
   else if (state.page === 'flujo-e2e') renderFlujoE2EPage();
   else if (state.page === 'entregas') renderEntregasPage();
   else if (state.page === 'cierre-aprov') renderCierreAprovPage();
@@ -2021,6 +2026,465 @@ function renderCumplimientoPage() {
   window.curMainNoEntregadosRows = noEntregadosRows;
   window.curMainRollbackRows = rollbacksRows;
 }
+
+/* -------------------------------------------------------------
+   VISTA: NIVEL DE CUMPLIMIENTO ARQUITECTURA
+   Réplica funcional de Cumplimiento usando nCompArq
+------------------------------------------------------------- */
+function renderCumplimientoArquitecturaPage() {
+  const rows = state.view;
+  const mesMap = new Map();
+  
+  rows.forEach(r => {
+    let mNom = r.mes;
+    if (!mNom || mNom === 'Sin Mes') return;
+    
+    let mIdx = r.mesIdx !== -1 ? r.mesIdx : MESES_ES.findIndex(m => m.toLowerCase() === mNom.toLowerCase());
+    if (mIdx === -1) mIdx = 6; 
+    
+    let y = r.anio || (state.selectedAnio !== '__ALL__' ? Number(state.selectedAnio) : 2026);
+    const key = `${y}-${String(mIdx).padStart(2, '0')}`;
+    
+    if (!mesMap.has(key)) {
+      let planFijo = null;
+      let metaFija = getMetaMensual(y, mIdx);
+      if (y === 2026 && mIdx === 6) { planFijo = 63; metaFija = 50; }
+      else if (y === 2026 && mIdx === 7) { planFijo = 150; metaFija = 120; }
+      else if (y === 2026 && mIdx === 8) { planFijo = 134; metaFija = 120; }
+
+      mesMap.set(key, {
+        key,
+        monthIdx: mIdx,
+        mesOriginal: mNom,
+        label: (mIdx === 8 ? 'sep' : MESES_CORTO_LOWER[mIdx]) || mNom.slice(0, 3).toLowerCase(),
+        planFijo,
+        metaFija,
+        rows: []
+      });
+    }
+    mesMap.get(key).rows.push(r);
+  });
+
+  const ordenados = Array.from(mesMap.values()).sort((a, b) => a.key.localeCompare(b.key));
+  
+  let mesesAMostrar = ordenados.map(m => {
+    return {
+      key: m.label,
+      label: m.label,
+      mesNombre: m.mesOriginal,
+      plan: m.planFijo != null ? m.planFijo : m.rows.reduce((a, b) => a + b.nCompArq, 0),
+      meta: m.metaFija,
+      migReal: m.rows.filter(r => r.estatus === 'Migrado').reduce((a, b) => a + b.nCompArq, 0),
+      rowsMes: m.rows
+    };
+  });
+
+  if (mesesAMostrar.length === 0) {
+    mesesAMostrar = [
+      { key: 'jul', label: 'jul', mesNombre: 'Julio', plan: 63, meta: 50, migReal: 0, rowsMes: [] },
+      { key: 'ago', label: 'ago', mesNombre: 'Agosto', plan: 150, meta: 120, migReal: 0, rowsMes: [] },
+      { key: 'sep', label: 'sep', mesNombre: 'Setiembre', plan: 134, meta: 120, migReal: 0, rowsMes: [] }
+    ];
+  }
+
+  const mesesLabels = mesesAMostrar.map(m => m.label);
+  const planMensual = mesesAMostrar.map(m => m.plan);
+  const metaMensual = mesesAMostrar.map(m => m.meta);
+  const migradoReal = mesesAMostrar.map(m => m.migReal);
+
+  const metaTotalMensual = metaMensual.reduce((a, b) => a + b, 0);
+  const planTotalMensual = planMensual.reduce((a, b) => a + b, 0);
+
+  const migradosRows = rows.filter(r => r.estatus === 'Migrado');
+  const ejecucionRealComp = migradosRows.reduce((a, b) => a + b.nCompArq, 0);
+  const entregadosRows = rows.filter(r => r.esEntregado && r.estatus === 'Migrado');
+  const entregadosComp = entregadosRows.reduce((a, b) => a + b.nCompArq, 0);
+  const noEntregadosRows = migradosRows.filter(r => !r.esEntregado);
+  const noEntregadosComp = noEntregadosRows.reduce((a, b) => a + b.nCompArq, 0);
+
+  const rollbacksRows = rows.filter(r => r.estatus === 'Rollback');
+  const rollbacksComp = rollbacksRows.reduce((a, b) => a + b.nCompArq, 0);
+  const intentosTotalComp = ejecucionRealComp + rollbacksComp;
+
+  const kpiCumplimiento = pct(ejecucionRealComp, metaTotalMensual);
+  const kpiEficaciaEntrega = pct(entregadosComp, ejecucionRealComp);
+  const kpiTasaRollback = pct(rollbacksComp, intentosTotalComp);
+  const kpiVarianza = planTotalMensual > 0 ? (Math.abs(planTotalMensual - ejecucionRealComp) / planTotalMensual) * 100 : 0;
+
+  const motivosMap = new Map();
+  noEntregadosRows.forEach(r => {
+    const mot = r.motivoNoEntrega || 'Pendiente de validación formal IBK';
+    motivosMap.set(mot, (motivosMap.get(mot) || 0) + r.nCompArq);
+  });
+  const motivosSorted = Array.from(motivosMap.entries()).sort((a, b) => b[1] - a[1]);
+  const motivosLabels = motivosSorted.map(x => x[0]);
+  const motivosValues = motivosSorted.map(x => x[1]);
+
+  const prioMap = new Map();
+  rows.forEach(r => {
+    const p = (r.priorizadoQ && r.priorizadoQ !== '—') ? r.priorizadoQ : 'Sin Categoría';
+    if(!prioMap.has(p)) prioMap.set(p, { label: p, atendidos: 0, pendientes: 0, rowsAtendidos: [], rowsPendientes: [] });
+    const node = prioMap.get(p);
+    if(r.estatus === 'Migrado') {
+        node.atendidos += r.nCompArq;
+        node.rowsAtendidos.push(r);
+    } else {
+        node.pendientes += r.nCompArq;
+        node.rowsPendientes.push(r);
+    }
+  });
+  const prioData = Array.from(prioMap.values()).sort((a,b) => (b.atendidos + b.pendientes) - (a.atendidos + a.pendientes));
+
+  const semMap = new Map();
+  rows.forEach(r => {
+    if (!r.semanaDate) return;
+    const t = r.semanaDate.getTime();
+    if (!semMap.has(t)) {
+      const diaNum = String(r.semanaDate.getDate()).padStart(2, '0');
+      const mesCorto = MESES_CORTO_LOWER[r.semanaDate.getMonth()];
+      const labelFormat = `${diaNum}-${mesCorto.charAt(0).toUpperCase() + mesCorto.slice(1)}`;
+      semMap.set(t, {
+        time: t,
+        label: labelFormat,
+        total: 0,
+        migrados: 0,
+        entregados: 0,
+        rollback: 0,
+        reprogramados: 0,
+        rows: []
+      });
+    }
+    const s = semMap.get(t);
+    s.total += r.nCompArq;
+    if (r.estatus === 'Migrado') s.migrados += r.nCompArq;
+    if (r.esEntregado && r.estatus === 'Migrado') s.entregados += r.nCompArq;
+    if (r.estatus === 'Rollback') s.rollback += r.nCompArq;
+    if (r.estatus === 'Reprogramado') s.reprogramados += r.nCompArq;
+    s.rows.push(r);
+  });
+  const semanasOrdenadas = Array.from(semMap.values()).sort((a, b) => a.time - b.time);
+
+  $('#page').innerHTML = `
+    <div class="section-label-bar">📌 Métricas Base Arquitectura (Valores Crudos)</div>
+    <div class="row r-4">
+      <div class="tile kpi navy">
+        <div class="lbl">Meta Acumulada del Periodo</div>
+        <div class="val">${fmt(metaTotalMensual)} <span style="font-size:15px;color:var(--k-text-muted);">comp.</span></div>
+        <div class="sub">Objetivo según meses en filtro</div>
+      </div>
+
+      <div class="tile kpi green kpi-clickable" onclick="drillKpiArqMigrados()" title="Clic para ver componentes Arquitectura migrados">
+        <div class="lbl">Ejecución Real Arquitectura (Migrados)</div>
+        <div class="val" style="color:var(--k-green);">${fmt(ejecucionRealComp)}</div>
+        <div class="sub">${new Set(migradosRows.map(r=>r.servidor)).size} servidores migrados · <b>Clic para ver</b></div>
+      </div>
+
+      <div class="tile kpi blue kpi-clickable" onclick="drillKpiArqEntregados()" title="Clic para ver componentes Arquitectura entregados a IBK">
+        <div class="lbl">Arquitectura Entregada Formalmente</div>
+        <div class="val" style="color:var(--k-blue);">${fmt(entregadosComp)}</div>
+        <div class="sub">${new Set(entregadosRows.map(r=>r.servidor)).size} servidores aceptados por IBK · <b>Clic para ver</b></div>
+      </div>
+
+      <div class="tile kpi ${noEntregadosComp > 0 ? 'amber' : 'green'} kpi-clickable" onclick="drillKpiArqNoEntregados()" title="Clic para ver motivos de no entrega">
+        <div class="lbl">Arquitectura Pendiente de Entrega</div>
+        <div class="val" style="color:${noEntregadosComp > 0 ? 'var(--k-amber)' : 'var(--k-green)'};">${fmt(noEntregadosComp)}</div>
+        <div class="sub">${noEntregadosComp > 0 ? '⚠️ Clic para ver motivos de retención' : '100% de lo migrado entregado'}</div>
+      </div>
+    </div>
+
+    <div class="section-label-bar" style="margin-top: 10px;">🩺 KPIs de Salud Arquitectura (Según Matriz de Evaluación)</div>
+    <div class="row r-4">
+      <div class="tile kpi ${kpiCumplimiento >= 90 ? 'green' : (kpiCumplimiento >= 75 ? 'amber' : 'alert')} kpi-clickable" onclick="drillKpiArqMigrados()">
+        <div class="lbl" style="font-size:10.5px;">% de Cumplimiento (Migrado vs. Meta)</div>
+        <div class="val" style="color:${kpiCumplimiento >= 90 ? 'var(--k-green)' : (kpiCumplimiento >= 75 ? 'var(--k-amber)' : 'var(--k-alert)')};">${pct1(kpiCumplimiento)}</div>
+        <div class="sub">Eficiencia Operativa · <b>Target: ≥ 90%</b></div>
+      </div>
+
+      <div class="tile kpi ${kpiEficaciaEntrega >= 95 ? 'green' : (kpiEficaciaEntrega >= 80 ? 'amber' : 'alert')} kpi-clickable" onclick="drillKpiArqNoEntregados()">
+        <div class="lbl" style="font-size:10.5px;">% Eficacia en Entrega (Entr. vs Migrado)</div>
+        <div class="val" style="color:${kpiEficaciaEntrega >= 95 ? 'var(--k-green)' : (kpiEficaciaEntrega >= 80 ? 'var(--k-amber)' : 'var(--k-alert)')};">${pct1(kpiEficaciaEntrega)}</div>
+        <div class="sub">Calidad y Exp. del Cliente · <b>Target: ≥ 95%</b></div>
+      </div>
+
+      <div class="tile kpi ${kpiTasaRollback <= 5 ? 'green' : 'alert'} kpi-clickable" onclick="drillKpiArqRollbacks()">
+        <div class="lbl" style="font-size:10.5px;">Tasa de Rollback</div>
+        <div class="val" style="color:${kpiTasaRollback <= 5 ? 'var(--k-green)' : 'var(--k-alert)'};">${pct1(kpiTasaRollback)}</div>
+        <div class="sub">Riesgo y Calidad Técnica · <b>Target: ≤ 5%</b></div>
+      </div>
+
+      <div class="tile kpi ${kpiVarianza <= 10 ? 'green' : (kpiVarianza <= 25 ? 'amber' : 'alert')}">
+        <div class="lbl" style="font-size:10.5px;">Varianza (Desv. Planificado vs Real)</div>
+        <div class="val" style="color:${kpiVarianza <= 10 ? 'var(--k-green)' : (kpiVarianza <= 25 ? 'var(--k-amber)' : 'var(--k-alert)')};">${pct1(kpiVarianza)}</div>
+        <div class="sub">Predictibilidad del Servicio · <b>Target: ≤ 10%</b></div>
+      </div>
+    </div>
+
+    <div class="row r-2">
+      <div class="tile" style="border: 1.5px solid #CBD5E1; border-radius: 16px;">
+        <div class="th">
+          <div>
+            <h3>Nivel de Cumplimiento Arquitectura Mensual (Meta vs Planificado vs Migrado)</h3>
+            <div class="sb">Gráfico dinámico sincronizado con las variables en la selección de cabecera</div>
+          </div>
+          <button class="btn ghost sm" onclick="irAPestana('detalle')">Ver Inventario ➔</button>
+        </div>
+        <div class="cbox"><canvas id="cArqMensualHistorico"></canvas></div>
+      </div>
+
+      <div class="tile" style="border: 1.5px solid #CBD5E1; border-radius: 16px;">
+        <div class="th">
+          <div>
+            <h3>Motivos de Retención: ¿Por qué no se han entregado? (${fmt(noEntregadosComp)} comp.)</h3>
+            <div class="sb">Categorías unificadas sin duplicidad por mayúsculas/minúsculas</div>
+          </div>
+          <button class="btn ghost sm" onclick="drillKpiArqNoEntregados()">Auditar Servidores</button>
+        </div>
+        <div class="cbox"><canvas id="cArqDonaMotivos"></canvas></div>
+      </div>
+    </div>
+
+    <div class="row r-1">
+      <div class="tile" style="border: 1.5px solid #CBD5E1; border-radius: 16px;">
+        <div class="th">
+          <div>
+            <h3>Estado de Avance Arquitectura por Priorizado Q (Atendidos vs Pendientes)</h3>
+            <div class="sb">Desglose de esfuerzo operativo según la categoría de priorización. Clic en las barras para auditar fechas planificadas.</div>
+          </div>
+        </div>
+        <div class="cbox" style="min-height: 250px;"><canvas id="cArqPriorizadoProgreso"></canvas></div>
+      </div>
+    </div>
+
+    <div class="row r-1">
+      <div class="tile" style="border: 1.5px solid #CBD5E1; border-radius: 16px;">
+        <div class="th">
+          <div>
+            <h3>Estado Arquitectura por Semana Operativa (Planificado vs Ejecutado)</h3>
+            <div class="sb">Desglose de rendimiento semanal de componentes extraído de la "Semana de Planificación". Clic en la barra para auditar.</div>
+          </div>
+        </div>
+        <div class="cbox" style="min-height: 280px;"><canvas id="cArqSemanalProgreso"></canvas></div>
+      </div>
+    </div>
+  `;
+
+  const ctxHist = $('#cArqMensualHistorico').getContext('2d');
+  state.charts['cArqMensualHistorico'] = new Chart(ctxHist, {
+    data: {
+      labels: mesesLabels,
+      datasets: [
+        {
+          type: 'bar',
+          label: 'Cant. Planificada',
+          data: planMensual,
+          backgroundColor: '#0E5A84',
+          borderRadius: 4,
+          barPercentage: 0.38,
+          order: 3
+        },
+        {
+          type: 'line',
+          label: 'Cant. Mensual (Meta)',
+          data: metaMensual,
+          borderColor: '#EA580C',
+          backgroundColor: '#EA580C',
+          borderWidth: 3.5,
+          pointRadius: 0,
+          tension: 0,
+          order: 1
+        },
+        {
+          type: 'line',
+          label: 'Migrado',
+          data: migradoReal,
+          borderColor: '#2E7D32',
+          backgroundColor: '#2E7D32',
+          borderWidth: 3.5,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          pointBackgroundColor: '#2E7D32',
+          tension: 0,
+          order: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 26 } },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 14, padding: 16, font: { weight: '600' } } },
+        tooltip: {
+          callbacks: {
+            label: (c) => `${c.dataset.label}: ${c.raw} componentes Arquitectura`
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { weight: '700' } } },
+        y: { beginAtZero: true, max: Math.max(165, ...planMensual, ...metaMensual) + 15, grid: { color: '#EDF2F9' } }
+      },
+      onClick: (evt, activeEls) => {
+        if (!activeEls || !activeEls.length) return;
+        const el = activeEls[0];
+        const mObj = mesesAMostrar[el.index];
+        if(mObj.rowsMes && mObj.rowsMes.length > 0) {
+           drillGrupo(`Detalle Arquitectura del mes de ${mObj.mesNombre} (${mObj.rowsMes.length} registros)`, mObj.rowsMes);
+        }
+      }
+    }
+  });
+
+  const ctxMotivos = $('#cArqDonaMotivos').getContext('2d');
+  state.charts['cArqDonaMotivos'] = new Chart(ctxMotivos, {
+    type: 'doughnut',
+    data: {
+      labels: motivosLabels.length ? motivosLabels : ['100% Entregado'],
+      datasets: [{
+        data: motivosValues.length ? motivosValues : [1],
+        backgroundColor: motivosValues.length ? ['#EA580C', '#D97706', '#EAB308', '#0F3A70', '#E11D48'] : ['#059669'],
+        borderWidth: 2,
+        borderColor: '#FFFFFF'
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12, font: { weight: '600', size: 11 } } },
+        tooltip: { callbacks: { label: c => `${c.label}: ${c.raw} componentes Arquitectura` } }
+      },
+      onClick: (evt, activeEls) => {
+        if (!activeEls || !activeEls.length) return;
+        const el = activeEls[0];
+        const labelMotivo = motivosLabels[el.index];
+        if (!labelMotivo) return;
+        const rowsMotivo = noEntregadosRows.filter(r => r.motivoNoEntrega.toLowerCase() === labelMotivo.toLowerCase());
+        drillGrupo(`Servidores No Entregados: ${labelMotivo} (${rowsMotivo.length} registros)`, rowsMotivo);
+      }
+    }
+  });
+
+  const ctxPrio = $('#cArqPriorizadoProgreso').getContext('2d');
+  state.charts['cArqPriorizadoProgreso'] = new Chart(ctxPrio, {
+    type: 'bar',
+    data: {
+      labels: prioData.map(p => p.label),
+      datasets: [
+        {
+          label: 'Atendidos (Migrados)',
+          data: prioData.map(p => p.atendidos),
+          backgroundColor: '#059669',
+          borderRadius: 3
+        },
+        {
+          label: 'Pendientes (Por Definir, Planificados, etc.)',
+          data: prioData.map(p => p.pendientes),
+          backgroundColor: '#D97706',
+          borderRadius: 3
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 22 } },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15, font: { weight: '600', size: 11.5 } } },
+        tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.raw} componentes Arquitectura` } }
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { font: { weight: '600' } } },
+        y: { stacked: true, beginAtZero: true, grid: { color: '#EDF2F9' } }
+      },
+      onClick: (evt, activeEls) => {
+        if (!activeEls || !activeEls.length) return;
+        const el = activeEls[0];
+        const pObj = prioData[el.index];
+        const dsIdx = el.datasetIndex;
+        let filterRows = pObj.rowsAtendidos;
+        let titleExt = "Atendidos (Migrados)";
+        
+        if (dsIdx === 1) { 
+          filterRows = pObj.rowsPendientes; 
+          titleExt = "Pendientes"; 
+        }
+        
+        if (filterRows.length > 0) drillGrupo(`Priorizado Q: ${pObj.label} - ${titleExt} (${filterRows.length} registros)`, filterRows);
+      }
+    }
+  });
+
+  const ctxSemanal = $('#cArqSemanalProgreso').getContext('2d');
+  state.charts['cArqSemanalProgreso'] = new Chart(ctxSemanal, {
+    type: 'bar',
+    data: {
+      labels: semanasOrdenadas.map(s => s.label),
+      datasets: [
+        {
+          label: 'Planificados',
+          data: semanasOrdenadas.map(s => s.total),
+          backgroundColor: '#00477B',
+          borderRadius: 3
+        },
+        {
+          label: 'Migrados',
+          data: semanasOrdenadas.map(s => s.migrados),
+          backgroundColor: '#00B050',
+          borderRadius: 3
+        },
+        {
+          label: 'Rollback',
+          data: semanasOrdenadas.map(s => s.rollback),
+          backgroundColor: '#FF4040',
+          borderRadius: 3
+        },
+        {
+          label: 'Entregados',
+          data: semanasOrdenadas.map(s => s.entregados),
+          backgroundColor: '#5B9BD5',
+          borderRadius: 3
+        },
+        {
+          label: 'Reprogramados',
+          data: semanasOrdenadas.map(s => s.reprogramados),
+          backgroundColor: '#FFC000',
+          borderRadius: 3
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 22 } },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15, font: { weight: '600', size: 11.5 } } },
+        tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.raw} componentes Arquitectura` } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { weight: '600' } } },
+        y: { beginAtZero: true, grid: { color: '#EDF2F9' } }
+      },
+      onClick: (evt, activeEls) => {
+        if (!activeEls || !activeEls.length) return;
+        const el = activeEls[0];
+        const sObj = semanasOrdenadas[el.index];
+        const dsIdx = el.datasetIndex;
+        let filterRows = sObj.rows;
+        let titleExt = "Total Planificados";
+        
+        if (dsIdx === 1) { filterRows = filterRows.filter(r => r.estatus === 'Migrado'); titleExt = "Migrados"; }
+        if (dsIdx === 2) { filterRows = filterRows.filter(r => r.estatus === 'Rollback'); titleExt = "Rollbacks"; }
+        if (dsIdx === 3) { filterRows = filterRows.filter(r => r.esEntregado && r.estatus === 'Migrado'); titleExt = "Entregados"; }
+        if (dsIdx === 4) { filterRows = filterRows.filter(r => r.estatus === 'Reprogramado'); titleExt = "Reprogramados"; }
+        
+        if (filterRows.length > 0) drillGrupo(`Semana del ${sObj.label} - ${titleExt} (${filterRows.length} registros)`, filterRows);
+      }
+    }
+  });
+
+  window.curArqMigradosRows = migradosRows;
+  window.curArqEntregadosRows = entregadosRows;
+  window.curArqNoEntregadosRows = noEntregadosRows;
+  window.curArqRollbackRows = rollbacksRows;
+}
+
 
 function irAPestana(pgId) {
   const btn = $(`.navbtn[data-pg="${pgId}"]`);
@@ -3758,6 +4222,7 @@ function initEvents() {
     state.page = btn.dataset.pg;
     const titles = {
       cumplimiento: '📊 Nivel de Cumplimiento de Componentes',
+      'cumplimiento-arq': '🏗️ Nivel de Cumplimiento Arquitectura',
       'flujo-e2e': '🚦 Flujo E2E y Alertas de OC (Upgrade Capacidades ➔ Aprovisionamiento ➔ OC)',
       entregas: '✅ Avance de Entregas (Servidores Migrados)',
       'cierre-aprov': '🎯 Gestión de Entregables (Tickets Cerrados)',
