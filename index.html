@@ -1678,6 +1678,118 @@ function renderResumenCompPage() {
 }
 
 /* -------------------------------------------------------------
+   COBERTURA DE ALCANCE: COMPONENTES / SERVIDORES / TICKETS
+------------------------------------------------------------- */
+function getTicketsAprovUnicos(rows) {
+  return new Set(rows.map(r => String(r.ticketAprov || '').trim()).filter(t => t && t !== 'Sin Ticket' && t !== '-' && !t.toLowerCase().includes('no aplica')));
+}
+
+function coberturaCardsHtml(rows, modo) {
+  const esArq = modo === 'arq';
+  const compField = esArq ? 'nCompArq' : 'nComp';
+  const totalComp = rows.reduce((a,r)=>a+(Number(r[compField])||0),0);
+  const totalSrv = new Set(rows.map(r=>r.servidor).filter(Boolean)).size;
+  const totalTkt = getTicketsAprovUnicos(rows).size;
+  const pendientes = rows.filter(r => r.estatus !== 'Migrado');
+  const pendComp = pendientes.reduce((a,r)=>a+(Number(r[compField])||0),0);
+  const pendSrv = new Set(pendientes.map(r=>r.servidor).filter(Boolean)).size;
+  const pendTkt = getTicketsAprovUnicos(pendientes).size;
+  const suffix = esArq ? 'Arq' : 'Main';
+  const nombre = esArq ? 'Arquitectura' : 'Kyndryl';
+  return `
+    <div class="section-label-bar">🧭 Cobertura del Alcance ${nombre}</div>
+    <div class="row r-2">
+      <div class="tile kpi navy kpi-clickable" onclick="mostrarDetalleCobertura('${suffix}','total')" title="Clic para auditar todo el alcance bajo los filtros actuales">
+        <div class="lbl">Total del Alcance</div>
+        <div class="val">${fmt(totalComp)} <span style="font-size:15px;color:var(--k-text-muted);">componentes</span></div>
+        <div class="sub"><b>${fmt(totalSrv)}</b> servidores únicos · <b>${fmt(totalTkt)}</b> tickets de aprovisionamiento únicos · <b>Clic para ver detalle</b></div>
+      </div>
+      <div class="tile kpi amber kpi-clickable" onclick="mostrarDetalleCobertura('${suffix}','pendiente')" title="Clic para auditar lo que falta migrar">
+        <div class="lbl">Pendiente de Migración</div>
+        <div class="val" style="color:var(--k-amber);">${fmt(pendComp)} <span style="font-size:15px;color:var(--k-text-muted);">componentes</span></div>
+        <div class="sub"><b>${fmt(pendSrv)}</b> servidores únicos · <b>${fmt(pendTkt)}</b> tickets de aprovisionamiento únicos · Estatus distinto de Migrado · <b>Clic para ver detalle</b></div>
+      </div>
+    </div>
+    <div class="row r-1" id="coberturaDetalle${suffix}">
+      <div class="tile" style="border:1.5px solid #CBD5E1;border-radius:16px;">
+        <div class="th" style="align-items:center;">
+          <div><h3 id="coberturaTitle${suffix}">Detalle de Cobertura</h3><div class="sb" id="coberturaSub${suffix}">Selecciona Total del Alcance o Pendiente de Migración para consultar el detalle aquí.</div></div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button class="btn green sm hide" id="btnExportCobertura${suffix}" onclick="exportarDetalleCobertura('${suffix}')">Exportar Excel</button>
+            <button class="btn ghost sm" onclick="limpiarDetalleCobertura('${suffix}')">Limpiar detalle</button>
+          </div>
+        </div>
+        <div id="coberturaContent${suffix}"><div style="padding:26px;text-align:center;background:#F8FAFC;border:1px dashed var(--k-border);border-radius:8px;color:var(--k-text-muted);">El detalle seleccionado aparecerá aquí, sin abrir una ventana emergente.</div></div>
+      </div>
+    </div>`;
+}
+
+function mostrarDetalleCobertura(suffix, tipo) {
+  const esArq = suffix === 'Arq';
+  const compField = esArq ? 'nCompArq' : 'nComp';
+  let base = state.view.slice();
+  if (tipo === 'pendiente') base = base.filter(r => r.estatus !== 'Migrado');
+  window['coberturaRows' + suffix] = base;
+  window['coberturaFiltro' + suffix] = '__ALL__';
+  window['coberturaSearch' + suffix] = '';
+  pintarDetalleCobertura(suffix, compField, tipo);
+  const sec = $('#coberturaDetalle' + suffix); if (sec) sec.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function pintarDetalleCobertura(suffix, compField, tipo) {
+  const rowsBase = window['coberturaRows' + suffix] || [];
+  const filtro = window['coberturaFiltro' + suffix] || '__ALL__';
+  const q = norm(window['coberturaSearch' + suffix] || '');
+  let rows = rowsBase.slice();
+  if (filtro !== '__ALL__') rows = rows.filter(r => r.estatus === filtro);
+  if (q) rows = rows.filter(r => norm(`${r.servidor} ${r.servidorDestino} ${r.siglas} ${r.app} ${r.ticketAprov} ${r.ownerKyndryl} ${r.priorizadoQ} ${r.estatus}`).includes(q));
+  const comp = rows.reduce((a,r)=>a+(Number(r[compField])||0),0);
+  const srv = new Set(rows.map(r=>r.servidor).filter(Boolean)).size;
+  const tkt = getTicketsAprovUnicos(rows).size;
+  window['coberturaFiltradas' + suffix] = rows.slice();
+  window['coberturaCompField' + suffix] = compField;
+  window['coberturaTipo' + suffix] = tipo;
+  const btnExp = $('#btnExportCobertura' + suffix); if (btnExp) btnExp.classList.remove('hide');
+  const estatus = ESTATUS_MIGRACION_LIST.filter(e => rowsBase.some(r=>r.estatus===e));
+  $('#coberturaTitle'+suffix).textContent = tipo === 'pendiente' ? 'Detalle — Pendiente de Migración' : 'Detalle — Total del Alcance';
+  $('#coberturaSub'+suffix).innerHTML = `<b>${fmt(comp)}</b> componentes · <b>${fmt(srv)}</b> servidores únicos · <b>${fmt(tkt)}</b> tickets únicos · ${fmt(rows.length)} relaciones mostradas`;
+  $('#coberturaContent'+suffix).innerHTML = `
+    <div style="display:flex;gap:8px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;"><span style="font-size:11px;font-weight:800;color:var(--k-text-muted);text-transform:uppercase;">Estatus:</span>
+        <button class="btn sm ${filtro==='__ALL__'?'':'ghost'}" onclick="setCoberturaFiltro('${suffix}','__ALL__','${compField}','${tipo}')">Todos</button>
+        ${estatus.map(e=>`<button class="btn sm ${filtro===e?'':'ghost'}" onclick="setCoberturaFiltro('${suffix}','${e}','${compField}','${tipo}')">${esc(e)}</button>`).join('')}
+      </div>
+      <input type="text" id="coberturaSearch${suffix}" placeholder="🔍 Buscar servidor, SIGLA, ticket, owner..." value="${esc(window['coberturaSearch'+suffix]||'')}" style="min-width:280px;">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"><span class="stat-pill all">Componentes: ${fmt(comp)}</span><span class="stat-pill all">Servidores: ${fmt(srv)}</span><span class="stat-pill all">Tickets: ${fmt(tkt)}</span></div>
+    <div class="tw" style="max-height:480px;"><table class="dt"><thead><tr><th class="l">Servidor</th><th class="l">Srv. Destino</th><th class="l">SIGLA</th><th class="l">Aplicación</th><th>Componentes</th><th class="l">Ticket Aprovisionamiento</th><th class="l">Estado Aprov.</th><th class="l">Priorizado Q</th><th class="l">Owner</th><th class="l">Estatus</th></tr></thead><tbody>
+      ${rows.map(r=>`<tr><td class="l mono"><b>${esc(r.servidor)}</b></td><td class="l mono">${esc(r.servidorDestino)}</td><td class="l mono"><b>${esc(r.siglas)}</b></td><td class="l">${esc(r.app)}</td><td class="num"><b>${fmt(r[compField]||0)}</b></td><td class="l mono" style="color:var(--k-navy);font-weight:700;">${esc(r.ticketAprov)}</td><td class="l">${esc(r.estadoAprov)}</td><td class="l">${esc(r.priorizadoQ)}</td><td class="l"><b>${esc(r.ownerKyndryl)}</b></td><td class="l"><span class="tag ${r.estatus==='Migrado'?'mig':(r.estatus==='Desestimado'?'des':(r.estatus==='Rollback'?'rb':(r.estatus==='Planificado'?'plan':'pend')))}">${esc(r.estatus)}</span></td></tr>`).join('') || `<tr><td colspan="10" class="l" style="text-align:center;padding:22px;color:#888;">No hay registros para el filtro seleccionado.</td></tr>`}
+    </tbody></table></div>`;
+  const inp=$('#coberturaSearch'+suffix); if(inp) inp.oninput=e=>{window['coberturaSearch'+suffix]=e.target.value;pintarDetalleCobertura(suffix,compField,tipo); const ni=$('#coberturaSearch'+suffix); if(ni){ni.focus();ni.setSelectionRange(ni.value.length,ni.value.length);}};
+}
+function setCoberturaFiltro(suffix, filtro, compField, tipo){ window['coberturaFiltro'+suffix]=filtro; pintarDetalleCobertura(suffix,compField,tipo); }
+function exportarDetalleCobertura(suffix){
+  const rows = window['coberturaFiltradas' + suffix] || [];
+  const compField = window['coberturaCompField' + suffix] || (suffix === 'Arq' ? 'nCompArq' : 'nComp');
+  const tipo = window['coberturaTipo' + suffix] || 'total';
+  const wb = XLSX.utils.book_new();
+  const exportRows = rows.map(r => ({
+    'Servidor Origen': r.servidor, 'Servidor Destino': r.servidorDestino, 'SIGLA': r.siglas, 'Aplicación': r.app,
+    'Componentes': Number(r[compField]) || 0, 'Componentes Kyndryl': Number(r.nComp) || 0, 'Componentes Arquitectura': Number(r.nCompArq) || 0,
+    'Ticket Aprovisionamiento': r.ticketAprov, 'Estado Aprovisionamiento': r.estadoAprov, 'Priorizado Q': r.priorizadoQ,
+    'Owner Kyndryl': r.ownerKyndryl, 'Ambiente': r.ambiente, 'Estatus Migración': r.estatus,
+    'OC Migración': r.oc, 'Estado OC': r.estadoOC, 'Trimestre': r.qIbk, 'Mes': r.mes
+  }));
+  const ws = XLSX.utils.json_to_sheet(exportRows);
+  ws['!cols'] = [{wch:22},{wch:22},{wch:14},{wch:36},{wch:14},{wch:20},{wch:24},{wch:24},{wch:24},{wch:24},{wch:24},{wch:14},{wch:20},{wch:20},{wch:18},{wch:14},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Detalle_Cobertura');
+  const alcance = tipo === 'pendiente' ? 'Pendiente_Migracion' : 'Total_Alcance';
+  const medida = suffix === 'Arq' ? 'Arquitectura' : 'Kyndryl';
+  XLSX.writeFile(wb, `Kyndryl_Cobertura_${medida}_${alcance}.xlsx`);
+}
+function limpiarDetalleCobertura(suffix){ const c=$('#coberturaContent'+suffix),t=$('#coberturaTitle'+suffix),s=$('#coberturaSub'+suffix),b=$('#btnExportCobertura'+suffix); if(t)t.textContent='Detalle de Cobertura'; if(s)s.textContent='Selecciona Total del Alcance o Pendiente de Migración para consultar el detalle aquí.'; if(b)b.classList.add('hide'); window['coberturaFiltradas'+suffix]=[]; if(c)c.innerHTML='<div style="padding:26px;text-align:center;background:#F8FAFC;border:1px dashed var(--k-border);border-radius:8px;color:var(--k-text-muted);">El detalle seleccionado aparecerá aquí, sin abrir una ventana emergente.</div>'; }
+
+/* -------------------------------------------------------------
    VISTA 1: NIVEL DE CUMPLIMIENTO
 ------------------------------------------------------------- */
 function renderCumplimientoPage() {
@@ -1814,7 +1926,8 @@ function renderCumplimientoPage() {
   const semanasOrdenadas = Array.from(semMap.values()).sort((a, b) => a.time - b.time);
 
   $('#page').innerHTML = `
-    <div class="section-label-bar">📌 Métricas Base del Servicio (Valores Crudos)</div>
+    ${coberturaCardsHtml(rows, 'main')}
+    <div class="section-label-bar" style="margin-top:10px;">📌 Métricas Base del Servicio (Valores Crudos)</div>
     <div class="row r-4">
       <div class="tile kpi navy">
         <div class="lbl">Meta Acumulada del Periodo</div>
@@ -2272,7 +2385,8 @@ function renderCumplimientoArquitecturaPage() {
   const semanasOrdenadas = Array.from(semMap.values()).sort((a, b) => a.time - b.time);
 
   $('#page').innerHTML = `
-    <div class="section-label-bar">📌 Métricas Base Arquitectura (Valores Crudos)</div>
+    ${coberturaCardsHtml(rows, 'arq')}
+    <div class="section-label-bar" style="margin-top:10px;">📌 Métricas Base Arquitectura (Valores Crudos)</div>
     <div class="row r-4">
       <div class="tile kpi navy">
         <div class="lbl">Meta Acumulada del Periodo</div>
