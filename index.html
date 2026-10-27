@@ -711,6 +711,36 @@ function aplicarCatalogoAplicaciones(rows) {
   return catalogo;
 }
 
+// Normaliza la columna Intento. Vacio se interpreta como 1ER INTENTO.
+function normalizarIntento(raw) {
+  const txt = String(raw == null ? '' : raw).trim();
+  if (!txt || txt === '-' || txt === '—') return { numero: 1, etiqueta: '1ER INTENTO', original: '' };
+  const n = norm(txt);
+  const m = n.match(/(\d+)/);
+  let numero = m ? parseInt(m[1], 10) : 1;
+  if (!Number.isFinite(numero) || numero < 1) numero = 1;
+  let suf = 'TO';
+  if (numero === 1) suf = 'ER';
+  else if (numero === 2) suf = 'DO';
+  else if (numero === 3) suf = 'ER';
+  return { numero, etiqueta: `${numero}${suf} INTENTO`, original: txt };
+}
+
+// Conserva solo el ultimo intento vigente por Servidor + SIGLA.
+// Si hay varias filas del mismo ultimo intento, se conservan todas porque pueden representar componentes distintos.
+function obtenerUltimosIntentos(rows) {
+  const maxPorUnidad = new Map();
+  rows.forEach(r => {
+    const key = `${norm(r.servidor)}___${norm(r.siglas)}`;
+    const n = Number(r.intentoNum) || 1;
+    if (!maxPorUnidad.has(key) || n > maxPorUnidad.get(key)) maxPorUnidad.set(key, n);
+  });
+  return rows.filter(r => {
+    const key = `${norm(r.servidor)}___${norm(r.siglas)}`;
+    return (Number(r.intentoNum) || 1) === maxPorUnidad.get(key);
+  });
+}
+
 /* -------------------------------------------------------------
    LECTURA Y NORMALIZACIÓN DE LA PESTAÑA 'CONSOLIDADO' 
 ------------------------------------------------------------- */
@@ -909,6 +939,8 @@ async function processWorkbook(file) {
       }
     }
     
+    const intentoInfo = normalizarIntento(getVal('intento', 'nrointento', 'numerointento', 'númerointento'));
+
     const componentesExtraidos = getNumStrict('componenteskyndryl', 'componenteskydryl', 'sumadecomponenteskyndryl', 'sumadecomponenteskydryl') || 0;
     const componentesExtArq = getNumStrict('componentesarquitectura', 'componentearquitectura', 'sumadecomponentesarquitectura') || 0;
     
@@ -938,6 +970,9 @@ async function processWorkbook(file) {
       nCompArq: componentesExtArq,
       estatus: estatusFinal,
       ejecFDS: ejecFDS,
+      intento: intentoInfo.etiqueta,
+      intentoNum: intentoInfo.numero,
+      intentoOriginal: intentoInfo.original,
       oc: ocNum ? String(ocNum).trim() : 'Sin OC',
       estadoOC: ocEstado,
       ticketUpg: ticketUpg != null && String(ticketUpg).trim() !== '' ? String(ticketUpg).trim() : 'No Aplica',
@@ -963,9 +998,10 @@ async function processWorkbook(file) {
   }
 
   aplicarCatalogoAplicaciones(rows);
-  state.raw = rows;
+  const rowsVigentes = obtenerUltimosIntentos(rows);
+  state.raw = rowsVigentes;
 
-  const allQs = Array.from(new Set(rows.map(r => r.qIbk))).filter(Boolean);
+  const allQs = Array.from(new Set(state.raw.map(r => r.qIbk))).filter(Boolean);
   if (allQs.includes('2026-Q3')) {
     state.selectedQs = new Set(['2026-Q3']);
   } else if (allQs.length > 0) {
@@ -1445,7 +1481,8 @@ function renderResumenCompPage() {
                    <th class="l sortable" onclick="setResumenSort('servidor')">Srv. Origen <span id="sr_servidor" class="sort-icon"></span></th>
                    <th class="l sortable" onclick="setResumenSort('servidorDestino')">Srv. Destino <span id="sr_servidorDestino" class="sort-icon"></span></th>
                    <th class="l">Resumen del Componente (TPO / SO / APP / SubSist)</th>
-                   <th class="l sortable" onclick="setResumenSort('estatus')">Estatus Migración <span id="sr_estatus" class="sort-icon"></span></th>
+                   <th class="l sortable" onclick="setResumenSort('intentoNum')">Intento Vigente <span id="sr_intentoNum" class="sort-icon"></span></th>
+                    <th class="l sortable" onclick="setResumenSort('estatus')">Estatus Migración <span id="sr_estatus" class="sort-icon"></span></th>
                    <th class="l sortable" onclick="setResumenSort('ejecFDS')">Días de Ejecución <span id="sr_ejecFDS" class="sort-icon"></span></th>
                    <th class="sortable" style="background:#0F3A70; color:#fff;" onclick="setResumenSort('nComp')">Comp. Kyndryl <span id="sr_nComp" class="sort-icon"></span></th>
                    <th class="sortable" style="background:#0284C7; color:#fff;" onclick="setResumenSort('nCompArq')">Comp. Arq <span id="sr_nCompArq" class="sort-icon"></span></th>
@@ -1819,8 +1856,8 @@ function pintarDetalleCobertura(suffix, compField, tipo) {
       <input type="text" id="coberturaSearch${suffix}" placeholder="🔍 Buscar servidor, SIGLA, ticket, owner..." value="${esc(window['coberturaSearch'+suffix]||'')}" style="min-width:280px;">
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"><span class="stat-pill all">Componentes: ${fmt(comp)}</span><span class="stat-pill all">Servidores: ${fmt(srv)}</span><span class="stat-pill all">Tickets: ${fmt(tkt)}</span></div>
-    <div class="tw" style="max-height:480px;"><table class="dt"><thead><tr><th class="l">Servidor</th><th class="l">Srv. Destino</th><th class="l">SIGLA</th><th class="l">Aplicación</th><th>Componentes</th><th class="l">Ticket Aprovisionamiento</th><th class="l">Estado Aprov.</th><th class="l">Priorizado Q</th><th class="l">Owner</th><th class="l">Estatus</th></tr></thead><tbody>
-      ${rows.map(r=>`<tr><td class="l mono"><b>${esc(r.servidor)}</b></td><td class="l mono">${esc(r.servidorDestino)}</td><td class="l mono"><b>${esc(r.siglas)}</b></td><td class="l">${esc(r.app)}</td><td class="num"><b>${fmt(r[compField]||0)}</b></td><td class="l mono" style="color:var(--k-navy);font-weight:700;">${esc(r.ticketAprov)}</td><td class="l">${esc(r.estadoAprov)}</td><td class="l">${esc(r.priorizadoQ)}</td><td class="l"><b>${esc(r.ownerKyndryl)}</b></td><td class="l"><span class="tag ${r.estatus==='Migrado'?'mig':(r.estatus==='Desestimado'?'des':(r.estatus==='Rollback'?'rb':(r.estatus==='Planificado'?'plan':'pend')))}">${esc(r.estatus)}</span></td></tr>`).join('') || `<tr><td colspan="10" class="l" style="text-align:center;padding:22px;color:#888;">No hay registros para el filtro seleccionado.</td></tr>`}
+    <div class="tw" style="max-height:480px;"><table class="dt"><thead><tr><th class="l">Servidor</th><th class="l">Srv. Destino</th><th class="l">SIGLA</th><th class="l">Aplicación</th><th>Componentes</th><th class="l">Ticket Aprovisionamiento</th><th class="l">Estado Aprov.</th><th class="l">Priorizado Q</th><th class="l">Owner</th><th class="l">Intento Vigente</th><th class="l">Estatus</th></tr></thead><tbody>
+      ${rows.map(r=>`<tr><td class="l mono"><b>${esc(r.servidor)}</b></td><td class="l mono">${esc(r.servidorDestino)}</td><td class="l mono"><b>${esc(r.siglas)}</b></td><td class="l">${esc(r.app)}</td><td class="num"><b>${fmt(r[compField]||0)}</b></td><td class="l mono" style="color:var(--k-navy);font-weight:700;">${esc(r.ticketAprov)}</td><td class="l">${esc(r.estadoAprov)}</td><td class="l">${esc(r.priorizadoQ)}</td><td class="l"><b>${esc(r.ownerKyndryl)}</b></td><td class="l"><span class="tag plan">${esc(r.intento)}</span></td><td class="l"><span class="tag ${r.estatus==='Migrado'?'mig':(r.estatus==='Desestimado'?'des':(r.estatus==='Rollback'?'rb':(r.estatus==='Planificado'?'plan':'pend')))}">${esc(r.estatus)}</span></td></tr>`).join('') || `<tr><td colspan="11" class="l" style="text-align:center;padding:22px;color:#888;">No hay registros para el filtro seleccionado.</td></tr>`}
     </tbody></table></div>`;
   const inp=$('#coberturaSearch'+suffix); if(inp) inp.oninput=e=>{window['coberturaSearch'+suffix]=e.target.value;pintarDetalleCobertura(suffix,compField,tipo); const ni=$('#coberturaSearch'+suffix); if(ni){ni.focus();ni.setSelectionRange(ni.value.length,ni.value.length);}};
 }
@@ -4280,7 +4317,8 @@ function drillGrupo(titulo, rows) {
             <th class="sortable" onclick="sortModal('nCompArq')" title="Clic para ordenar">Comp. Arq <span id="ms_nCompArq" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('ambiente')" title="Clic para ordenar">Ambiente <span id="ms_ambiente" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('priorizadoQ')" title="Clic para ordenar">Priorizado Q <span id="ms_priorizadoQ" class="sort-icon modal-sort-icon"></span></th>
-            <th class="l sortable" onclick="sortModal('ownerKyndryl')" title="Clic para ordenar">Owner Kyndryl <span id="ms_ownerKyndryl" class="sort-icon modal-sort-icon"></span></th>
+            <th class="l sortable" onclick="sortModal('intentoNum')" title="Clic para ordenar">Intento Vigente <span id="ms_intentoNum" class="sort-icon modal-sort-icon"></span></th>
+             <th class="l sortable" onclick="sortModal('ownerKyndryl')" title="Clic para ordenar">Owner Kyndryl <span id="ms_ownerKyndryl" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('esEntregado')" title="Clic para ordenar">Estado Entrega <span id="ms_esEntregado" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('motivoNoEntrega')" title="Clic para ordenar">Motivo No Entrega <span id="ms_motivoNoEntrega" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('oc')" title="Clic para ordenar">OC Migración <span id="ms_oc" class="sort-icon modal-sort-icon"></span></th>
@@ -4475,7 +4513,8 @@ function renderDetallePage() {
               <th class="l sortable" onclick="setInvSort('ambiente')">Ambiente <span id="si_ambiente" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('priorizadoQ')">Priorizado Q <span id="si_priorizadoQ" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('prioridad')">Prioridad <span id="si_prioridad" class="sort-icon"></span></th>
-              <th class="l sortable" onclick="setInvSort('ownerKyndryl')">Owner <span id="si_ownerKyndryl" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setInvSort('intentoNum')">Intento Vigente <span id="si_intentoNum" class="sort-icon"></span></th>
+               <th class="l sortable" onclick="setInvSort('ownerKyndryl')">Owner <span id="si_ownerKyndryl" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('oc')">OC Migración <span id="si_oc" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('estadoOC')">Estado OC <span id="si_estadoOC" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('fechaNum')">Fecha Plan. <span id="si_fechaNum" class="sort-icon"></span></th>
@@ -4515,7 +4554,7 @@ function renderDetallePage() {
     }
 
     if (qText) {
-      filtrados = filtrados.filter(r => norm(`${r.siglas} ${r.app} ${r.servidor} ${r.servidorDestino} ${r.ownerKyndryl} ${r.oc} ${r.estadoOC} ${r.soOrigen} ${r.soDestino} ${r.priorizadoQ} ${r.prioridad}`).includes(qText));
+      filtrados = filtrados.filter(r => norm(`${r.siglas} ${r.app} ${r.servidor} ${r.servidorDestino} ${r.ownerKyndryl} ${r.oc} ${r.estadoOC} ${r.soOrigen} ${r.soDestino} ${r.priorizadoQ} ${r.prioridad} ${r.intento}`).includes(qText));
     }
 
     filtrados.sort((a, b) => {
