@@ -192,6 +192,9 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
 .tag.listo-cierre { border-color: var(--k-green); background: #DCFCE7; color: #15803D; font-weight: 800; }
 .tag.incompleto { border-color: var(--k-amber); background: #FEF3C7; color: #B45309; }
 .tag.purple { border-color: var(--k-purple); background: rgba(139, 92, 246, 0.1); color: var(--k-purple); }
+.priority-badge { display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;font-size:10.5px;font-weight:800;border:1px solid;white-space:nowrap; }
+.priority-badge.yes { background:#FFE4E6;color:#BE123C;border-color:#FB7185;box-shadow:0 0 0 2px rgba(225,29,72,.05); }
+.priority-badge.no { background:#F1F5F9;color:#64748B;border-color:#CBD5E1; }
 
 .modal-chip { cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); user-select: none; border-width: 1.5px !important; padding: 4px 10px; font-size: 11.5px; opacity: 0.8; }
 .modal-chip:hover { filter: brightness(0.9); opacity: 1; transform: translateY(-1px); }
@@ -543,6 +546,7 @@ const state = {
   filtroEstadoCierreAprov: '__ALL__',
   searchAprovQuery: '',
   searchInvQuery: '',
+  invFiltroPrioridad: '__ALL__',
   calFiltroAnio: '__ALL__',
   calFiltroMes: '__ALL__',
   calFiltroSemana: '__ALL__',
@@ -670,8 +674,45 @@ function normalizeNombreMes(raw) {
   return String(raw).trim();
 }
 
+// Catálogo maestro SIGLA -> Aplicación. Una SIGLA debe conservar un único nombre de aplicación.
+// Se descartan valores que parecen horarios/turnos (ej. 24*7, 24x7) y placeholders.
+function esNombreAplicacionValido(app) {
+  const t = String(app || '').replace(/\s+/g, ' ').trim();
+  if (!t) return false;
+  const n = norm(t);
+  if (['sin aplicacion','sin aplicación','n/a','na','no aplica','-','—','s/s'].includes(n)) return false;
+  if (/^24\s*[x*]\s*7$/i.test(t) || /^24\s*\/\s*7$/i.test(t)) return false;
+  return true;
+}
+
+function aplicarCatalogoAplicaciones(rows) {
+  const porSigla = new Map();
+  rows.forEach(r => {
+    const sigla = String(r.siglas || '').trim();
+    const app = String(r.app || '').replace(/\s+/g, ' ').trim();
+    if (!sigla || sigla === 'S/S' || !esNombreAplicacionValido(app)) return;
+    if (!porSigla.has(sigla)) porSigla.set(sigla, new Map());
+    const m = porSigla.get(sigla);
+    const key = norm(app);
+    if (!m.has(key)) m.set(key, { nombre: app, count: 0 });
+    m.get(key).count++;
+  });
+  const catalogo = new Map();
+  porSigla.forEach((apps, sigla) => {
+    const elegido = Array.from(apps.values()).sort((a,b) => b.count - a.count || b.nombre.length - a.nombre.length || a.nombre.localeCompare(b.nombre))[0];
+    if (elegido) catalogo.set(sigla, elegido.nombre);
+  });
+  rows.forEach(r => {
+    const canon = catalogo.get(String(r.siglas || '').trim());
+    if (canon) r.app = canon;
+    r.esPrioritario = /prioritario/i.test(String(r.priorizadoQ || ''));
+    r.prioridad = r.esPrioritario ? 'PRIORITARIO' : 'NO PRIORITARIO';
+  });
+  return catalogo;
+}
+
 /* -------------------------------------------------------------
-   LECTURA Y NORMALIZACIÓN DE LA PESTAÑA 'CONSOLIDADO'
+   LECTURA Y NORMALIZACIÓN DE LA PESTAÑA 'CONSOLIDADO' 
 ------------------------------------------------------------- */
 async function processWorkbook(file) {
   const buffer = await file.arrayBuffer();
@@ -921,6 +962,7 @@ async function processWorkbook(file) {
     });
   }
 
+  aplicarCatalogoAplicaciones(rows);
   state.raw = rows;
 
   const allQs = Array.from(new Set(rows.map(r => r.qIbk))).filter(Boolean);
@@ -1291,7 +1333,9 @@ function renderResumenCompPage() {
   const stats = {};
   labels.forEach(l => stats[l] = { k: 0, a: 0, srv: new Set(), rows: [] });
 
-  uniqueRows.forEach(r => {
+  // V13: Los KPIs oficiales se calculan sobre TODAS las relaciones filtradas.
+  // La deduplicacion Servidor + SIGLA se conserva exclusivamente para la tabla de auditoria visual.
+  state.view.forEach(r => {
      totK += r.nComp;
      totA += (r.nCompArq || 0);
 
@@ -1327,27 +1371,27 @@ function renderResumenCompPage() {
   window.resumenFiltroCategory = '__ALL__';
 
   $('#page').innerHTML = `
-    <div class="section-label-bar">📦 Resumen Global de Componentes Únicos (Deduplicados)</div>
+    <div class="section-label-bar">📦 Resumen Global de Componentes</div>
     <div class="row r-4">
       <div class="tile kpi navy">
         <div class="lbl">Total Comp. Kyndryl</div>
         <div class="val">${fmt(totK)}</div>
-        <div class="sub">Columna "Componentes Kyndryl"</div>
+        <div class="sub">Alcance oficial bajo los filtros actuales</div>
       </div>
       <div class="tile kpi amber">
         <div class="lbl">Pendientes Kyndryl</div>
         <div class="val" style="color:var(--k-amber);">${fmt(totalPendientesKyndryl)}</div>
-        <div class="sub">${fmt(pendK_Reg)} en Días Regulares · ${fmt(pendK_Fds)} en Fines de Semana</div>
+        <div class="sub">${fmt(pendK_Reg)} Regular + ${fmt(pendK_Fds)} FDS · Excluye Migrados y Desestimados</div>
       </div>
       <div class="tile kpi blue">
         <div class="lbl">Total Comp. Arquitectura</div>
         <div class="val">${fmt(totA)}</div>
-        <div class="sub">Columna "Componentes Arquitectura"</div>
+        <div class="sub">Alcance oficial bajo los filtros actuales</div>
       </div>
       <div class="tile kpi amber">
         <div class="lbl">Pendientes Arquitectura</div>
         <div class="val" style="color:var(--k-amber);">${fmt(totalPendientesArq)}</div>
-        <div class="sub">${fmt(pendA_Reg)} en Días Regulares · ${fmt(pendA_Fds)} en Fines de Semana</div>
+        <div class="sub">${fmt(pendA_Reg)} Regular + ${fmt(pendA_Fds)} FDS · Excluye Migrados y Desestimados</div>
       </div>
     </div>
 
@@ -1690,25 +1734,37 @@ function coberturaCardsHtml(rows, modo) {
   const totalComp = rows.reduce((a,r)=>a+(Number(r[compField])||0),0);
   const totalSrv = new Set(rows.map(r=>r.servidor).filter(Boolean)).size;
   const totalTkt = getTicketsAprovUnicos(rows).size;
-  const pendientes = rows.filter(r => r.estatus !== 'Migrado');
+  const pendientes = rows.filter(r => r.estatus !== 'Migrado' && r.estatus !== 'Desestimado');
+  const desestimados = rows.filter(r => r.estatus === 'Desestimado');
+  const migrados = rows.filter(r => r.estatus === 'Migrado');
   const pendComp = pendientes.reduce((a,r)=>a+(Number(r[compField])||0),0);
   const pendSrv = new Set(pendientes.map(r=>r.servidor).filter(Boolean)).size;
   const pendTkt = getTicketsAprovUnicos(pendientes).size;
+  const desComp = desestimados.reduce((a,r)=>a+(Number(r[compField])||0),0);
+  const desSrv = new Set(desestimados.map(r=>r.servidor).filter(Boolean)).size;
+  const desTkt = getTicketsAprovUnicos(desestimados).size;
+  const migComp = migrados.reduce((a,r)=>a+(Number(r[compField])||0),0);
   const suffix = esArq ? 'Arq' : 'Main';
   const nombre = esArq ? 'Arquitectura' : 'Kyndryl';
   return `
     <div class="section-label-bar">🧭 Cobertura del Alcance ${nombre}</div>
-    <div class="row r-2">
+    <div class="row r-3">
       <div class="tile kpi navy kpi-clickable" onclick="mostrarDetalleCobertura('${suffix}','total')" title="Clic para auditar todo el alcance bajo los filtros actuales">
         <div class="lbl">Total del Alcance</div>
         <div class="val">${fmt(totalComp)} <span style="font-size:15px;color:var(--k-text-muted);">componentes</span></div>
         <div class="sub"><b>${fmt(totalSrv)}</b> servidores únicos · <b>${fmt(totalTkt)}</b> tickets de aprovisionamiento únicos · <b>Clic para ver detalle</b></div>
       </div>
-      <div class="tile kpi amber kpi-clickable" onclick="mostrarDetalleCobertura('${suffix}','pendiente')" title="Clic para auditar lo que falta migrar">
+      <div class="tile kpi amber kpi-clickable" onclick="mostrarDetalleCobertura('${suffix}','pendiente')" title="Clic para auditar lo que realmente falta migrar">
         <div class="lbl">Pendiente de Migración</div>
         <div class="val" style="color:var(--k-amber);">${fmt(pendComp)} <span style="font-size:15px;color:var(--k-text-muted);">componentes</span></div>
-        <div class="sub"><b>${fmt(pendSrv)}</b> servidores únicos · <b>${fmt(pendTkt)}</b> tickets de aprovisionamiento únicos · Estatus distinto de Migrado · <b>Clic para ver detalle</b></div>
+        <div class="sub"><b>${fmt(pendSrv)}</b> servidores únicos · <b>${fmt(pendTkt)}</b> tickets únicos · Excluye Migrados y Desestimados · <b>Clic para ver detalle</b></div>
       </div>
+      <div class="tile kpi alert kpi-clickable" onclick="mostrarDetalleCobertura('${suffix}','desestimado')" title="Clic para auditar componentes desestimados que no se ejecutarán">
+        <div class="lbl">Desestimados / No se Ejecutarán</div>
+        <div class="val" style="color:var(--k-alert);">${fmt(desComp)} <span style="font-size:15px;color:var(--k-text-muted);">componentes</span></div>
+        <div class="sub"><b>${fmt(desSrv)}</b> servidores únicos · <b>${fmt(desTkt)}</b> tickets únicos · Forecast - Estado: Desestimado · <b>Clic para ver detalle</b></div>
+      </div>
+      <div style="grid-column:1/-1;font-size:11.5px;color:var(--k-text-muted);padding:0 4px 2px;">Conciliación: <b>${fmt(migComp)} Migrados + ${fmt(pendComp)} Pendientes + ${fmt(desComp)} Desestimados = ${fmt(totalComp)} Total del Alcance</b>.</div>
     </div>
     <div class="row r-1" id="coberturaDetalle${suffix}">
       <div class="tile" style="border:1.5px solid #CBD5E1;border-radius:16px;">
@@ -1728,7 +1784,8 @@ function mostrarDetalleCobertura(suffix, tipo) {
   const esArq = suffix === 'Arq';
   const compField = esArq ? 'nCompArq' : 'nComp';
   let base = state.view.slice();
-  if (tipo === 'pendiente') base = base.filter(r => r.estatus !== 'Migrado');
+  if (tipo === 'pendiente') base = base.filter(r => r.estatus !== 'Migrado' && r.estatus !== 'Desestimado');
+  else if (tipo === 'desestimado') base = base.filter(r => r.estatus === 'Desestimado');
   window['coberturaRows' + suffix] = base;
   window['coberturaFiltro' + suffix] = '__ALL__';
   window['coberturaSearch' + suffix] = '';
@@ -1751,7 +1808,7 @@ function pintarDetalleCobertura(suffix, compField, tipo) {
   window['coberturaTipo' + suffix] = tipo;
   const btnExp = $('#btnExportCobertura' + suffix); if (btnExp) btnExp.classList.remove('hide');
   const estatus = ESTATUS_MIGRACION_LIST.filter(e => rowsBase.some(r=>r.estatus===e));
-  $('#coberturaTitle'+suffix).textContent = tipo === 'pendiente' ? 'Detalle — Pendiente de Migración' : 'Detalle — Total del Alcance';
+  $('#coberturaTitle'+suffix).textContent = tipo === 'pendiente' ? 'Detalle — Pendiente de Migración' : (tipo === 'desestimado' ? 'Detalle — Desestimados / No se Ejecutarán' : 'Detalle — Total del Alcance');
   $('#coberturaSub'+suffix).innerHTML = `<b>${fmt(comp)}</b> componentes · <b>${fmt(srv)}</b> servidores únicos · <b>${fmt(tkt)}</b> tickets únicos · ${fmt(rows.length)} relaciones mostradas`;
   $('#coberturaContent'+suffix).innerHTML = `
     <div style="display:flex;gap:8px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px;">
@@ -1783,7 +1840,7 @@ function exportarDetalleCobertura(suffix){
   const ws = XLSX.utils.json_to_sheet(exportRows);
   ws['!cols'] = [{wch:22},{wch:22},{wch:14},{wch:36},{wch:14},{wch:20},{wch:24},{wch:24},{wch:24},{wch:24},{wch:24},{wch:14},{wch:20},{wch:20},{wch:18},{wch:14},{wch:14}];
   XLSX.utils.book_append_sheet(wb, ws, 'Detalle_Cobertura');
-  const alcance = tipo === 'pendiente' ? 'Pendiente_Migracion' : 'Total_Alcance';
+  const alcance = tipo === 'pendiente' ? 'Pendiente_Migracion' : (tipo === 'desestimado' ? 'Desestimados' : 'Total_Alcance');
   const medida = suffix === 'Arq' ? 'Arquitectura' : 'Kyndryl';
   XLSX.writeFile(wb, `Kyndryl_Cobertura_${medida}_${alcance}.xlsx`);
 }
@@ -4333,6 +4390,7 @@ function openModal(title, sub, bodyHtml, exportData) {
     const ws = XLSX.utils.json_to_sheet(dataToExport.map(r => ({
       'Equipo': r.equipoSO,
       'Priorizado Q': r.priorizadoQ,
+      'Prioridad': r.prioridad,
       'Trimestre': r.qIbk, 'Mes': r.mes, 'Sigla': r.siglas, 'Aplicación': r.app, 
       'Servidor Origen': r.servidor, 'Servidor Destino': r.servidorDestino,
       '# Componentes Kyndryl': r.nComp, '# Componentes Arquitectura': r.nCompArq, 
@@ -4391,6 +4449,14 @@ function renderDetallePage() {
           <div class="sl">
             <input type="text" id="tbSearchInv" placeholder="🔍 Buscar servidor, app u owner..." value="${esc(state.searchInvQuery || '')}" style="min-width: 250px;">
           </div>
+          <div class="sl">
+            <label>Prioridad</label>
+            <select id="selInvPrioridad" style="min-width:155px;">
+              <option value="__ALL__" ${state.invFiltroPrioridad === '__ALL__' ? 'selected' : ''}>Todos</option>
+              <option value="PRIORITARIO" ${state.invFiltroPrioridad === 'PRIORITARIO' ? 'selected' : ''}>🔴 Prioritarios</option>
+              <option value="NO PRIORITARIO" ${state.invFiltroPrioridad === 'NO PRIORITARIO' ? 'selected' : ''}>No prioritarios</option>
+            </select>
+          </div>
           ${pillsInvHtml}
         </div>
       </div>
@@ -4408,6 +4474,7 @@ function renderDetallePage() {
               <th class="sortable" onclick="setInvSort('nCompArq')">Comp. Arq <span id="si_nCompArq" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('ambiente')">Ambiente <span id="si_ambiente" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('priorizadoQ')">Priorizado Q <span id="si_priorizadoQ" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setInvSort('prioridad')">Prioridad <span id="si_prioridad" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('ownerKyndryl')">Owner <span id="si_ownerKyndryl" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('oc')">OC Migración <span id="si_oc" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('estadoOC')">Estado OC <span id="si_estadoOC" class="sort-icon"></span></th>
@@ -4443,9 +4510,12 @@ function renderDetallePage() {
     if (window.invFiltroPill !== '__ALL__') {
       filtrados = filtrados.filter(r => r.estatus === window.invFiltroPill);
     }
+    if (state.invFiltroPrioridad !== '__ALL__') {
+      filtrados = filtrados.filter(r => r.prioridad === state.invFiltroPrioridad);
+    }
 
     if (qText) {
-      filtrados = filtrados.filter(r => norm(`${r.siglas} ${r.app} ${r.servidor} ${r.servidorDestino} ${r.ownerKyndryl} ${r.oc} ${r.estadoOC} ${r.soOrigen} ${r.soDestino} ${r.priorizadoQ}`).includes(qText));
+      filtrados = filtrados.filter(r => norm(`${r.siglas} ${r.app} ${r.servidor} ${r.servidorDestino} ${r.ownerKyndryl} ${r.oc} ${r.estadoOC} ${r.soOrigen} ${r.soDestino} ${r.priorizadoQ} ${r.prioridad}`).includes(qText));
     }
 
     filtrados.sort((a, b) => {
@@ -4477,6 +4547,7 @@ function renderDetallePage() {
         <td class="num" style="font-weight:700;color:var(--k-blue);">${r.nCompArq || 0}</td>
         <td class="l">${esc(r.ambiente)}</td>
         <td class="l" style="font-size:12px;font-weight:600;color:var(--k-navy);">${esc(r.priorizadoQ)}</td>
+        <td class="l"><span class="priority-badge ${r.esPrioritario ? 'yes' : 'no'}">${r.esPrioritario ? '🔴 PRIORITARIO' : 'NO PRIORITARIO'}</span></td>
         <td class="l"><b>${esc(r.ownerKyndryl)}</b></td>
         <td class="l mono">${esc(r.oc)}</td>
         <td class="l"><span class="tag ${getEstadoOCClass(r.estadoOC)}">${esc(r.estadoOC)}</span></td>
@@ -4487,7 +4558,7 @@ function renderDetallePage() {
         <td class="l" style="font-size:12px; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.subDestino)}</td>
         <td class="l"><span class="tag ${r.estatus === 'Migrado' ? 'mig' : (r.estatus === 'Planificado' ? 'plan' : (r.estatus === 'Desestimado' ? 'des' : (r.estatus === 'Rollback' ? 'rb' : 'pend')))}">${esc(r.estatus)}</span></td>
       </tr>
-    `).join('') + (filtrados.length > 300 ? '<tr><td colspan="18" class="l" style="text-align:center;color:#888;">Mostrando los primeros 300 registros... Exportar para ver completo.</td></tr>' : '');
+    `).join('') + (filtrados.length > 300 ? '<tr><td colspan="19" class="l" style="text-align:center;color:#888;">Mostrando los primeros 300 registros... Exportar para ver completo.</td></tr>' : '');
 
     $$('.sort-icon').forEach(el => { if(el.id && el.id.startsWith('si_')) el.textContent = ''; });
     const activeIcon = $('#si_' + window.invSortCol);
@@ -4498,6 +4569,10 @@ function renderDetallePage() {
 
   $('#tbSearchInv').oninput = e => {
     state.searchInvQuery = e.target.value;
+    window.paintInvTable();
+  };
+  $('#selInvPrioridad').onchange = e => {
+    state.invFiltroPrioridad = e.target.value;
     window.paintInvTable();
   };
 }
@@ -4549,6 +4624,7 @@ function initEvents() {
     state.searchFlujoQuery = '';
     state.searchAprovQuery = '';
     state.searchInvQuery = '';
+    state.invFiltroPrioridad = '__ALL__';
     state.filtroAlertaFlujo = '__ALL__';
     state.filtroSemanaEntregas = '__ALL__';
     state.filtroEstadoCierreAprov = '__ALL__';
@@ -4596,6 +4672,7 @@ function initEvents() {
     const ws = XLSX.utils.json_to_sheet(state.view.map(r => ({
       'Equipo': r.equipoSO,
       'Priorizado Q': r.priorizadoQ,
+      'Prioridad': r.prioridad,
       'Trimestre': r.qIbk, 'Mes': r.mes, 'Sigla': r.siglas, 'Aplicación': r.app, 
       'Servidor Origen': r.servidor, 'Servidor Destino': r.servidorDestino,
       '# Componentes Kyndryl': r.nComp, '# Componentes Arquitectura': r.nCompArq, 
