@@ -878,8 +878,19 @@ async function processWorkbook(file) {
 
     const ticketUpg = getVal('ticketupgradecapacidades', 'ticketupgrade', 'upgradecapacidades');
     const estadoUpg = getVal('estadoticketupgradecapacidades', 'estadoticketupgrade', 'estadoupgrade');
-    const ticketAprov = getVal('ticketaprovisionamiento', 'ticketaprov', 'aprovisionamiento');
-    const estadoAprov = getVal('estadoticketaprovisionamiento', 'estadoaprovisionamiento', 'estadoaprov');
+    // Fuente oficial de Aprovisionamiento: priorizar encabezados exactos del Excel.
+    // Evita que getVal() tome por coincidencia parcial columnas vecinas (SET, homologacion, capacidad, etc.).
+    const getValExact = (...headers) => {
+      const wanted = headers.map(cleanKey);
+      for (const col of Object.keys(o)) {
+        if (wanted.includes(cleanKey(col)) && o[col] != null) return o[col];
+      }
+      return null;
+    };
+    const ticketAprovExact = getValExact('Ticket de Aprovisionamiento');
+    const estadoAprovExact = getValExact('Estado del ticket de Aprovisionamiento');
+    const ticketAprov = ticketAprovExact != null ? ticketAprovExact : getVal('ticketaprovisionamiento', 'ticketaprov', 'aprovisionamiento');
+    const estadoAprov = estadoAprovExact != null ? estadoAprovExact : getVal('estadoticketaprovisionamiento', 'estadoaprovisionamiento', 'estadoaprov');
     const queFalta = getVal('quefalta', 'que falta');
 
     const soOrigen = String(getVal('sistemaoperativoorigen', 'sistemaoperativo', 'so') || 'Sin SO').trim();
@@ -888,7 +899,7 @@ async function processWorkbook(file) {
     const subOrigenCompleto = (subOrigen !== '—' && subOrigen !== '') ? (subOrigen + (verOrigen ? ` ${verOrigen}` : '')) : '—';
     const soDestinoRaw = getVal('sistemaoperativodestino', 'sodestino');
     const soDestino = soDestinoRaw ? String(soDestinoRaw).trim() : '—';
-    const servidorDestino = String(getVal('servidordestino', 'hostdestino', 'targetserver', 'servidor destino', 'host destino', 'servidor dest') || '—').trim();
+    const servidorDestino = String(getVal('hostname_destino', 'hostnamedestino', 'servidordestino', 'hostdestino', 'targetserver', 'servidor destino', 'host destino', 'servidor dest') || '—').trim();
     
     // LECTURA DE COLUMNA TPO (Tipo de Plataforma)
     const tpo = String(getVal('tpo', 'tipo') || '—').trim();
@@ -3220,7 +3231,10 @@ function renderEntregasPage() {
             <h3 id="entregasDetalleTitle">Detalle de Entregas</h3>
             <div class="sb" id="entregasDetalleSub">Selecciona una tarjeta superior o una barra del gráfico para consultar el detalle aquí.</div>
           </div>
-          <button class="btn ghost sm" id="btnLimpiarDetalleEntregas">Limpiar detalle</button>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button class="btn green sm hide" id="btnExportDetalleEntregas" onclick="exportarDetalleEntregas()">Exportar Excel</button>
+            <button class="btn ghost sm" id="btnLimpiarDetalleEntregas">Limpiar detalle</button>
+          </div>
         </div>
         <div id="entregasDetalleContent" style="padding:10px 0;color:var(--k-text-muted);">
           <div style="padding:28px;text-align:center;background:#F8FAFC;border:1px dashed var(--k-border);border-radius:8px;">
@@ -3327,6 +3341,8 @@ function renderEntregasPage() {
     $('#entregasDetalleTitle').textContent = 'Detalle de Entregas';
     $('#entregasDetalleSub').textContent = 'Selecciona una tarjeta superior o una barra del gráfico para consultar el detalle aquí.';
     $('#entregasDetalleContent').innerHTML = `<div style="padding:28px;text-align:center;background:#F8FAFC;border:1px dashed var(--k-border);border-radius:8px;">El detalle seleccionado aparecerá en esta sección sin abrir ventanas emergentes.</div>`;
+    window.entregasDetalleRows = [];
+    const btnExp = $('#btnExportDetalleEntregas'); if (btnExp) btnExp.classList.add('hide');
   };
 }
 
@@ -3336,6 +3352,10 @@ function mostrarDetalleEntregas(titulo, rows) {
   const compCount = rows.reduce((a,b) => a + b.nComp, 0);
   const ticketSet = new Set(rows.map(r => String(r.ticketAprov || '').trim()).filter(t => t && t !== 'Sin Ticket' && t !== '-' && !t.toLowerCase().includes('no aplica')));
   const ticketCount = ticketSet.size;
+
+  window.entregasDetalleRows = rows.slice();
+  window.entregasDetalleTitulo = titulo;
+  const btnExp = $('#btnExportDetalleEntregas'); if (btnExp) btnExp.classList.toggle('hide', rows.length === 0);
 
   $('#entregasDetalleTitle').textContent = titulo;
   $('#entregasDetalleSub').innerHTML = `<b>${fmt(srvCount)}</b> servidores · <b>${fmt(compCount)}</b> componentes · <b>${fmt(ticketCount)}</b> tickets de aprovisionamiento únicos · ${fmt(rows.length)} relaciones`;
@@ -3351,6 +3371,7 @@ function mostrarDetalleEntregas(titulo, rows) {
         <thead><tr>
           <th class="l">Servidor</th><th class="l">Sigla</th><th class="l">Aplicación</th>
           <th>Componentes</th><th class="l">Ticket Aprovisionamiento</th><th class="l">Estado Aprov.</th>
+          <th class="l">OC Migración</th><th class="l">Estado OC</th><th class="l">Intento Vigente</th>
           <th class="l">Owner Kyndryl</th><th class="l">Estado Entrega</th><th class="l">Estatus Migración</th>
         </tr></thead>
         <tbody>${rows.map(r => `
@@ -3361,6 +3382,9 @@ function mostrarDetalleEntregas(titulo, rows) {
             <td class="num"><b>${fmt(r.nComp)}</b></td>
             <td class="l mono" style="color:var(--k-navy);font-weight:700;">${esc(r.ticketAprov)}</td>
             <td class="l">${esc(r.estadoAprov)}</td>
+            <td class="l mono" style="font-weight:800;color:var(--k-navy);">${esc(r.oc)}</td>
+            <td class="l"><span class="tag ${getEstadoOCClass(r.estadoOC)}">${esc(r.estadoOC)}</span></td>
+            <td class="l"><b>${esc(r.intento || '1ER INTENTO')}</b></td>
             <td class="l"><b>${esc(r.ownerKyndryl)}</b></td>
             <td class="l"><span class="tag ${r.esEntregado ? 'mig' : 'pend'}">${r.esEntregado ? 'Entregado' : 'Pendiente'}</span></td>
             <td class="l"><span class="tag ${r.estatus === 'Migrado' ? 'mig' : (r.estatus === 'Desestimado' ? 'des' : 'plan')}">${esc(r.estatus)}</span></td>
@@ -3370,6 +3394,38 @@ function mostrarDetalleEntregas(titulo, rows) {
   $('#entregasDetalleContent').innerHTML = content;
   const sec = $('#entregasDetalleSection');
   if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function exportarDetalleEntregas() {
+  const rows = window.entregasDetalleRows || [];
+  if (!rows.length) return;
+  const wb = XLSX.utils.book_new();
+  const exportRows = rows.map(r => ({
+    'Servidor Origen': r.servidor,
+    'Servidor Destino': r.servidorDestino,
+    'SIGLA': r.siglas,
+    'Aplicación': r.app,
+    'Componentes Kyndryl': Number(r.nComp) || 0,
+    'Componentes Arquitectura': Number(r.nCompArq) || 0,
+    'Intento Vigente': r.intento || '1ER INTENTO',
+    'Ticket Aprovisionamiento': r.ticketAprov,
+    'Estado Aprovisionamiento': r.estadoAprov,
+    'OC(3) Migracion': r.oc,
+    'Estado OC': r.estadoOC,
+    'Owner Kyndryl': r.ownerKyndryl,
+    'Estado Entrega': r.esEntregado ? 'Entregado' : 'Pendiente',
+    'Motivo No Entrega': r.motivoNoEntrega,
+    'Estatus Migración': r.estatus,
+    'Priorizado Q': r.priorizadoQ,
+    'Trimestre': r.qIbk,
+    'Mes': r.mes,
+    'Ambiente': r.ambiente
+  }));
+  const ws = XLSX.utils.json_to_sheet(exportRows);
+  ws['!cols'] = [{wch:22},{wch:22},{wch:14},{wch:36},{wch:20},{wch:24},{wch:18},{wch:24},{wch:24},{wch:20},{wch:20},{wch:24},{wch:18},{wch:36},{wch:20},{wch:24},{wch:16},{wch:14},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Detalle_Entregas');
+  const titulo = String(window.entregasDetalleTitulo || 'Detalle_Entregas').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,60);
+  XLSX.writeFile(wb, `Kyndryl_${titulo || 'Detalle_Entregas'}.xlsx`);
 }
 
 function drillKpiServidoresEntregados() {
@@ -4353,6 +4409,7 @@ function renderModalRows(rows) {
       <td class="num" style="font-weight:700;color:var(--k-blue);">${r.nCompArq || 0}</td>
       <td class="l">${esc(r.ambiente)}</td>
       <td class="l" style="font-size:12px;font-weight:600;color:var(--k-navy);">${esc(r.priorizadoQ)}</td>
+      <td class="l"><span class="tag plan">${esc(r.intento || '1ER INTENTO')}</span></td>
       <td class="l"><b>${esc(r.ownerKyndryl)}</b></td>
       <td class="l"><span class="tag ${r.esEntregado ? 'mig' : 'pend'}">${r.esEntregado ? 'Entregado' : 'Pendiente'}</span></td>
       <td class="l" style="font-size:12px;font-weight:600;color:${r.esEntregado ? 'var(--k-green)' : 'var(--k-alert)'}; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.motivoNoEntrega)}</td>
@@ -4587,6 +4644,7 @@ function renderDetallePage() {
         <td class="l">${esc(r.ambiente)}</td>
         <td class="l" style="font-size:12px;font-weight:600;color:var(--k-navy);">${esc(r.priorizadoQ)}</td>
         <td class="l"><span class="priority-badge ${r.esPrioritario ? 'yes' : 'no'}">${r.esPrioritario ? '🔴 PRIORITARIO' : 'NO PRIORITARIO'}</span></td>
+        <td class="l"><span class="tag plan">${esc(r.intento || '1ER INTENTO')}</span></td>
         <td class="l"><b>${esc(r.ownerKyndryl)}</b></td>
         <td class="l mono">${esc(r.oc)}</td>
         <td class="l"><span class="tag ${getEstadoOCClass(r.estadoOC)}">${esc(r.estadoOC)}</span></td>
