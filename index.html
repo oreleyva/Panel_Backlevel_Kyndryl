@@ -872,14 +872,6 @@ async function processWorkbook(file) {
     }
 
     const priorizadoQVal = normalizarPriorizadoQ(getVal('priorizadoq', 'priorizado q'));
-    const ownerKyndryl = String(getVal('ownerkyndryl', 'crewleader', 'responsableadministracion', 'owner') || 'Sin Asignar').trim();
-    const ocNum = getVal('oc3migracion', 'oc3migracion', 'ocmigracion', 'oc3', 'oc(3)migracion', 'oc');
-    const ocEstado = normalizarEstadoOC(getVal('estadooc3', 'estadooc', 'estadodelaoc'));
-
-    const ticketUpg = getVal('ticketupgradecapacidades', 'ticketupgrade', 'upgradecapacidades');
-    const estadoUpg = getVal('estadoticketupgradecapacidades', 'estadoticketupgrade', 'estadoupgrade');
-    // Fuente oficial de Aprovisionamiento: priorizar encabezados exactos del Excel.
-    // Evita que getVal() tome por coincidencia parcial columnas vecinas (SET, homologacion, capacidad, etc.).
     const getValExact = (...headers) => {
       const wanted = headers.map(cleanKey);
       for (const col of Object.keys(o)) {
@@ -887,6 +879,16 @@ async function processWorkbook(file) {
       }
       return null;
     };
+    const ownerKyndrylExact = getValExact('Owner Kyndryl');
+    const ownerKyndryl = String(ownerKyndrylExact != null ? ownerKyndrylExact : (getVal('ownerkyndryl', 'crewleader', 'responsableadministracion', 'owner') || 'Sin Asignar')).trim();
+    const ocNumExact = getValExact('OC(3) Migracion');
+    const ocNum = ocNumExact != null ? ocNumExact : getVal('oc3migracion', 'ocmigracion', 'oc3', 'oc');
+    const ocEstado = normalizarEstadoOC(getVal('estadooc3', 'estadooc', 'estadodelaoc'));
+
+    const ticketUpg = getVal('ticketupgradecapacidades', 'ticketupgrade', 'upgradecapacidades');
+    const estadoUpg = getVal('estadoticketupgradecapacidades', 'estadoticketupgrade', 'estadoupgrade');
+    // Fuente oficial de Aprovisionamiento: priorizar encabezados exactos del Excel.
+    // Evita que getVal() tome por coincidencia parcial columnas vecinas (SET, homologacion, capacidad, etc.).
     const ticketAprovExact = getValExact('Ticket de Aprovisionamiento');
     const estadoAprovExact = getValExact('Estado del ticket de Aprovisionamiento');
     const ticketAprov = ticketAprovExact != null ? ticketAprovExact : getVal('ticketaprovisionamiento', 'ticketaprov', 'aprovisionamiento');
