@@ -533,7 +533,7 @@ function clasificarFDS(str) {
 }
 
 const state = {
-  raw: [], view: [], page: 'cumplimiento', charts: {},
+  raw: [], view: [], historyRaw: [], historyView: [], page: 'cumplimiento', charts: {},
   selectedAnio: '2026',
   selectedQs: new Set(),
   selectedMeses: new Set(),
@@ -1010,6 +1010,8 @@ async function processWorkbook(file) {
 
   aplicarCatalogoAplicaciones(rows);
   const rowsVigentes = obtenerUltimosIntentos(rows);
+  // V19: conservar todos los intentos para trazabilidad, pero mantener state.raw solo con el ultimo intento vigente.
+  state.historyRaw = rows.slice();
   state.raw = rowsVigentes;
 
   const allQs = Array.from(new Set(state.raw.map(r => r.qIbk))).filter(Boolean);
@@ -1317,6 +1319,21 @@ function applyFilters() {
   if (f.equipoSO !== '__ALL__') list = list.filter(r => r.equipoSO === f.equipoSO);
   
   state.view = list;
+
+  // V19: vista historica de intentos. Respeta filtros de ambito, pero NO el filtro global de Estatus,
+  // para permitir ver Reprogramados/Rollback anteriores aunque el intento vigente ya sea Migrado.
+  let hist = state.historyRaw.slice();
+  if (state.selectedAnio !== '__ALL__') hist = hist.filter(r => String(r.anio) === String(state.selectedAnio));
+  if (state.selectedQs.size > 0) hist = hist.filter(r => state.selectedQs.has(r.qIbk)); else hist = [];
+  if (state.selectedMeses.has('__NONE__')) hist = [];
+  else if (state.selectedMeses.size > 0) hist = hist.filter(r => state.selectedMeses.has(r.mes));
+  if (state.selectedPriorizadosQ.has('__NONE__')) hist = [];
+  else if (state.selectedPriorizadosQ.size > 0) hist = hist.filter(r => state.selectedPriorizadosQ.has(r.priorizadoQ));
+  if (f.leader !== '__ALL__') hist = hist.filter(r => r.ownerKyndryl === f.leader);
+  if (f.estadoOC !== '__ALL__') hist = hist.filter(r => r.estadoOC === f.estadoOC);
+  if (f.amb !== '__ALL__') hist = hist.filter(r => r.ambiente === f.amb);
+  if (f.equipoSO !== '__ALL__') hist = hist.filter(r => r.equipoSO === f.equipoSO);
+  state.historyView = hist;
 }
 
 function renderApp() {
@@ -3855,6 +3872,12 @@ function drillKpiTicketsPendientes() {
 ------------------------------------------------------------- */
 function renderCalendarioPage() {
   let calRows = state.view.slice();
+  // V19: eventos historicos de intentos anteriores, solo para trazabilidad visual.
+  // Nunca sustituyen ni se suman a calRows (universo oficial vigente).
+  let calHistRows = state.historyView.filter(r => {
+    const vigente = state.raw.some(v => norm(v.servidor) === norm(r.servidor) && norm(v.siglas) === norm(r.siglas) && Number(v.intentoNum||1) === Number(r.intentoNum||1));
+    return !vigente && (r.estatus === 'Reprogramado' || r.estatus === 'Rollback');
+  });
 
   const calRowsConSemana = calRows.filter(r => r.semanaDate != null);
   const aniosDisponibles = Array.from(new Set(calRowsConSemana.map(r => r.semanaDate.getFullYear()))).sort();
@@ -3863,9 +3886,11 @@ function renderCalendarioPage() {
 
   if (state.calFiltroAnio !== '__ALL__') {
     calRows = calRows.filter(r => r.semanaDate && String(r.semanaDate.getFullYear()) === String(state.calFiltroAnio));
+    calHistRows = calHistRows.filter(r => r.semanaDate && String(r.semanaDate.getFullYear()) === String(state.calFiltroAnio));
   }
   if (state.calFiltroMes !== '__ALL__') {
     calRows = calRows.filter(r => r.semanaDate && MESES_ES[r.semanaDate.getMonth()] === state.calFiltroMes);
+    calHistRows = calHistRows.filter(r => r.semanaDate && MESES_ES[r.semanaDate.getMonth()] === state.calFiltroMes);
   }
 
   const semMap = new Map();
@@ -3983,6 +4008,20 @@ function renderCalendarioPage() {
     rowsOCInferior = calRows.filter(r => r.dia === state.calSeleccionDia);
     tituloInferior = `Total de todos los días: ${state.calSeleccionDia}`;
   }
+
+  // Seleccion historica equivalente a la semana/dia elegidos. Solo informativa.
+  let rowsHistInferior = calHistRows.slice();
+  if (state.calSeleccionSemanaIdx != null && semanas[state.calSeleccionSemanaIdx]) {
+    const semSelected = semanas[state.calSeleccionSemanaIdx];
+    rowsHistInferior = rowsHistInferior.filter(r => r.semanaDate && r.semanaDate.getTime() === semSelected.time);
+    if (state.calSeleccionDia) rowsHistInferior = rowsHistInferior.filter(r => r.dia === state.calSeleccionDia);
+  } else if (state.calSeleccionDia) {
+    rowsHistInferior = rowsHistInferior.filter(r => r.dia === state.calSeleccionDia);
+  } else if (state.calFiltroSemana !== '__ALL__') {
+    rowsHistInferior = rowsHistInferior.filter(r => r.semanaDate && String(r.semanaDate.getTime()) === String(state.calFiltroSemana));
+  }
+  const histRbComp = rowsHistInferior.filter(r=>r.estatus==='Rollback').reduce((a,b)=>a+b.nComp,0);
+  const histReprogComp = rowsHistInferior.filter(r=>r.estatus==='Reprogramado').reduce((a,b)=>a+b.nComp,0);
 
   const totInferiorComp = rowsOCInferior.reduce((a, b) => a + b.nComp, 0);
   const planComp = rowsOCInferior.filter(r => r.estatus === 'Planificado').reduce((a, b) => a + b.nComp, 0);
@@ -4131,6 +4170,27 @@ function renderCalendarioPage() {
           <tbody id="tbBodyCalInferior"></tbody>
         </table>
       </div>
+    </div>
+
+    <div class="tile" style="overflow:visible;margin-top:20px;border:1.5px solid #F59E0B;">
+      <div class="th" style="align-items:center;margin-bottom:10px;">
+        <div>
+          <h3>🕘 Historial de Intentos — No contabiliza en totales oficiales</h3>
+          <div class="sb">Muestra Reprogramados y Rollback de intentos anteriores. El alcance, matriz y KPIs continúan usando exclusivamente el último intento vigente.</div>
+        </div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;">
+          <span class="stat-pill reprog">Reprogramados históricos: ${fmt(histReprogComp)}</span>
+          <span class="stat-pill rb">Rollback históricos: ${fmt(histRbComp)}</span>
+        </div>
+      </div>
+      <div class="tw" style="max-height:360px;"><table class="dt"><thead><tr>
+        <th class="l">Semana</th><th class="l">Servidor</th><th class="l">SIGLA</th><th class="l">Intento Histórico</th><th class="l">Estado Histórico</th><th>Componentes</th><th class="l">OC Migración</th><th class="l">Fecha</th><th class="l">Intento Vigente Actual</th><th class="l">Estado Vigente Actual</th>
+      </tr></thead><tbody>
+        ${rowsHistInferior.sort((a,b)=>(a.semanaDate?.getTime()||0)-(b.semanaDate?.getTime()||0)).map(r=>{
+          const vig=state.raw.find(v=>norm(v.servidor)===norm(r.servidor)&&norm(v.siglas)===norm(r.siglas));
+          return `<tr><td class="l">${esc(r.semanaRangoLbl)}</td><td class="l mono"><b>${esc(r.servidor)}</b></td><td class="l mono">${esc(r.siglas)}</td><td class="l"><span class="tag plan">${esc(r.intento)}</span></td><td class="l"><span class="tag ${r.estatus==='Rollback'?'rb':'pend'}">${esc(r.estatus)}</span></td><td class="num"><b>${fmt(r.nComp)}</b></td><td class="l mono">${esc(r.oc)}</td><td class="l mono">${esc(r.fechaLbl)}</td><td class="l">${esc(vig?.intento||'—')}</td><td class="l"><span class="tag ${vig?.estatus==='Migrado'?'mig':(vig?.estatus==='Rollback'?'rb':'plan')}">${esc(vig?.estatus||'—')}</span></td></tr>`;
+        }).join('') || `<tr><td colspan="10" class="l" style="text-align:center;padding:20px;color:#888;">No hay Reprogramados/Rollback históricos para la selección actual.</td></tr>`}
+      </tbody></table></div>
     </div>
   `;
 
