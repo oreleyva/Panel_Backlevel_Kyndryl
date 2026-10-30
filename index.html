@@ -1007,7 +1007,8 @@ async function processWorkbook(file) {
       semanaRangoLbl: semanaDate ? formatSemanaRango(semanaDate) : (fechaExacta ? formatSemanaRango(fechaExacta) : 'Semana por Definir'),
       fechaLbl: fechaExacta ? formatFechaVisual(fechaExacta) : (semanaDateRaw ? formatFechaVisual(semanaDateRaw) : 'Sin fecha'),
       dia: diaNom,
-      comentarios: String(getVal('comentariosmigracion', 'comentarios') || '').trim()
+      // V24: fuente UNICA y literal; sin aliases ni coincidencias parciales. Si la celda esta vacia, se muestra —.
+      comentarios: String((Object.prototype.hasOwnProperty.call(o, 'Comentarios de Migracion/Desestimacion') ? o['Comentarios de Migracion/Desestimacion'] : '') || '').trim()
     });
   }
 
@@ -4055,6 +4056,7 @@ function renderCalendarioPage() {
         ambientesSet: new Set(),
         minFechaNum: r.fechaDate ? r.fechaDate.getTime() : (r.semanaDate ? r.semanaDate.getTime() : Infinity),
         totalComp: 0,
+        comentariosSet: new Set(),
         rows: []
       });
     }
@@ -4064,6 +4066,7 @@ function renderCalendarioPage() {
     if (r.fechaLbl && r.fechaLbl !== 'Sin fecha') item.fechasSet.add(r.fechaLbl);
     if (r.siglas && r.siglas !== 'S/S') item.appSet.add(r.siglas);
     if (r.ambiente && r.ambiente !== '—') item.ambientesSet.add(r.ambiente);
+    if (r.comentarios && String(r.comentarios).trim()) item.comentariosSet.add(String(r.comentarios).trim());
     
     const curTime = r.fechaDate ? r.fechaDate.getTime() : (r.semanaDate ? r.semanaDate.getTime() : Infinity);
     if(curTime < item.minFechaNum) item.minFechaNum = curTime;
@@ -4076,7 +4079,8 @@ function renderCalendarioPage() {
       ambientesStr: Array.from(item.ambientesSet).join(', ') || '—',
       appsStr: Array.from(item.appSet).join(', ') || 'S/S',
       fechasStr: Array.from(item.fechasSet).join('<br>') || 'Sin fecha',
-      srvCount: item.srvSet.size
+      srvCount: item.srvSet.size,
+      comentariosStr: Array.from(item.comentariosSet || []).join(' | ') || '—'
   }));
 
   const compMostradosInferior = ocsInferiorList.reduce((a, b) => a + b.totalComp, 0);
@@ -4169,6 +4173,7 @@ function renderCalendarioPage() {
               <th class="sortable" onclick="setCalSort('totalComp')" title="Clic para ordenar">Componentes <span id="sc_totalComp" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setCalSort('minFechaNum')" title="Clic para ordenar">Fecha Migración <span id="sc_minFechaNum" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setCalSort('appsStr')" title="Clic para ordenar">Aplicaciones Involucradas <span id="sc_appsStr" class="sort-icon"></span></th>
+              <th class="l">Motivo / Comentario</th>
               <th class="l">Acción</th>
             </tr>
           </thead>
@@ -4189,12 +4194,12 @@ function renderCalendarioPage() {
         </div>
       </div>
       <div class="tw" style="max-height:360px;"><table class="dt"><thead><tr>
-        <th class="l">Semana</th><th class="l">Servidor</th><th class="l">SIGLA</th><th class="l">Intento Histórico</th><th class="l">Estado Histórico</th><th>Componentes</th><th class="l">OC Migración</th><th class="l">Fecha</th><th class="l">Intento Vigente Actual</th><th class="l">Estado Vigente Actual</th>
+        <th class="l">Semana</th><th class="l">Servidor</th><th class="l">SIGLA</th><th class="l">Intento Histórico</th><th class="l">Estado Histórico</th><th>Componentes</th><th class="l">OC Migración</th><th class="l">Fecha</th><th class="l">Motivo / Comentario Histórico</th><th class="l">Intento Vigente Actual</th><th class="l">Estado Vigente Actual</th>
       </tr></thead><tbody>
         ${rowsHistInferior.sort((a,b)=>(a.semanaDate?.getTime()||0)-(b.semanaDate?.getTime()||0)).map(r=>{
           const vig=state.raw.find(v=>norm(v.servidor)===norm(r.servidor)&&norm(v.siglas)===norm(r.siglas));
-          return `<tr><td class="l">${esc(r.semanaRangoLbl)}</td><td class="l mono"><b>${esc(r.servidor)}</b></td><td class="l mono">${esc(r.siglas)}</td><td class="l"><span class="tag plan">${esc(r.intento)}</span></td><td class="l"><span class="tag ${r.estatus==='Rollback'?'rb':'pend'}">${esc(r.estatus)}</span></td><td class="num"><b>${fmt(r.nComp)}</b></td><td class="l mono">${esc(r.oc)}</td><td class="l mono">${esc(r.fechaLbl)}</td><td class="l">${esc(vig?.intento||'—')}</td><td class="l"><span class="tag ${vig?.estatus==='Migrado'?'mig':(vig?.estatus==='Rollback'?'rb':'plan')}">${esc(vig?.estatus||'—')}</span></td></tr>`;
-        }).join('') || `<tr><td colspan="10" class="l" style="text-align:center;padding:20px;color:#888;">No hay Reprogramados/Rollback históricos para la selección actual.</td></tr>`}
+          return `<tr><td class="l">${esc(r.semanaRangoLbl)}</td><td class="l mono"><b>${esc(r.servidor)}</b></td><td class="l mono">${esc(r.siglas)}</td><td class="l"><span class="tag plan">${esc(r.intento)}</span></td><td class="l"><span class="tag ${r.estatus==='Rollback'?'rb':'pend'}">${esc(r.estatus)}</span></td><td class="num"><b>${fmt(r.nComp)}</b></td><td class="l mono">${esc(r.oc)}</td><td class="l mono">${esc(r.fechaLbl)}</td><td class="l" style="max-width:360px;white-space:normal;">${esc(r.comentarios||'—')}</td><td class="l">${esc(vig?.intento||'—')}</td><td class="l"><span class="tag ${vig?.estatus==='Migrado'?'mig':(vig?.estatus==='Rollback'?'rb':'plan')}">${esc(vig?.estatus||'—')}</span></td></tr>`;
+        }).join('') || `<tr><td colspan="11" class="l" style="text-align:center;padding:20px;color:#888;">No hay Reprogramados/Rollback históricos para la selección actual.</td></tr>`}
       </tbody></table></div>
     </div>
   `;
@@ -4249,12 +4254,13 @@ function renderCalendarioPage() {
             <td class="num" style="color:var(--k-red);font-weight:700;font-size:13.5px;">${fmt(item.totalComp)}</td>
             <td class="l mono" style="font-weight:700;color:var(--k-navy);line-height:1.2;">${item.fechasStr}</td>
             <td class="l mono" style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(item.appsStr)}</td>
+            <td class="l" style="min-width:300px;max-width:460px;white-space:normal;word-break:break-word;line-height:1.35;">${esc(item.comentariosStr || '—')}</td>
             <td class="l">
               <button class="btn sm ghost" onclick="drillOCInferiorPorIdx(${idx})">Ver servidores</button>
             </td>
           </tr>
         `;
-     }).join('') || `<tr><td colspan="10" class="l" style="text-align:center;padding:24px;color:#888;">No hay órdenes de cambio bajo la selección actual.</td></tr>`;
+     }).join('') || `<tr><td colspan="11" class="l" style="text-align:center;padding:24px;color:#888;">No hay órdenes de cambio bajo la selección actual.</td></tr>`;
 
      $$('.sort-icon').forEach(el => {
         if (el.id && el.id.startsWith('sc_')) el.textContent = '';
