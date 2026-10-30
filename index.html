@@ -4026,6 +4026,7 @@ function renderCalendarioPage() {
   }
   const histRbComp = rowsHistInferior.filter(r=>r.estatus==='Rollback').reduce((a,b)=>a+b.nComp,0);
   const histReprogComp = rowsHistInferior.filter(r=>r.estatus==='Reprogramado').reduce((a,b)=>a+b.nComp,0);
+  const histTotalComp = histRbComp + histReprogComp;
 
   const totInferiorComp = rowsOCInferior.reduce((a, b) => a + b.nComp, 0);
   const planComp = rowsOCInferior.filter(r => r.estatus === 'Planificado').reduce((a, b) => a + b.nComp, 0);
@@ -4189,6 +4190,7 @@ function renderCalendarioPage() {
           <div class="sb">Muestra Reprogramados y Rollback de intentos anteriores. El alcance, matriz y KPIs continúan usando exclusivamente el último intento vigente.</div>
         </div>
         <div style="display:flex;gap:7px;flex-wrap:wrap;">
+          <span class="stat-pill all">Todos históricos: ${fmt(histTotalComp)}</span>
           <span class="stat-pill reprog">Reprogramados históricos: ${fmt(histReprogComp)}</span>
           <span class="stat-pill rb">Rollback históricos: ${fmt(histRbComp)}</span>
         </div>
@@ -4204,6 +4206,21 @@ function renderCalendarioPage() {
           return `<tr><td class="l mono"><b>${esc(fechaHistorica)}</b></td><td class="l mono"><b>${esc(r.servidor)}</b></td><td class="l mono">${esc(r.siglas)}</td><td class="l"><span class="tag plan">${esc(r.intento)}</span></td><td class="l"><span class="tag ${r.estatus==='Rollback'?'rb':'pend'}">${esc(r.estatus)}</span></td><td class="num"><b>${fmt(r.nComp)}</b></td><td class="l mono">${esc(r.oc)}</td><td class="l" style="max-width:360px;white-space:normal;">${esc(r.comentarios||'—')}</td><td class="l">${esc(vig?.intento||'—')}</td><td class="l"><span class="tag ${vig?.estatus==='Migrado'?'mig':(vig?.estatus==='Rollback'?'rb':(vig?.estatus==='Desestimado'?'des':(vig?.estatus==='Planificado'?'plan':'pend')))}">${esc(vig?.estatus||'—')}</span></td><td class="l mono"><b>${esc(fechaVigente)}</b></td></tr>`;
         }).join('') || `<tr><td colspan="11" class="l" style="text-align:center;padding:20px;color:#888;">No hay Reprogramados/Rollback históricos para la selección actual.</td></tr>`}
       </tbody></table></div>
+    </div>
+
+    <div class="tile" style="margin-top:14px;border:1.5px solid #CBD5E1;background:#F8FAFC;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--k-text-muted);">Conciliación de actividad operativa</div>
+          <div style="font-size:18px;font-weight:800;color:var(--k-charcoal);margin-top:3px;">Actividad Operativa de la Semana: ${fmt(totInferiorComp + histTotalComp)} componentes-evento</div>
+          <div style="font-size:11.5px;color:var(--k-text-muted);margin-top:4px;"><b>${fmt(totInferiorComp)} vigentes + ${fmt(histTotalComp)} históricos = ${fmt(totInferiorComp + histTotalComp)}</b>. Los históricos son informativos y no incrementan el alcance ni los KPIs oficiales.</div>
+        </div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;">
+          <span class="stat-pill all">Oficial vigente: ${fmt(totInferiorComp)}</span>
+          <span class="stat-pill reprog">Histórico: ${fmt(histTotalComp)}</span>
+          <span class="stat-pill plan">Actividad: ${fmt(totInferiorComp + histTotalComp)}</span>
+        </div>
+      </div>
     </div>
   `;
 
