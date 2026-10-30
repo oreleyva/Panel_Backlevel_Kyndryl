@@ -4194,11 +4194,14 @@ function renderCalendarioPage() {
         </div>
       </div>
       <div class="tw" style="max-height:360px;"><table class="dt"><thead><tr>
-        <th class="l">Semana</th><th class="l">Servidor</th><th class="l">SIGLA</th><th class="l">Intento Histórico</th><th class="l">Estado Histórico</th><th>Componentes</th><th class="l">OC Migración</th><th class="l">Fecha</th><th class="l">Motivo / Comentario Histórico</th><th class="l">Intento Vigente Actual</th><th class="l">Estado Vigente Actual</th>
+        <th class="l">Fecha del Evento Histórico</th><th class="l">Servidor</th><th class="l">SIGLA</th><th class="l">Intento Histórico</th><th class="l">Estado Histórico</th><th>Componentes</th><th class="l">OC Migración</th><th class="l">Motivo / Comentario Histórico</th><th class="l">Último Intento</th><th class="l">Estado del Último Intento</th><th class="l">Fecha del Último Intento</th>
       </tr></thead><tbody>
         ${rowsHistInferior.sort((a,b)=>(a.semanaDate?.getTime()||0)-(b.semanaDate?.getTime()||0)).map(r=>{
-          const vig=state.raw.find(v=>norm(v.servidor)===norm(r.servidor)&&norm(v.siglas)===norm(r.siglas));
-          return `<tr><td class="l">${esc(r.semanaRangoLbl)}</td><td class="l mono"><b>${esc(r.servidor)}</b></td><td class="l mono">${esc(r.siglas)}</td><td class="l"><span class="tag plan">${esc(r.intento)}</span></td><td class="l"><span class="tag ${r.estatus==='Rollback'?'rb':'pend'}">${esc(r.estatus)}</span></td><td class="num"><b>${fmt(r.nComp)}</b></td><td class="l mono">${esc(r.oc)}</td><td class="l mono">${esc(r.fechaLbl)}</td><td class="l" style="max-width:360px;white-space:normal;">${esc(r.comentarios||'—')}</td><td class="l">${esc(vig?.intento||'—')}</td><td class="l"><span class="tag ${vig?.estatus==='Migrado'?'mig':(vig?.estatus==='Rollback'?'rb':'plan')}">${esc(vig?.estatus||'—')}</span></td></tr>`;
+          const vigentesUnidad=state.raw.filter(v=>norm(v.servidor)===norm(r.servidor)&&norm(v.siglas)===norm(r.siglas));
+          const vig=vigentesUnidad.sort((a,b)=>(Number(b.intentoNum)||1)-(Number(a.intentoNum)||1) || ((b.fechaDate?.getTime()||0)-(a.fechaDate?.getTime()||0)))[0];
+          const fechaHistorica=r.fechaDate ? formatFechaVisual(r.fechaDate) : (r.fechaLbl || 'Sin fecha');
+          const fechaVigente=vig ? (vig.fechaDate ? formatFechaVisual(vig.fechaDate) : (vig.fechaLbl || 'Sin fecha')) : '—';
+          return `<tr><td class="l mono"><b>${esc(fechaHistorica)}</b></td><td class="l mono"><b>${esc(r.servidor)}</b></td><td class="l mono">${esc(r.siglas)}</td><td class="l"><span class="tag plan">${esc(r.intento)}</span></td><td class="l"><span class="tag ${r.estatus==='Rollback'?'rb':'pend'}">${esc(r.estatus)}</span></td><td class="num"><b>${fmt(r.nComp)}</b></td><td class="l mono">${esc(r.oc)}</td><td class="l" style="max-width:360px;white-space:normal;">${esc(r.comentarios||'—')}</td><td class="l">${esc(vig?.intento||'—')}</td><td class="l"><span class="tag ${vig?.estatus==='Migrado'?'mig':(vig?.estatus==='Rollback'?'rb':(vig?.estatus==='Desestimado'?'des':(vig?.estatus==='Planificado'?'plan':'pend')))}">${esc(vig?.estatus||'—')}</span></td><td class="l mono"><b>${esc(fechaVigente)}</b></td></tr>`;
         }).join('') || `<tr><td colspan="11" class="l" style="text-align:center;padding:20px;color:#888;">No hay Reprogramados/Rollback históricos para la selección actual.</td></tr>`}
       </tbody></table></div>
     </div>
