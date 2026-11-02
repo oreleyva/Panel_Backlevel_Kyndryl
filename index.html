@@ -1866,9 +1866,21 @@ function pintarDetalleCobertura(suffix, compField, tipo) {
   const rowsBase = window['coberturaRows' + suffix] || [];
   const filtro = window['coberturaFiltro' + suffix] || '__ALL__';
   const q = norm(window['coberturaSearch' + suffix] || '');
+  const sortCol = window['coberturaSortCol' + suffix] || 'servidor';
+  const sortAsc = window['coberturaSortAsc' + suffix] !== false;
   let rows = rowsBase.slice();
   if (filtro !== '__ALL__') rows = rows.filter(r => r.estatus === filtro);
-  if (q) rows = rows.filter(r => norm(`${r.servidor} ${r.servidorDestino} ${r.siglas} ${r.app} ${r.ticketAprov} ${r.ownerKyndryl} ${r.priorizadoQ} ${r.estatus}`).includes(q));
+  if (q) rows = rows.filter(r => norm(`${r.servidor} ${r.servidorDestino} ${r.siglas} ${r.app} ${r.ticketAprov} ${r.estadoAprov} ${r.priorizadoQ} ${r.estatus} ${r.comentarios || ''}`).includes(q));
+  rows.sort((a,b) => {
+    let va = sortCol === 'componentes' ? Number(a[compField] || 0) : (sortCol === 'comentarios' ? (a.comentarios || '') : a[sortCol]);
+    let vb = sortCol === 'componentes' ? Number(b[compField] || 0) : (sortCol === 'comentarios' ? (b.comentarios || '') : b[sortCol]);
+    if (typeof va === 'string') va = norm(va);
+    if (typeof vb === 'string') vb = norm(vb);
+    if (va == null) va = ''; if (vb == null) vb = '';
+    if (va < vb) return sortAsc ? -1 : 1;
+    if (va > vb) return sortAsc ? 1 : -1;
+    return 0;
+  });
   const comp = rows.reduce((a,r)=>a+(Number(r[compField])||0),0);
   const srv = new Set(rows.map(r=>r.servidor).filter(Boolean)).size;
   const tkt = getTicketsAprovUnicos(rows).size;
@@ -1877,6 +1889,7 @@ function pintarDetalleCobertura(suffix, compField, tipo) {
   window['coberturaTipo' + suffix] = tipo;
   const btnExp = $('#btnExportCobertura' + suffix); if (btnExp) btnExp.classList.remove('hide');
   const estatus = ESTATUS_MIGRACION_LIST.filter(e => rowsBase.some(r=>r.estatus===e));
+  const th = (label, col, left=true) => `<th class="${left?'l ':''}sortable" onclick="setCoberturaSort('${suffix}','${col}','${compField}','${tipo}')" title="Clic para ordenar">${label} <span class="sort-icon">${sortCol===col ? (sortAsc?'▲':'▼') : ''}</span></th>`;
   $('#coberturaTitle'+suffix).textContent = tipo === 'pendiente' ? 'Detalle — Pendiente de Migración' : (tipo === 'desestimado' ? 'Detalle — Desestimados / No se Ejecutarán' : 'Detalle — Total del Alcance');
   $('#coberturaSub'+suffix).innerHTML = `<b>${fmt(comp)}</b> componentes · <b>${fmt(srv)}</b> servidores únicos · <b>${fmt(tkt)}</b> tickets únicos · ${fmt(rows.length)} relaciones mostradas`;
   $('#coberturaContent'+suffix).innerHTML = `
@@ -1885,13 +1898,18 @@ function pintarDetalleCobertura(suffix, compField, tipo) {
         <button class="btn sm ${filtro==='__ALL__'?'':'ghost'}" onclick="setCoberturaFiltro('${suffix}','__ALL__','${compField}','${tipo}')">Todos</button>
         ${estatus.map(e=>`<button class="btn sm ${filtro===e?'':'ghost'}" onclick="setCoberturaFiltro('${suffix}','${e}','${compField}','${tipo}')">${esc(e)}</button>`).join('')}
       </div>
-      <input type="text" id="coberturaSearch${suffix}" placeholder="🔍 Buscar servidor, SIGLA, ticket, owner..." value="${esc(window['coberturaSearch'+suffix]||'')}" style="min-width:280px;">
+      <input type="text" id="coberturaSearch${suffix}" placeholder="🔍 Buscar servidor, SIGLA, ticket, estado, motivo..." value="${esc(window['coberturaSearch'+suffix]||'')}" style="min-width:300px;">
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"><span class="stat-pill all">Componentes: ${fmt(comp)}</span><span class="stat-pill all">Servidores: ${fmt(srv)}</span><span class="stat-pill all">Tickets: ${fmt(tkt)}</span></div>
-    <div class="tw" style="max-height:480px;"><table class="dt"><thead><tr><th class="l">Servidor</th><th class="l">Srv. Destino</th><th class="l">SIGLA</th><th class="l">Aplicación</th><th>Componentes</th><th class="l">Ticket Aprovisionamiento</th><th class="l">Estado Aprov.</th><th class="l">Priorizado Q</th><th class="l">Owner</th><th class="l">Intento Vigente</th><th class="l">Estatus</th></tr></thead><tbody>
-      ${rows.map(r=>`<tr><td class="l mono"><b>${esc(r.servidor)}</b></td><td class="l mono">${esc(r.servidorDestino)}</td><td class="l mono"><b>${esc(r.siglas)}</b></td><td class="l">${esc(r.app)}</td><td class="num"><b>${fmt(r[compField]||0)}</b></td><td class="l mono" style="color:var(--k-navy);font-weight:700;">${esc(r.ticketAprov)}</td><td class="l">${esc(r.estadoAprov)}</td><td class="l">${esc(r.priorizadoQ)}</td><td class="l"><b>${esc(r.ownerKyndryl)}</b></td><td class="l"><span class="tag plan">${esc(r.intento)}</span></td><td class="l"><span class="tag ${r.estatus==='Migrado'?'mig':(r.estatus==='Desestimado'?'des':(r.estatus==='Rollback'?'rb':(r.estatus==='Planificado'?'plan':'pend')))}">${esc(r.estatus)}</span></td></tr>`).join('') || `<tr><td colspan="11" class="l" style="text-align:center;padding:22px;color:#888;">No hay registros para el filtro seleccionado.</td></tr>`}
+    <div class="tw" style="max-height:480px;"><table class="dt"><thead><tr>${th('Servidor','servidor')}${th('Srv. Destino','servidorDestino')}${th('SIGLA','siglas')}${th('Aplicación','app')}${th('Componentes','componentes',false)}${th('Ticket Aprovisionamiento','ticketAprov')}${th('Estado Aprov.','estadoAprov')}${th('Priorizado Q','priorizadoQ')}${th('Estatus','estatus')}${tipo === 'desestimado' ? th('Motivo de Desestimación','comentarios') : ''}</tr></thead><tbody>
+      ${rows.map(r=>`<tr><td class="l mono"><b>${esc(r.servidor)}</b></td><td class="l mono">${esc(r.servidorDestino)}</td><td class="l mono"><b>${esc(r.siglas)}</b></td><td class="l">${esc(r.app)}</td><td class="num"><b>${fmt(r[compField]||0)}</b></td><td class="l mono" style="color:var(--k-navy);font-weight:700;">${esc(r.ticketAprov)}</td><td class="l">${esc(r.estadoAprov)}</td><td class="l">${esc(r.priorizadoQ)}</td><td class="l"><span class="tag ${r.estatus==='Migrado'?'mig':(r.estatus==='Desestimado'?'des':(r.estatus==='Rollback'?'rb':(r.estatus==='Planificado'?'plan':'pend')))}">${esc(r.estatus)}</span></td>${tipo === 'desestimado' ? `<td class="l" style="min-width:320px;white-space:normal;word-break:break-word;">${esc(r.comentarios || '—')}</td>` : ''}</tr>`).join('') || `<tr><td colspan="${tipo === 'desestimado' ? 10 : 9}" class="l" style="text-align:center;padding:22px;color:#888;">No hay registros para el filtro seleccionado.</td></tr>`}
     </tbody></table></div>`;
   const inp=$('#coberturaSearch'+suffix); if(inp) inp.oninput=e=>{window['coberturaSearch'+suffix]=e.target.value;pintarDetalleCobertura(suffix,compField,tipo); const ni=$('#coberturaSearch'+suffix); if(ni){ni.focus();ni.setSelectionRange(ni.value.length,ni.value.length);}};
+}
+function setCoberturaSort(suffix, col, compField, tipo){
+  const key='coberturaSortCol'+suffix, ascKey='coberturaSortAsc'+suffix;
+  if(window[key]===col) window[ascKey]=!(window[ascKey]!==false); else { window[key]=col; window[ascKey]=true; }
+  pintarDetalleCobertura(suffix,compField,tipo);
 }
 function setCoberturaFiltro(suffix, filtro, compField, tipo){ window['coberturaFiltro'+suffix]=filtro; pintarDetalleCobertura(suffix,compField,tipo); }
 function exportarDetalleCobertura(suffix){
@@ -1903,7 +1921,8 @@ function exportarDetalleCobertura(suffix){
     'Servidor Origen': r.servidor, 'Servidor Destino': r.servidorDestino, 'SIGLA': r.siglas, 'Aplicación': r.app,
     'Componentes': Number(r[compField]) || 0, 'Componentes Kyndryl': Number(r.nComp) || 0, 'Componentes Arquitectura': Number(r.nCompArq) || 0,
     'Ticket Aprovisionamiento': r.ticketAprov, 'Estado Aprovisionamiento': r.estadoAprov, 'Priorizado Q': r.priorizadoQ,
-    'Owner Kyndryl': r.ownerKyndryl, 'Ambiente': r.ambiente, 'Estatus Migración': r.estatus,
+    'Ambiente': r.ambiente, 'Estatus Migración': r.estatus,
+    ...(tipo === 'desestimado' ? { 'Motivo de Desestimación': r.comentarios || '—' } : {}),
     'OC Migración': r.oc, 'Estado OC': r.estadoOC, 'Trimestre': r.qIbk, 'Mes': r.mes
   }));
   const ws = XLSX.utils.json_to_sheet(exportRows);
