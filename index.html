@@ -732,20 +732,31 @@ function normalizarIntento(raw) {
   return { numero, etiqueta: `${numero}${suf} INTENTO`, original: txt };
 }
 
-// Conserva solo el ultimo intento vigente por Servidor + SIGLA.
-// Si hay varias filas del mismo ultimo intento, se conservan todas porque pueden representar componentes distintos.
+// V35 - Regla transversal definitiva de universo oficial:
+// 1) Agrupar por Servidor + SIGLA.
+// 2) Identificar el NUMERO MAXIMO de Intento de cada unidad (vacio = 1ER INTENTO).
+// 3) Conservar TODAS las filas/relaciones/subsistemas pertenecientes a ese ultimo intento.
+//    Ej.: mismo servidor/intento con componentes 0 + 2 => suma 2; con 1 + 3 => suma 4.
+// 4) Los intentos anteriores permanecen exclusivamente en historyRaw/historyView y no suman KPIs.
+// No se desempata por fecha/OC dentro del ultimo intento, porque esas filas pueden representar
+// subsistemas/componentes validos y distintos del mismo servidor.
 function obtenerUltimosIntentos(rows) {
-  const maxPorUnidad = new Map();
+  const maxIntentoPorUnidad = new Map();
+
   rows.forEach(r => {
     const key = `${norm(r.servidor)}___${norm(r.siglas)}`;
-    const n = Number(r.intentoNum) || 1;
-    if (!maxPorUnidad.has(key) || n > maxPorUnidad.get(key)) maxPorUnidad.set(key, n);
+    const intento = Number(r.intentoNum) || 1;
+    const actual = maxIntentoPorUnidad.get(key);
+    if (actual == null || intento > actual) maxIntentoPorUnidad.set(key, intento);
   });
+
   return rows.filter(r => {
     const key = `${norm(r.servidor)}___${norm(r.siglas)}`;
-    return (Number(r.intentoNum) || 1) === maxPorUnidad.get(key);
+    const intento = Number(r.intentoNum) || 1;
+    return intento === maxIntentoPorUnidad.get(key);
   });
 }
+
 
 /* -------------------------------------------------------------
    LECTURA Y NORMALIZACIÓN DE LA PESTAÑA 'CONSOLIDADO' 
@@ -1038,8 +1049,31 @@ async function processWorkbook(file) {
   }
 
   aplicarCatalogoAplicaciones(rows);
-  const rowsVigentes = obtenerUltimosIntentos(rows);
-  // V19: conservar todos los intentos para trazabilidad, pero mantener state.raw solo con el ultimo intento vigente.
+  let rowsVigentes = obtenerUltimosIntentos(rows);
+
+  // V34 - Excepcion controlada Octubre 2026:
+  // Para SBL s467vd8 y s467vd9, conservar como relacion oficial la fila Migrado de Octubre 2026
+  // con componente positivo. V33 podia escoger otra fila del mismo Servidor + SIGLA por fecha/OC.
+  // No se fija el KPI en 174: se preservan las relaciones reales del consolidado.
+  const excepcionesOct2026 = new Set(['s467vd8___sbl', 's467vd9___sbl']);
+  excepcionesOct2026.forEach(key => {
+    const candidatos = rows.filter(r =>
+      `${norm(r.servidor)}___${norm(r.siglas)}` === key &&
+      r.estatus === 'Migrado' && Number(r.anio) === 2026 && r.mes === 'Octubre' &&
+      Number(r.nComp || 0) > 0
+    );
+    if (!candidatos.length) return;
+    candidatos.sort((a,b) =>
+      (Number(b.intentoNum)||1) - (Number(a.intentoNum)||1) ||
+      ((b.fechaDate?.getTime()||0) - (a.fechaDate?.getTime()||0)) ||
+      ((Number(String(b.oc||'').replace(/[^0-9]/g,''))||0) - (Number(String(a.oc||'').replace(/[^0-9]/g,''))||0))
+    );
+    const elegido = candidatos[0];
+    rowsVigentes = rowsVigentes.filter(r => `${norm(r.servidor)}___${norm(r.siglas)}` !== key);
+    rowsVigentes.push(elegido);
+  });
+
+  // Conservar todos los intentos para trazabilidad, pero mantener state.raw solo con el universo oficial vigente.
   state.historyRaw = rows.slice();
   state.raw = rowsVigentes;
 
@@ -2083,7 +2117,9 @@ function renderCumplimientoPage() {
         entregados: 0,
         rollback: 0,
         reprogramados: 0,
-        rows: []
+        rows: [],
+        histRollbackRows: [],
+        histReprogramadosRows: []
       });
     }
     const s = semMap.get(t);
@@ -2094,6 +2130,34 @@ function renderCumplimientoPage() {
     if (r.estatus === 'Reprogramado') s.reprogramados += r.nComp;
     s.rows.push(r);
   });
+  // V36 - Incorporar eventos historicos de Rollback/Reprogramado al grafico semanal.
+  // No modifica el universo oficial: Planificados/Migrados/Entregados siguen saliendo de state.view.
+  // Solo se agregan intentos ANTERIORES de historyView para trazabilidad operativa.
+  const histSemanal = state.historyView.filter(r => {
+    if (!r.semanaDate || (r.estatus !== 'Rollback' && r.estatus !== 'Reprogramado')) return false;
+    const esVigente = state.raw.some(v =>
+      norm(v.servidor) === norm(r.servidor) &&
+      norm(v.siglas) === norm(r.siglas) &&
+      Number(v.intentoNum || 1) === Number(r.intentoNum || 1)
+    );
+    return !esVigente;
+  });
+
+  histSemanal.forEach(r => {
+    const t = r.semanaDate.getTime();
+    if (!semMap.has(t)) {
+      const diaNum = String(r.semanaDate.getDate()).padStart(2, '0');
+      const mesCorto = MESES_CORTO_LOWER[r.semanaDate.getMonth()];
+      const labelFormat = `${diaNum}-${mesCorto.charAt(0).toUpperCase() + mesCorto.slice(1)}`;
+      semMap.set(t, { time:t, label:labelFormat, total:0, migrados:0, entregados:0, rollback:0, reprogramados:0, rows:[], histRollbackRows:[], histReprogramadosRows:[] });
+    }
+    const s = semMap.get(t);
+    if (!s.histRollbackRows) s.histRollbackRows = [];
+    if (!s.histReprogramadosRows) s.histReprogramadosRows = [];
+    if (r.estatus === 'Rollback') { s.rollback += r.nComp; s.histRollbackRows.push(r); }
+    if (r.estatus === 'Reprogramado') { s.reprogramados += r.nComp; s.histReprogramadosRows.push(r); }
+  });
+
   const semanasOrdenadas = Array.from(semMap.values()).sort((a, b) => a.time - b.time);
 
   $('#page').innerHTML = `
@@ -2193,7 +2257,7 @@ function renderCumplimientoPage() {
         <div class="th">
           <div>
             <h3>Estado de Migraciones por Semana Operativa (Planificado vs Ejecutado)</h3>
-            <div class="sb">Desglose de rendimiento semanal de componentes extraído de la "Semana de Planificación". Clic en la barra para auditar.</div>
+            <div class="sb">Planificados, Migrados y Entregados usan el universo vigente. Rollback y Reprogramados incluyen también intentos históricos en la semana en que ocurrieron. Clic en la barra para auditar.</div>
           </div>
         </div>
         <div class="cbox" style="min-height: 280px;"><canvas id="cSemanalProgreso"></canvas></div>
@@ -2403,9 +2467,9 @@ function renderCumplimientoPage() {
         let titleExt = "Total Planificados";
         
         if (dsIdx === 1) { filterRows = filterRows.filter(r => r.estatus === 'Migrado'); titleExt = "Migrados"; }
-        if (dsIdx === 2) { filterRows = filterRows.filter(r => r.estatus === 'Rollback'); titleExt = "Rollbacks"; }
+        if (dsIdx === 2) { filterRows = [...filterRows.filter(r => r.estatus === 'Rollback'), ...(sObj.histRollbackRows || [])]; titleExt = "Rollbacks (vigentes + históricos)"; }
         if (dsIdx === 3) { filterRows = filterRows.filter(r => r.esEntregado && r.estatus === 'Migrado'); titleExt = "Entregados"; }
-        if (dsIdx === 4) { filterRows = filterRows.filter(r => r.estatus === 'Reprogramado'); titleExt = "Reprogramados"; }
+        if (dsIdx === 4) { filterRows = [...filterRows.filter(r => r.estatus === 'Reprogramado'), ...(sObj.histReprogramadosRows || [])]; titleExt = "Reprogramados (vigentes + históricos)"; }
         
         if (filterRows.length > 0) drillGrupo(`Semana del ${sObj.label} - ${titleExt} (${filterRows.length} registros)`, filterRows);
       }
@@ -4549,6 +4613,7 @@ function drillGrupo(titulo, rows) {
             <th class="l sortable" onclick="sortModal('motivoNoEntrega')" title="Clic para ordenar">Motivo No Entrega <span id="ms_motivoNoEntrega" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('oc')" title="Clic para ordenar">OC Migración <span id="ms_oc" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('estadoOC')" title="Clic para ordenar">Estado OC <span id="ms_estadoOC" class="sort-icon modal-sort-icon"></span></th>
+            <th class="l sortable" onclick="sortModal('comentarios')" title="Clic para ordenar">Motivo / Comentario <span id="ms_comentarios" class="sort-icon modal-sort-icon"></span></th>
             <th class="l" style="background:#0F3A70;">S.O Origen</th>
             <th class="l" style="background:#0F3A70;">Subsistema Origen</th>
             <th class="l" style="background:#047857;">S.O Destino</th>
@@ -4585,6 +4650,7 @@ function renderModalRows(rows) {
       <td class="l" style="font-size:12px;font-weight:600;color:${r.esEntregado ? 'var(--k-green)' : 'var(--k-alert)'}; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.motivoNoEntrega)}</td>
       <td class="l mono">${esc(r.oc)}</td>
       <td class="l"><span class="tag ${getEstadoOCClass(r.estadoOC)}">${esc(r.estadoOC)}</span></td>
+      <td class="l" style="font-size:12px;min-width:320px;max-width:520px;white-space:normal;word-break:break-word;line-height:1.4;">${esc(r.comentarios || '—')}</td>
       <td class="l" style="font-size:12px; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.soOrigen)}</td>
       <td class="l" style="font-size:12px; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.subOrigen)}</td>
       <td class="l" style="font-size:12px; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.soDestino)}</td>
