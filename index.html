@@ -346,8 +346,6 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
         </div>
         <div class="grow"></div>
         <button class="btn ghost sm" id="btnChangeFile">Cambiar Consolidado</button>
-        <button class="btn ghost sm" id="btnLoadLeadTime">Cargar Lead Time</button>
-        <input type="file" id="leadTimeInput" accept=".xlsx,.xlsm,.xls" style="display:none">
         <button class="btn ghost sm" id="btnExportXls">Exportar Excel</button>
       </div>
       <div class="slicers">
@@ -897,7 +895,7 @@ async function processWorkbook(file) {
       return null;
     };
     const ownerKyndrylExact = getValExact('Owner Kyndryl');
-    const ownerKyndryl = String(ownerKyndrylExact != null ? ownerKyndrylExact : (getVal('ownerkyndryl', 'crewleader', 'responsableadministracion', 'owner') || 'Sin Asignar')).trim();
+    const ownerKyndryl = String(ownerKyndrylExact != null && String(ownerKyndrylExact).trim() !== '' ? ownerKyndrylExact : 'Sin Asignar').trim();
     const ocNumExact = getValExact('OC(3) Migracion');
     const ocNum = ocNumExact != null ? ocNumExact : getVal('oc3migracion', 'ocmigracion', 'oc3', 'oc');
     const ocEstado = normalizarEstadoOC(getVal('estadooc3', 'estadooc', 'estadodelaoc'));
@@ -4955,106 +4953,103 @@ function getCumplimientoMonthlyRows(year,monthName){
   if(!monthName) return [];
   return state.view.filter(r=>Number(r.anio)===year && r.mes===monthName);
 }
+function getKMNMonthlyMetrics(year, monthName){
+  if(!monthName) return null;
+  const vig = state.raw.filter(r => Number(r.anio)===year && r.mes===monthName);
+  const hist = state.historyRaw.filter(r => Number(r.anio)===year && r.mes===monthName);
+
+  // Planificados: universo oficial del mes, excluyendo desestimados.
+  const planificados = vig.filter(r=>r.estatus!=='Desestimado').reduce((a,r)=>a+(Number(r.nComp)||0),0);
+  const migrados = vig.filter(r=>r.estatus==='Migrado').reduce((a,r)=>a+(Number(r.nComp)||0),0);
+  const entregados = vig.filter(r=>r.estatus==='Migrado' && r.esEntregado).reduce((a,r)=>a+(Number(r.nComp)||0),0);
+
+  // Rollback/Reprogramado: eventos del mes, vigentes + intentos historicos, sin contar dos veces la misma fila vigente.
+  const vigenteKeys = new Set(vig.map(r=>`${norm(r.servidor)}___${norm(r.siglas)}___${Number(r.intentoNum||1)}___${r.estatus}___${Number(r.nComp)||0}`));
+  const eventos = hist.filter(r=>r.estatus==='Rollback'||r.estatus==='Reprogramado').filter(r=>{
+    const k=`${norm(r.servidor)}___${norm(r.siglas)}___${Number(r.intentoNum||1)}___${r.estatus}___${Number(r.nComp)||0}`;
+    return !vigenteKeys.has(k) || vig.some(v=>v===r);
+  });
+  // historyRaw contiene tambien vigentes; deduplicar por identidad operativa basica.
+  const evMap=new Map();
+  eventos.forEach(r=>{
+    const k=`${norm(r.servidor)}___${norm(r.siglas)}___${Number(r.intentoNum||1)}___${r.estatus}___${r.fechaDate?.getTime()||r.semanaDate?.getTime()||0}___${r.oc}___${Number(r.nComp)||0}`;
+    if(!evMap.has(k)) evMap.set(k,r);
+  });
+  const ev=Array.from(evMap.values());
+  const rollbacks=ev.filter(r=>r.estatus==='Rollback').reduce((a,r)=>a+(Number(r.nComp)||0),0);
+  const reprogramados=ev.filter(r=>r.estatus==='Reprogramado').reduce((a,r)=>a+(Number(r.nComp)||0),0);
+  const ejecutados=migrados+rollbacks;
+
+  // V40 - Equivalencia ejecutiva en tickets de aprovisionamiento unicos.
+  // Los porcentajes KMN oficiales se mantienen calculados por componentes.
+  const ticketSet = rows => getTicketsAprovUnicos(rows);
+  const planificadosRows = vig.filter(r=>r.estatus!=='Desestimado');
+  const migradosRows = vig.filter(r=>r.estatus==='Migrado');
+  const entregadosRows = vig.filter(r=>r.estatus==='Migrado' && r.esEntregado);
+  const rollbackRows = ev.filter(r=>r.estatus==='Rollback');
+  const reprogramadosRows = ev.filter(r=>r.estatus==='Reprogramado');
+  const ejecutadosRows = [...migradosRows, ...rollbackRows];
+  const ticketsPlanificados = ticketSet(planificadosRows).size;
+  const ticketsMigrados = ticketSet(migradosRows).size;
+  const ticketsEntregados = ticketSet(entregadosRows).size;
+  const ticketsRollback = ticketSet(rollbackRows).size;
+  const ticketsReprogramados = ticketSet(reprogramadosRows).size;
+  const ticketsEjecutados = ticketSet(ejecutadosRows).size;
+
+  return {vig, planificados, migrados, entregados, rollbacks, reprogramados, ejecutados,
+    ticketsPlanificados, ticketsMigrados, ticketsEntregados, ticketsRollback, ticketsReprogramados, ticketsEjecutados,
+    tasaRollback: ejecutados?rollbacks/ejecutados:0,
+    estabilidad: planificados?reprogramados/planificados:0,
+    cumplimientoComprometido: planificados?migrados/planificados:0,
+    cumplimientoEntregas: migrados?entregados/migrados:0};
+}
+
 function renderReporteKMNPage(){
   const sel=monthYearForKMN();
-  const lead=sel.monthName?getLeadTimeMonthlyRows(sel.year,sel.monthIdx):[];
-  const cum=sel.monthName?getCumplimientoMonthlyRows(sel.year,sel.monthName):[];
-  const cumple=lead.filter(r=>r.Etiqueta==='Cumple').length, noCumple=lead.filter(r=>r.Etiqueta==='No Cumple').length;
-  const comp=cum.reduce((a,r)=>a+(Number(r.nComp)||0),0), mig=cum.filter(r=>r.estatus==='Migrado').reduce((a,r)=>a+(Number(r.nComp)||0),0);
-  const ready=!!sel.monthName && state.leadTimeRaw.length>0;
+  const m=sel.monthName?getKMNMonthlyMetrics(sel.year,sel.monthName):null;
+  const ready=!!m;
+  const pc=v=>pct1((Number(v)||0)*100);
   $('#page').innerHTML=`
     <div class="section-label-bar">📑 Reporte KMN Mensual</div>
-    <div class="row r-3">
-      <div class="tile kpi ${state.raw.length?'green':'alert'}"><div class="lbl">Consolidado Principal</div><div class="val" style="font-size:21px;">${state.raw.length?'✓ Cargado':'Falta'}</div><div class="sub">Fuente de Cumplimiento y del dashboard</div></div>
-      <div class="tile kpi ${state.leadTimeRaw.length?'green':'amber'}"><div class="lbl">Fuente Lead Time</div><div class="val" style="font-size:21px;">${state.leadTimeRaw.length?'✓ Cargada':'Pendiente'}</div><div class="sub">${state.leadTimeRaw.length?esc(state.leadTimeFileName):'Usa “Cargar Lead Time” en la cabecera'}</div></div>
-      <div class="tile kpi ${ready?'blue':'amber'}"><div class="lbl">Periodo del Reporte</div><div class="val" style="font-size:21px;">${sel.monthName?esc(sel.monthName+' '+sel.year):'Selecciona 1 mes'}</div><div class="sub">El reporte requiere exactamente un mes seleccionado</div></div>
-    </div>
     <div class="row r-2">
-      <div class="tile"><div class="th"><div><h3>Lead Time</h3><div class="sb">Regla mensual: Fecha_de_Cierre dentro del mes seleccionado · DIAS = Tiempo_Solucion_en_Horas / 24 · Cumple &lt; 90 días</div></div></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;"><span class="stat-pill all">Tickets: ${fmt(lead.length)}</span><span class="stat-pill mig">Cumple: ${fmt(cumple)}</span><span class="stat-pill rb">No Cumple: ${fmt(noCumple)}</span></div>
-      </div>
-      <div class="tile"><div class="th"><div><h3>Cumplimiento</h3><div class="sb">Usa el universo vigente del dashboard para evitar doble conteo por intentos anteriores</div></div></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;"><span class="stat-pill all">Componentes: ${fmt(comp)}</span><span class="stat-pill mig">Migrados: ${fmt(mig)}</span><span class="stat-pill all">Relaciones: ${fmt(cum.length)}</span></div>
-      </div>
+      <div class="tile kpi ${state.raw.length?'green':'alert'}"><div class="lbl">Fuente del Reporte</div><div class="val" style="font-size:21px;">${state.raw.length?'✓ Consolidado cargado':'Falta consolidado'}</div><div class="sub">Todos los indicadores se calculan desde el Consolidado principal.</div></div>
+      <div class="tile kpi ${ready?'blue':'amber'}"><div class="lbl">Periodo del Reporte</div><div class="val" style="font-size:21px;">${sel.monthName?esc(sel.monthName+' '+sel.year):'Selecciona 1 mes'}</div><div class="sub">El reporte requiere exactamente un mes seleccionado.</div></div>
     </div>
-    <div class="tile" style="border:1.5px solid ${ready?'#059669':'#D97706'};">
-      <div class="th" style="margin-bottom:0;align-items:center;"><div><h3>${ready?'✅ Reporte listo para generar':'⚠️ Reporte aún no está listo'}</h3><div class="sb">${!sel.monthName?'Selecciona un único Mes en la cabecera.':(!state.leadTimeRaw.length?'Carga el segundo Excel de Lead Time.':'Se generará un libro con las hojas Lead Time y Cumplimiento.')}</div></div>
-      <button class="btn green" ${ready?'':'disabled'} id="btnGenerarKMN">📥 Generar Reporte KMN Excel</button></div>
-    </div>`;
+    ${m?`<div class="row r-4">
+      <div class="tile kpi alert"><div class="lbl">Tasa de Rollback Mensual</div><div class="val">${pc(m.tasaRollback)}</div><div class="sub"><b>Componentes:</b> ${fmt(m.rollbacks)} Rollback / ${fmt(m.ejecutados)} Ejecutados<br><b>Tickets:</b> ${fmt(m.ticketsRollback)} Rollback / ${fmt(m.ticketsEjecutados)} Ejecutados</div></div>
+      <div class="tile kpi amber"><div class="lbl">Estabilidad de la Planificación</div><div class="val">${pc(m.estabilidad)}</div><div class="sub"><b>Componentes:</b> ${fmt(m.reprogramados)} Reprogramados / ${fmt(m.planificados)} Planificados<br><b>Tickets:</b> ${fmt(m.ticketsReprogramados)} Reprogramados / ${fmt(m.ticketsPlanificados)} Planificados</div></div>
+      <div class="tile kpi green"><div class="lbl">Cumplimiento de lo Comprometido</div><div class="val">${pc(m.cumplimientoComprometido)}</div><div class="sub"><b>Componentes:</b> ${fmt(m.migrados)} Migrados / ${fmt(m.planificados)} Planificados<br><b>Tickets:</b> ${fmt(m.ticketsMigrados)} Migrados / ${fmt(m.ticketsPlanificados)} Planificados</div></div>
+      <div class="tile kpi blue"><div class="lbl">Cumplimiento de Entregas</div><div class="val">${pc(m.cumplimientoEntregas)}</div><div class="sub"><b>Componentes:</b> ${fmt(m.entregados)} Entregados / ${fmt(m.migrados)} Migrados<br><b>Tickets:</b> ${fmt(m.ticketsEntregados)} Entregados / ${fmt(m.ticketsMigrados)} Migrados</div></div>
+    </div>
+    <div class="tile" style="margin-bottom:16px;"><div class="th"><div><h3>Base de cálculo mensual</h3><div class="sb">Rollback y Reprogramados incluyen eventos históricos del mes. Migrados y Entregados usan el universo vigente para evitar doble conteo por intentos.</div></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;"><span class="stat-pill all">Planificados: ${fmt(m.planificados)} comp. / ${fmt(m.ticketsPlanificados)} tickets</span><span class="stat-pill mig">Migrados: ${fmt(m.migrados)} comp. / ${fmt(m.ticketsMigrados)} tickets</span><span class="stat-pill plan">Entregados: ${fmt(m.entregados)} comp. / ${fmt(m.ticketsEntregados)} tickets</span><span class="stat-pill rb">Rollback: ${fmt(m.rollbacks)} comp. / ${fmt(m.ticketsRollback)} tickets</span><span class="stat-pill reprog">Reprogramados: ${fmt(m.reprogramados)} comp. / ${fmt(m.ticketsReprogramados)} tickets</span><span class="stat-pill all">Ejecutados: ${fmt(m.ejecutados)} comp. / ${fmt(m.ticketsEjecutados)} tickets</span></div></div>`:''}
+    <div class="tile" style="border:1.5px solid ${ready?'#059669':'#D97706'};"><div class="th" style="margin-bottom:0;align-items:center;"><div><h3>${ready?'✅ Reporte KMN listo para generar':'⚠️ Selecciona un único mes'}</h3><div class="sb">${ready?'Se generará un Excel con el detalle mensual y los cuatro indicadores KMN.':'Selecciona exactamente un Mes en la cabecera.'}</div></div><button class="btn green" ${ready?'':'disabled'} id="btnGenerarKMN">📥 Generar Reporte KMN Excel</button></div></div>`;
   const b=$('#btnGenerarKMN'); if(b&&ready) b.onclick=exportReporteKMN;
 }
+
 async function exportReporteKMN(){
-  const sel=monthYearForKMN(); if(!sel.monthName||!state.leadTimeRaw.length) return;
-  const btn=$('#btnGenerarKMN');
-  const host=btn ? btn.closest('.tile') : null;
-  let prog=$('#kmnProgress');
-  if(host && !prog){
-    prog=document.createElement('div'); prog.id='kmnProgress';
-    prog.style.cssText='margin-top:14px;padding-top:12px;border-top:1px solid var(--k-border);';
-    prog.innerHTML='<div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;margin-bottom:6px;"><span id="kmnProgressText">Preparando reporte...</span><span id="kmnProgressPct">0%</span></div><div style="height:10px;background:#E2E8F0;border-radius:999px;overflow:hidden;"><div id="kmnProgressBar" style="height:100%;width:0%;background:var(--k-green);transition:width .25s ease;"></div></div>';
-    host.appendChild(prog);
-  }
-  const step=async(pct,text)=>{ const t=$('#kmnProgressText'), n=$('#kmnProgressPct'), b=$('#kmnProgressBar'); if(t)t.textContent=text;if(n)n.textContent=pct+'%';if(b)b.style.width=pct+'%'; await new Promise(r=>setTimeout(r,80)); };
-  if(btn){btn.disabled=true;btn.textContent='⏳ Generando...';}
-  try{
-    await step(10,'Preparando Lead Time...');
-  const lead=getLeadTimeMonthlyRows(sel.year,sel.monthIdx);
-  const cum=getCumplimientoMonthlyRows(sel.year,sel.monthName);
-  await step(28,'Lead Time listo · '+lead.length+' tickets. Preparando Cumplimiento...');
+  const sel=monthYearForKMN(); const m=sel.monthName?getKMNMonthlyMetrics(sel.year,sel.monthName):null; if(!m)return;
   const wb=XLSX.utils.book_new();
-  const exclude=new Set(['uuid_requester','uuid_assignee','UUID_Grupo']);
-  const baseHeaders=state.leadTimeHeaders.filter(h=>!exclude.has(h));
-  const ltHeaders=[...baseHeaders];
-  const pos=ltHeaders.indexOf('Tiempo_Solucion_en_Horas');
-  if(pos>=0) ltHeaders.splice(pos+1,0,'DIAS'); else ltHeaders.push('DIAS');
-  ltHeaders.push('Etiqueta');
-  const ltAOA=[ltHeaders,...lead.map(r=>ltHeaders.map(h=>r[h]??null))];
-  const wsLT=XLSX.utils.aoa_to_sheet(ltAOA); wsLT['!autofilter']={ref:`A1:${XLSX.utils.encode_col(ltHeaders.length-1)}${Math.max(1,ltAOA.length)}`}; wsLT['!cols']=ltHeaders.map(h=>({wch:Math.min(45,Math.max(12,String(h).length+2))}));
-  XLSX.utils.book_append_sheet(wb,wsLT,'Lead Time');
-  await step(48,'Hoja Lead Time construida. Generando Cumplimiento...');
-  const ch=['Q - IBK','Relevante','Sigla','Servidor','Ambiente','Rol','Componente Sub Sistema','Versión','Sistema Operativo','Database','Sistema Operativo_Destino','BD','WME - IIS','Componentes Kydryl','Ticket de Aprovisionamiento','Estado del ticket de Aprovisionamiento','SET aprovisionamiento - Homologac','Estado  Ticket Upgrade Capacidades','AÑO','MES','Semana de Planificacion','Fecha de Inicio Migracion','OC(3) Migracion','Hora de Inicio Migracion','Fecha Fin Migracion','Hora Fin Migracion','Estado de la OC (3)','Forecast - Estado'];
-  const data=cum.map(r=>[r.qIbk,r.relevante,r.siglas,r.servidor,r.ambiente,r.rol,r.subOrigen?.replace(/\s+[^\s]+$/,''),null,r.soOrigen,r.database,r.soDestino,r.bdReporte,r.wmeIis,Number(r.nComp)||0,r.ticketAprov,r.estadoAprov,r.setAprov,r.estadoUpg,r.anio,r.mes,r.semanaDate,r.fechaDate,r.oc,r.horaInicioMigracion,r.fechaFinMigracion,r.horaFinMigracion,r.estadoOC,r.estatus]);
-  const aoa=[ch,...data];
-  const weeks=Array.from(new Set(cum.map(r=>r.semanaDate&&r.semanaDate.getTime()).filter(Boolean))).sort((a,b)=>a-b).map(t=>new Date(t));
-  while(weeks.length<4) weeks.push(null); const w4=weeks.slice(0,4);
-  const hist=state.historyView.filter(r=>Number(r.anio)===sel.year&&r.mes===sel.monthName);
-  const sum=(rows,pred)=>rows.filter(pred).reduce((a,r)=>a+(Number(r.nComp)||0),0);
-  const valsFor=(d,kind)=>{ if(!d)return 0; const rows=cum.filter(r=>r.semanaDate&&r.semanaDate.getTime()===d.getTime()); const hr=hist.filter(r=>r.semanaDate&&r.semanaDate.getTime()===d.getTime()); if(kind==='Planificado')return sum(rows,r=>r.estatus!=='Desestimado'); if(kind==='Ejecutados')return sum(rows,r=>r.estatus==='Migrado'||r.estatus==='Rollback'); if(kind==='Satisfactorio')return sum(rows,r=>r.estatus==='Migrado'); if(kind==='Rollback Aplicación (CREW)')return 0; if(kind==='Rollback Técnico (Kyndryl)')return sum(hr,r=>r.estatus==='Rollback'); if(kind==='Reprogramado Aplicación (CREW)')return 0; if(kind==='Reprogramado Técnico (Kyndryl)')return sum(hr,r=>r.estatus==='Reprogramado'); if(kind==='Desestimado')return sum(rows,r=>r.estatus==='Desestimado'); return 0; };
-  const start=aoa.length+3; aoa.push([]); aoa.push([]); aoa.push([null,null,null,null,null,null,'Mes / Semana',sel.monthName]); aoa.push([null,null,null,null,null,null,null,'Semana 1','Semana 2','Semana 3','Semana 4','Total']);
-  const kinds=['Planificado','Ejecutados','Satisfactorio','Rollback Aplicación (CREW)','Rollback Técnico (Kyndryl)','Reprogramado Aplicación (CREW)','Reprogramado Técnico (Kyndryl)','Desestimado'];
-  // V31: calcular y conservar los totales directamente. No releer posiciones rígidas de la matriz AOA.
-  // Esto evita errores si cambia la cantidad de filas de cabecera del resumen.
-  const totals={};
-  kinds.forEach(k=>{
-    const vv=w4.map(d=>valsFor(d,k));
-    const total=vv.reduce((a,b)=>a+(Number(b)||0),0);
-    totals[k]=total;
-    aoa.push([null,null,null,null,null,null,k,...vv,total]);
-  });
-  const denom=(totals['Planificado']||0)-(totals['Rollback Aplicación (CREW)']||0)-(totals['Desestimado']||0)-(totals['Reprogramado Aplicación (CREW)']||0);
-  const pctCum=denom>0?(totals['Satisfactorio']||0)/denom:0;
-  aoa.push([]);aoa.push([]);aoa.push([null,null,null,null,null,null,null,'%Cumplimiento','Ejecutados Satisfactorios/(Planificados-Rollback Crew)',pctCum]);
-  const wsC=XLSX.utils.aoa_to_sheet(aoa); wsC['!autofilter']={ref:`A1:AB${Math.max(1,data.length+1)}`}; wsC['!cols']=ch.map(h=>({wch:Math.min(32,Math.max(12,h.length+2))}));
-  XLSX.utils.book_append_sheet(wb,wsC,'Cumplimiento');
-  await step(70,'Construyendo libro Excel...');
-  const fileName=`Reporte KMN - Backlevel-${sel.monthName} ${sel.year}.xlsx`;
-  await step(88,'Preparando descarga...');
-  const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});
-  const blob=new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=fileName; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1500);
-  await step(100,'Reporte generado. Revisa tus descargas.');
-  }catch(err){ console.error('Error KMN:',err); const t=$('#kmnProgressText'); if(t)t.textContent='❌ Error al generar: '+(err&&err.message?err.message:String(err)); const b=$('#kmnProgressBar'); if(b)b.style.background='var(--k-alert)'; }
-  finally{ if(btn){btn.disabled=false;btn.textContent='📥 Generar Reporte KMN Excel';} }
+  const resumen=[
+    ['REPORTE KMN MENSUAL', `${sel.monthName} ${sel.year}`],[],
+    ['Indicador','Numerador Componentes','Denominador Componentes','Resultado','Numerador Tickets','Denominador Tickets'],
+    ['Tasa de Rollback Mensual',m.rollbacks,m.ejecutados,m.tasaRollback,m.ticketsRollback,m.ticketsEjecutados],
+    ['Estabilidad de la Planificación',m.reprogramados,m.planificados,m.estabilidad,m.ticketsReprogramados,m.ticketsPlanificados],
+    ['Cumplimiento de lo Comprometido',m.migrados,m.planificados,m.cumplimientoComprometido,m.ticketsMigrados,m.ticketsPlanificados],
+    ['Cumplimiento de Entregas',m.entregados,m.migrados,m.cumplimientoEntregas,m.ticketsEntregados,m.ticketsMigrados],[],
+    ['Base','Componentes','Tickets'],['Planificados',m.planificados,m.ticketsPlanificados],['Ejecutados',m.ejecutados,m.ticketsEjecutados],['Migrados',m.migrados,m.ticketsMigrados],['Entregados',m.entregados,m.ticketsEntregados],['Rollback',m.rollbacks,m.ticketsRollback],['Reprogramados',m.reprogramados,m.ticketsReprogramados]
+  ];
+  const wsR=XLSX.utils.aoa_to_sheet(resumen); ['D5','D6','D7','D8'].forEach(c=>{if(wsR[c])wsR[c].z='0.00%';}); wsR['!cols']=[{wch:36},{wch:24},{wch:26},{wch:18},{wch:20},{wch:22}]; XLSX.utils.book_append_sheet(wb,wsR,'Indicadores KMN');
+  const detail=m.vig.map(r=>({'Trimestre':r.qIbk,'Mes':r.mes,'Servidor':r.servidor,'SIGLA':r.siglas,'Aplicación':r.app,'Componentes Kyndryl':Number(r.nComp)||0,'Intento Vigente':r.intento,'Forecast - Estado':r.estatus,'Entregado':r.esEntregado?'Sí':'No','Owner Kyndryl':r.ownerKyndryl,'OC(3) Migracion':r.oc,'Estado OC':r.estadoOC,'Comentarios de Migracion/Desestimacion':r.comentarios||''}));
+  const wsD=XLSX.utils.json_to_sheet(detail); wsD['!cols']=[{wch:14},{wch:14},{wch:20},{wch:12},{wch:35},{wch:20},{wch:18},{wch:20},{wch:14},{wch:24},{wch:18},{wch:18},{wch:55}]; XLSX.utils.book_append_sheet(wb,wsD,'Detalle Mensual');
+  XLSX.writeFile(wb,`Reporte KMN - Backlevel-${sel.monthName} ${sel.year}.xlsx`);
 }
 
 /* -------------------------------------------------------------
    CONFIGURACIÓN DE EVENTOS
 ------------------------------------------------------------- */
 function initEvents() {
-  const dz = $('#dz'), fi = $('#fileInput'), lti = $('#leadTimeInput');
+  const dz = $('#dz'), fi = $('#fileInput');
   $('#pickBtn').onclick = () => fi.click();
-  $('#btnLoadLeadTime').onclick = () => lti.click();
-  lti.onchange = e => { if (e.target.files.length) processLeadTimeWorkbook(e.target.files[0]); };
   dz.onclick = e => { if (e.target === dz) fi.click(); };
   fi.onchange = e => { if (e.target.files.length) processWorkbook(e.target.files[0]); };
 
