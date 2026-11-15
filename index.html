@@ -2121,7 +2121,10 @@ function renderCumplimientoPage() {
       });
     }
     const s = semMap.get(t);
-    s.total += r.nComp;
+    // V42: Planificados representa el total operativo comprometido de la semana:
+    // Migrados + Rollback + Reprogramados (vigentes e historicos agregados mas abajo).
+    // Las barras Rollback/Reprogramados son el desglose del Planificado, no un universo adicional.
+    if (r.estatus === 'Migrado' || r.estatus === 'Rollback' || r.estatus === 'Reprogramado') s.total += r.nComp;
     if (r.estatus === 'Migrado') s.migrados += r.nComp;
     if (r.esEntregado && r.estatus === 'Migrado') s.entregados += r.nComp;
     if (r.estatus === 'Rollback') s.rollback += r.nComp;
@@ -2152,8 +2155,8 @@ function renderCumplimientoPage() {
     const s = semMap.get(t);
     if (!s.histRollbackRows) s.histRollbackRows = [];
     if (!s.histReprogramadosRows) s.histReprogramadosRows = [];
-    if (r.estatus === 'Rollback') { s.rollback += r.nComp; s.histRollbackRows.push(r); }
-    if (r.estatus === 'Reprogramado') { s.reprogramados += r.nComp; s.histReprogramadosRows.push(r); }
+    if (r.estatus === 'Rollback') { s.rollback += r.nComp; s.total += r.nComp; s.histRollbackRows.push(r); }
+    if (r.estatus === 'Reprogramado') { s.reprogramados += r.nComp; s.total += r.nComp; s.histReprogramadosRows.push(r); }
   });
 
   const semanasOrdenadas = Array.from(semMap.values()).sort((a, b) => a.time - b.time);
@@ -2255,7 +2258,7 @@ function renderCumplimientoPage() {
         <div class="th">
           <div>
             <h3>Estado de Migraciones por Semana Operativa (Planificado vs Ejecutado)</h3>
-            <div class="sb">Planificados, Migrados y Entregados usan el universo vigente. Rollback y Reprogramados incluyen también intentos históricos en la semana en que ocurrieron. Clic en la barra para auditar.</div>
+            <div class="sb">Planificados = Migrados + Rollback + Reprogramados de la semana. Rollback y Reprogramados incluyen también intentos históricos en la semana en que ocurrieron. Clic en la barra para auditar.</div>
           </div>
         </div>
         <div class="cbox" style="min-height: 280px;"><canvas id="cSemanalProgreso"></canvas></div>
@@ -2461,13 +2464,17 @@ function renderCumplimientoPage() {
         const el = activeEls[0];
         const sObj = semanasOrdenadas[el.index];
         const dsIdx = el.datasetIndex;
-        let filterRows = sObj.rows;
-        let titleExt = "Total Planificados";
+        let filterRows = [
+          ...sObj.rows.filter(r => r.estatus === 'Migrado' || r.estatus === 'Rollback' || r.estatus === 'Reprogramado'),
+          ...(sObj.histRollbackRows || []),
+          ...(sObj.histReprogramadosRows || [])
+        ];
+        let titleExt = "Total Planificados (Migrados + Rollback + Reprogramados)";
         
-        if (dsIdx === 1) { filterRows = filterRows.filter(r => r.estatus === 'Migrado'); titleExt = "Migrados"; }
-        if (dsIdx === 2) { filterRows = [...filterRows.filter(r => r.estatus === 'Rollback'), ...(sObj.histRollbackRows || [])]; titleExt = "Rollbacks (vigentes + históricos)"; }
-        if (dsIdx === 3) { filterRows = filterRows.filter(r => r.esEntregado && r.estatus === 'Migrado'); titleExt = "Entregados"; }
-        if (dsIdx === 4) { filterRows = [...filterRows.filter(r => r.estatus === 'Reprogramado'), ...(sObj.histReprogramadosRows || [])]; titleExt = "Reprogramados (vigentes + históricos)"; }
+        if (dsIdx === 1) { filterRows = sObj.rows.filter(r => r.estatus === 'Migrado'); titleExt = "Migrados"; }
+        if (dsIdx === 2) { filterRows = [...sObj.rows.filter(r => r.estatus === 'Rollback'), ...(sObj.histRollbackRows || [])]; titleExt = "Rollbacks (vigentes + históricos)"; }
+        if (dsIdx === 3) { filterRows = sObj.rows.filter(r => r.esEntregado && r.estatus === 'Migrado'); titleExt = "Entregados"; }
+        if (dsIdx === 4) { filterRows = [...sObj.rows.filter(r => r.estatus === 'Reprogramado'), ...(sObj.histReprogramadosRows || [])]; titleExt = "Reprogramados (vigentes + históricos)"; }
         
         if (filterRows.length > 0) drillGrupo(`Semana del ${sObj.label} - ${titleExt} (${filterRows.length} registros)`, filterRows);
       }
@@ -2604,16 +2611,37 @@ function renderCumplimientoArquitecturaPage() {
         entregados: 0,
         rollback: 0,
         reprogramados: 0,
-        rows: []
+        rows: [],
+        histRollbackRows: [],
+        histReprogramadosRows: []
       });
     }
     const s = semMap.get(t);
-    s.total += r.nCompArq;
-    if (r.estatus === 'Migrado') s.migrados += r.nCompArq;
+    // V43: Planificados Arquitectura representa el esfuerzo operativo de la semana:
+    // Migrados + Rollback + Reprogramados. Los historicos se agregan despues en la semana del evento.
+    if (r.estatus === 'Migrado') { s.migrados += r.nCompArq; s.total += r.nCompArq; }
     if (r.esEntregado && r.estatus === 'Migrado') s.entregados += r.nCompArq;
-    if (r.estatus === 'Rollback') s.rollback += r.nCompArq;
-    if (r.estatus === 'Reprogramado') s.reprogramados += r.nCompArq;
+    if (r.estatus === 'Rollback') { s.rollback += r.nCompArq; s.total += r.nCompArq; }
+    if (r.estatus === 'Reprogramado') { s.reprogramados += r.nCompArq; s.total += r.nCompArq; }
     s.rows.push(r);
+  });
+
+  const histSemanalArq = state.historyView.filter(r => {
+    if (!r.semanaDate || (r.estatus !== 'Rollback' && r.estatus !== 'Reprogramado')) return false;
+    const esVigente = state.raw.some(v => norm(v.servidor)===norm(r.servidor) && norm(v.siglas)===norm(r.siglas) && Number(v.intentoNum||1)===Number(r.intentoNum||1));
+    return !esVigente;
+  });
+  histSemanalArq.forEach(r => {
+    const t = r.semanaDate.getTime();
+    if (!semMap.has(t)) {
+      const diaNum=String(r.semanaDate.getDate()).padStart(2,'0');
+      const mesCorto=MESES_CORTO_LOWER[r.semanaDate.getMonth()];
+      semMap.set(t,{time:t,label:`${diaNum}-${mesCorto.charAt(0).toUpperCase()+mesCorto.slice(1)}`,total:0,migrados:0,entregados:0,rollback:0,reprogramados:0,rows:[],histRollbackRows:[],histReprogramadosRows:[]});
+    }
+    const s=semMap.get(t);
+    const n=Number(r.nCompArq)||0;
+    if(r.estatus==='Rollback'){s.rollback+=n;s.total+=n;s.histRollbackRows.push(r);}
+    if(r.estatus==='Reprogramado'){s.reprogramados+=n;s.total+=n;s.histReprogramadosRows.push(r);}
   });
   const semanasOrdenadas = Array.from(semMap.values()).sort((a, b) => a.time - b.time);
 
@@ -2714,7 +2742,7 @@ function renderCumplimientoArquitecturaPage() {
         <div class="th">
           <div>
             <h3>Estado Arquitectura por Semana Operativa (Planificado vs Ejecutado)</h3>
-            <div class="sb">Desglose de rendimiento semanal de componentes extraído de la "Semana de Planificación". Clic en la barra para auditar.</div>
+            <div class="sb">Planificados = Migrados + Rollback + Reprogramados. Rollback y Reprogramados incluyen también intentos históricos en la semana en que ocurrieron. Clic en la barra para auditar.</div>
           </div>
         </div>
         <div class="cbox" style="min-height: 280px;"><canvas id="cArqSemanalProgreso"></canvas></div>
@@ -2920,13 +2948,16 @@ function renderCumplimientoArquitecturaPage() {
         const el = activeEls[0];
         const sObj = semanasOrdenadas[el.index];
         const dsIdx = el.datasetIndex;
-        let filterRows = sObj.rows;
-        let titleExt = "Total Planificados";
+        let filterRows = [
+          ...sObj.rows.filter(r => r.estatus === 'Migrado' || r.estatus === 'Rollback' || r.estatus === 'Reprogramado'),
+          ...(sObj.histRollbackRows || []), ...(sObj.histReprogramadosRows || [])
+        ];
+        let titleExt = "Planificados (Migrados + Rollback + Reprogramados)";
         
-        if (dsIdx === 1) { filterRows = filterRows.filter(r => r.estatus === 'Migrado'); titleExt = "Migrados"; }
-        if (dsIdx === 2) { filterRows = filterRows.filter(r => r.estatus === 'Rollback'); titleExt = "Rollbacks"; }
-        if (dsIdx === 3) { filterRows = filterRows.filter(r => r.esEntregado && r.estatus === 'Migrado'); titleExt = "Entregados"; }
-        if (dsIdx === 4) { filterRows = filterRows.filter(r => r.estatus === 'Reprogramado'); titleExt = "Reprogramados"; }
+        if (dsIdx === 1) { filterRows = sObj.rows.filter(r => r.estatus === 'Migrado'); titleExt = "Migrados"; }
+        if (dsIdx === 2) { filterRows = [...sObj.rows.filter(r => r.estatus === 'Rollback'), ...(sObj.histRollbackRows || [])]; titleExt = "Rollbacks (vigentes + históricos)"; }
+        if (dsIdx === 3) { filterRows = sObj.rows.filter(r => r.esEntregado && r.estatus === 'Migrado'); titleExt = "Entregados"; }
+        if (dsIdx === 4) { filterRows = [...sObj.rows.filter(r => r.estatus === 'Reprogramado'), ...(sObj.histReprogramadosRows || [])]; titleExt = "Reprogramados (vigentes + históricos)"; }
         
         if (filterRows.length > 0) drillGrupo(`Semana del ${sObj.label} - ${titleExt} (${filterRows.length} registros)`, filterRows);
       }
