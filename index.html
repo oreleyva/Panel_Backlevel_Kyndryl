@@ -329,6 +329,10 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
         <span>Reporte KMN Mensual<small>Lead Time + Cumplimiento</small></span>
       </button>
+      <button class="navbtn" data-pg="analisis-rb-rp">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-7"/><circle cx="7" cy="15" r="1"/><circle cx="11" cy="11" r="1"/><circle cx="14" cy="14" r="1"/><circle cx="19" cy="7" r="1"/></svg>
+        <span>Rollback y Reprogramaciones<small>Indicadores · Picos · 5 Why</small></span>
+      </button>
       <button class="navbtn" data-pg="resumen-comp">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
         <span>Resumen de Componentes<small>Kyndryl vs Arquitectura</small></span>
@@ -449,7 +453,8 @@ const drawLabelsPlugin = {
       const meta = chart.getDatasetMeta(i);
       if (!meta.hidden) {
         meta.data.forEach((element, index) => {
-          const dataString = dataset.data[index].toString();
+          const rawValue = Number(dataset.data[index]);
+          const dataString = dataset.integerPercentLabels ? (Math.round(rawValue) + '%') : dataset.data[index].toString();
           if (dataString !== '0') {
             ctx.fillStyle = '#1e293b';
             ctx.font = '600 10.5px "Inter", sans-serif';
@@ -1423,6 +1428,7 @@ function renderApp() {
   else if (state.page === 'calendario') renderCalendarioPage();
   else if (state.page === 'resumen-comp') renderResumenCompPage();
   else if (state.page === 'reporte-kmn') renderReporteKMNPage();
+  else if (state.page === 'analisis-rb-rp') renderAnalisisRbRpPage();
   else renderDetallePage();
 }
 
@@ -4943,6 +4949,124 @@ function renderDetallePage() {
 
 
 /* -------------------------------------------------------------
+   V46: ANALISIS DE ROLLBACK Y REPROGRAMACIONES
+   Incluye vigentes + intentos historicos, sin alterar alcance oficial.
+------------------------------------------------------------- */
+function getEventosRbRpFiltrados(){
+  const vigentesKeys = new Set(state.view.map(r=>`${norm(r.servidor)}___${norm(r.siglas)}___${Number(r.intentoNum||1)}___${r.estatus}___${r.fechaDate?.getTime()||r.semanaDate?.getTime()||0}___${r.oc}___${Number(r.nComp)||0}`));
+  const base = [];
+  state.view.filter(r=>r.estatus==='Rollback'||r.estatus==='Reprogramado').forEach(r=>base.push({...r, origenEvento:'Vigente'}));
+  state.historyView.filter(r=>r.estatus==='Rollback'||r.estatus==='Reprogramado').forEach(r=>{
+    const k=`${norm(r.servidor)}___${norm(r.siglas)}___${Number(r.intentoNum||1)}___${r.estatus}___${r.fechaDate?.getTime()||r.semanaDate?.getTime()||0}___${r.oc}___${Number(r.nComp)||0}`;
+    if(!vigentesKeys.has(k)) base.push({...r, origenEvento:'Histórico'});
+  });
+  const m=new Map();
+  base.forEach(r=>{
+    const k=`${norm(r.servidor)}___${norm(r.siglas)}___${Number(r.intentoNum||1)}___${r.estatus}___${r.fechaDate?.getTime()||r.semanaDate?.getTime()||0}___${r.oc}___${Number(r.nComp)||0}`;
+    if(!m.has(k))m.set(k,r);
+  });
+  return Array.from(m.values());
+}
+function renderAnalisisRbRpPage(){
+  const eventos=getEventosRbRpFiltrados();
+  const rb=eventos.filter(r=>r.estatus==='Rollback');
+  const rp=eventos.filter(r=>r.estatus==='Reprogramado');
+  const sum=rs=>rs.reduce((a,r)=>a+(Number(r.nComp)||0),0);
+  const srv=rs=>new Set(rs.map(r=>norm(r.servidor)).filter(Boolean)).size;
+  const ocs=rs=>new Set(rs.map(r=>String(r.oc||'').trim()).filter(x=>x&&x!=='Sin OC')).size;
+
+  // Base oficial vigente para denominadores. Los eventos historicos solo alimentan RB/RP.
+  const vig=state.view.slice();
+  const migComp=sum(vig.filter(r=>r.estatus==='Migrado'));
+  const rbComp=sum(rb), rpComp=sum(rp);
+  const ejecutadosComp=migComp+rbComp;
+  const planificadosComp=migComp+rbComp+rpComp;
+  const tasaRbGlobal=ejecutadosComp?rbComp/ejecutadosComp*100:0;
+  const tasaRpGlobal=planificadosComp?rpComp/planificadosComp*100:0;
+
+  const semMap=new Map();
+  const ensureSem=(r)=>{if(!r.semanaDate)return null;const t=r.semanaDate.getTime();if(!semMap.has(t))semMap.set(t,{time:t,label:`${String(r.semanaDate.getDate()).padStart(2,'0')}-${MESES_CORTO[r.semanaDate.getMonth()]}`,vig:[],rb:[],rp:[]});return semMap.get(t);};
+  vig.forEach(r=>{const s=ensureSem(r);if(s)s.vig.push(r);});
+  eventos.forEach(r=>{const s=ensureSem(r);if(s)s[r.estatus==='Rollback'?'rb':'rp'].push(r);});
+  const sems=Array.from(semMap.values()).sort((a,b)=>a.time-b.time).map(s=>{
+    const mig=sum(s.vig.filter(r=>r.estatus==='Migrado'));
+    const rbN=sum(s.rb), rpN=sum(s.rp);
+    const ejecutados=mig+rbN;
+    const planificados=mig+rbN+rpN;
+    return {...s,mig,rbN,rpN,ejecutados,planificados,tasaRb:ejecutados?rbN/ejecutados*100:0,tasaRp:planificados?rpN/planificados*100:0};
+  });
+  const picoRb=sems.reduce((best,x)=>x.tasaRb>(best?.tasaRb??-1)?x:best,null);
+  const picoRp=sems.reduce((best,x)=>x.tasaRp>(best?.tasaRp??-1)?x:best,null);
+
+  const monthMap=new Map();
+  const ensureMonth=(r)=>{if(!r.mes||r.mes==='Sin Mes')return null;const idx=MESES_ES.indexOf(r.mes);const key=`${r.anio}-${String(idx).padStart(2,'0')}`;if(!monthMap.has(key))monthMap.set(key,{key,label:r.mes,vig:[],rb:[],rp:[]});return monthMap.get(key);};
+  vig.forEach(r=>{const m=ensureMonth(r);if(m)m.vig.push(r);});
+  eventos.forEach(r=>{const m=ensureMonth(r);if(m)m[r.estatus==='Rollback'?'rb':'rp'].push(r);});
+  const months=Array.from(monthMap.values()).sort((a,b)=>a.key.localeCompare(b.key)).map(m=>{
+    const mig=sum(m.vig.filter(r=>r.estatus==='Migrado'));
+    const rbN=sum(m.rb), rpN=sum(m.rp);
+    const ejecutados=mig+rbN;
+    const planificados=mig+rbN+rpN;
+    return {...m,mig,rbN,rpN,ejecutados,planificados,satRb:Math.max(0,ejecutados-rbN),baseRp:Math.max(0,planificados-rpN),tasaRb:ejecutados?rbN/ejecutados*100:0,tasaRp:planificados?rpN/planificados*100:0};
+  });
+
+  window.rbRpEventos=eventos; window.rbRpDetalle=eventos;
+  $('#page').innerHTML=`
+    <div class="section-label-bar">📈 Indicadores de Rollback y Reprogramaciones</div>
+    <div class="row r-4">
+      <div class="tile kpi alert kpi-clickable" onclick="mostrarDetalleRbRp('Rollback')"><div class="lbl">Rollback</div><div class="val">${fmt(rbComp)} <span style="font-size:15px;color:var(--k-text-muted)">componentes</span></div><div class="sub">${fmt(srv(rb))} servidores · ${fmt(ocs(rb))} OC únicas · Tasa: <b>${pct1(tasaRbGlobal)}</b></div></div>
+      <div class="tile kpi amber kpi-clickable" onclick="mostrarDetalleRbRp('Reprogramado')"><div class="lbl">Reprogramados</div><div class="val">${fmt(rpComp)} <span style="font-size:15px;color:var(--k-text-muted)">componentes</span></div><div class="sub">${fmt(srv(rp))} servidores · ${fmt(ocs(rp))} OC únicas · Tasa: <b>${pct1(tasaRpGlobal)}</b></div></div>
+      <div class="tile kpi alert"><div class="lbl">Pico Tasa Rollback</div><div class="val" style="font-size:22px">${picoRb?pct1(picoRb.tasaRb):'0,0%'}</div><div class="sub">${picoRb?`Semana ${esc(picoRb.label)} · ${fmt(picoRb.rbN)} comp. · ${fmt(ocs(picoRb.rb))} OC`:'Sin eventos'}</div></div>
+      <div class="tile kpi amber"><div class="lbl">Pico Tasa Reprogramación</div><div class="val" style="font-size:22px">${picoRp?pct1(picoRp.tasaRp):'0,0%'}</div><div class="sub">${picoRp?`Semana ${esc(picoRp.label)} · ${fmt(picoRp.rpN)} comp. · ${fmt(ocs(picoRp.rp))} OC`:'Sin eventos'}</div></div>
+    </div>
+
+    <div class="row r-2">
+      <div class="tile kpi alert"><div class="lbl">Tasa de Rollback del período</div><div class="val" style="font-size:28px">${pct1(tasaRbGlobal)}</div><div class="sub"><b>${fmt(rbComp)} Rollback / ${fmt(ejecutadosComp)} Ejecutados</b> · ${fmt(Math.max(0,ejecutadosComp-rbComp))} satisfactorios (${pct1(ejecutadosComp?Math.max(0,ejecutadosComp-rbComp)/ejecutadosComp*100:0)})</div></div>
+      <div class="tile kpi amber"><div class="lbl">Tasa de Reprogramación del período</div><div class="val" style="font-size:28px">${pct1(tasaRpGlobal)}</div><div class="sub"><b>${fmt(rpComp)} Reprogramados / ${fmt(planificadosComp)} Planificados</b> · Planificados = Migrados + Rollback + Reprogramados</div></div>
+    </div>
+
+    <div class="row r-2">
+      <div class="tile"><div class="th"><div><h3>Rollback Mensual — Satisfactorios vs Rollback</h3><div class="sb">Vista ejecutiva tipo “pases”: Ejecutados = Migrados + Rollback. El porcentaje naranja es la tasa mensual de Rollback.</div></div></div><div class="cbox" style="min-height:300px"><canvas id="cRbMensualStack"></canvas></div></div>
+      <div class="tile"><div class="th"><div><h3>Reprogramación Mensual — Cumplidos vs Reprogramados</h3><div class="sb">Planificados oficiales vs eventos Reprogramados. El porcentaje naranja es Reprogramados / Planificados.</div></div></div><div class="cbox" style="min-height:300px"><canvas id="cRpMensualStack"></canvas></div></div>
+    </div>
+    <div class="row r-2">
+      <div class="tile"><div class="th"><div><h3>Tasa de Rollback — Tendencia Semanal</h3><div class="sb">Rollback / Ejecutados por semana. Tooltip incluye numerador, denominador, servidores y OC.</div></div></div><div class="cbox" style="min-height:310px"><canvas id="cRbTasaSemanal"></canvas></div></div>
+      <div class="tile"><div class="th"><div><h3>Tasa de Reprogramación — Tendencia Semanal</h3><div class="sb">Reprogramados / Planificados por semana. Permite identificar picos y semanas de riesgo.</div></div></div><div class="cbox" style="min-height:310px"><canvas id="cRpTasaSemanal"></canvas></div></div>
+    </div>
+
+    <div class="row r-2">
+      <div class="tile"><div class="th"><div><h3>Rollback por Semana Operativa — Componentes</h3><div class="sb">Gráfico auditable original. Tooltip = componentes, servidores y OC. Clic para detalle.</div></div></div><div class="cbox" style="min-height:260px"><canvas id="cAnalisisRb"></canvas></div></div>
+      <div class="tile"><div class="th"><div><h3>Reprogramaciones por Semana Operativa — Componentes</h3><div class="sb">Incluye vigentes + históricos del evento, sin incrementar el alcance oficial.</div></div></div><div class="cbox" style="min-height:260px"><canvas id="cAnalisisRp"></canvas></div></div>
+    </div>
+    <div class="row r-1" id="rbRpDetalleSec"><div class="tile"><div class="th"><div><h3 id="rbRpDetalleTitle">Detalle auditable</h3><div class="sb" id="rbRpDetalleSub">Selecciona una tarjeta o una barra.</div></div><button class="btn green sm" onclick="exportRbRp()">Exportar Excel</button></div><div id="rbRpDetalleBody"></div></div></div>
+    <div class="row r-1"><div class="tile" style="border:1.5px solid #8B5CF6"><div class="th"><div><h3>🧩 Análisis 5 Why por OC / Evento</h3><div class="sb">Selecciona “5 Why” en el detalle. El motivo del Excel se conserva como evidencia; los Why son campos de análisis editables y se guardan localmente en este navegador.</div></div></div><div id="fiveWhyPanel" style="color:var(--k-text-muted)">Selecciona un evento para iniciar el análisis.</div></div></div>`;
+
+  const stackChart=(id,baseKey,eventKey,eventLabel,eventColor,rateKey)=>{const ctx=$('#'+id).getContext('2d');state.charts[id]=new Chart(ctx,{type:'bar',data:{labels:months.map(m=>m.label),datasets:[{label:eventLabel==='Rollback'?'Satisfactorios':'Sin reprogramación',data:months.map(m=>m[baseKey]),backgroundColor:'#059669',borderRadius:3},{label:eventLabel,data:months.map(m=>m[eventKey]),backgroundColor:eventColor,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{afterBody:(items)=>{const m=months[items[0].dataIndex];return [`Tasa ${eventLabel}: ${pct1(m[rateKey])}`,eventLabel==='Rollback'?`Ejecutados: ${fmt(m.ejecutados)}`:`Planificados: ${fmt(m.planificados)}`,`OC ${eventLabel}: ${fmt(ocs(m[eventLabel==='Rollback'?'rb':'rp']))}`];}}}},scales:{x:{stacked:true,beginAtZero:true,grid:{color:'#EDF2F9'}},y:{stacked:true,grid:{display:false}}},onClick:(e,a)=>{if(!a.length)return;const m=months[a[0].index];mostrarDetalleRbRp(eventLabel==='Rollback'?'Rollback':'Reprogramado',m[eventLabel==='Rollback'?'rb':'rp']);}}});};
+  stackChart('cRbMensualStack','satRb','rbN','Rollback','#E05A2A','tasaRb');
+  stackChart('cRpMensualStack','baseRp','rpN','Reprogramado','#D97706','tasaRp');
+
+  const lineChart=(id,rateKey,eventKey,eventLabel,color,denKey)=>{const ctx=$('#'+id).getContext('2d');state.charts[id]=new Chart(ctx,{type:'line',data:{labels:sems.map(s=>s.label),datasets:[{label:`Tasa ${eventLabel}`,data:sems.map(s=>s[rateKey]),integerPercentLabels:true,borderColor:color,backgroundColor:color,borderWidth:2.5,pointRadius:sems.map(s=>s[eventKey]>0?5:3),pointBackgroundColor:sems.map(s=>s[eventKey]>0?'#E11D48':color),tension:0.15}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:18}},plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>{const x=sems[c.dataIndex],rs=x[eventLabel==='Rollback'?'rb':'rp'];return [`Tasa: ${pct1(c.raw)}`,`${eventLabel}: ${fmt(x[eventKey])} componentes`,`${denKey==='ejecutados'?'Ejecutados':'Planificados'}: ${fmt(x[denKey])}`,`${srv(rs)} servidores · ${ocs(rs)} OC`];}}}},scales:{y:{beginAtZero:true,ticks:{callback:v=>v+'%'},grid:{color:'#EDF2F9'}},x:{grid:{display:false}}},onClick:(e,a)=>{if(!a.length)return;const x=sems[a[0].index];mostrarDetalleRbRp(eventLabel==='Rollback'?'Rollback':'Reprogramado',x[eventLabel==='Rollback'?'rb':'rp']);}}});};
+  lineChart('cRbTasaSemanal','tasaRb','rbN','Rollback','#0E5A84','ejecutados');
+  lineChart('cRpTasaSemanal','tasaRp','rpN','Reprogramación','#D97706','planificados');
+
+  const makeChart=(id,key,label,color)=>{const ctx=$('#'+id).getContext('2d'); state.charts[id]=new Chart(ctx,{type:'bar',data:{labels:sems.map(s=>s.label),datasets:[{label,data:sems.map(s=>s[key==='rb'?'rbN':'rpN']),backgroundColor:color,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const rs=sems[c.dataIndex][key];return [`${c.raw} componentes`,`${srv(rs)} servidores`,`${ocs(rs)} OC únicas`];}}}},scales:{y:{beginAtZero:true,grid:{color:'#EDF2F9'}},x:{grid:{display:false}}},onClick:(e,a)=>{if(!a.length)return; mostrarDetalleRbRp(label,sems[a[0].index][key]);}}});};
+  makeChart('cAnalisisRb','rb','Rollback','#E11D48'); makeChart('cAnalisisRp','rp','Reprogramado','#D97706');
+  mostrarDetalleRbRp('__ALL__',eventos,false);
+}
+function mostrarDetalleRbRp(tipo,rows=null,scroll=true){
+  let data=rows||window.rbRpEventos||[]; if(!rows&&tipo!=='__ALL__')data=data.filter(r=>r.estatus===tipo); window.rbRpDetalle=data.slice();
+  const sum=data.reduce((a,r)=>a+(Number(r.nComp)||0),0), sr=new Set(data.map(r=>r.servidor)).size, oc=new Set(data.map(r=>r.oc).filter(x=>x&&x!=='Sin OC')).size;
+  const title=tipo==='__ALL__'?'Todos los eventos Rollback / Reprogramado':tipo;
+  $('#rbRpDetalleTitle').textContent=`Detalle — ${title}`; $('#rbRpDetalleSub').innerHTML=`<b>${fmt(sum)}</b> componentes · <b>${fmt(sr)}</b> servidores · <b>${fmt(oc)}</b> OC únicas · ${fmt(data.length)} relaciones-evento`;
+  $('#rbRpDetalleBody').innerHTML=`<div class="tw" style="max-height:500px"><table class="dt"><thead><tr><th class="l">Evento</th><th class="l">Fecha</th><th class="l">Servidor</th><th class="l">SIGLA</th><th>Componentes</th><th class="l">OC</th><th class="l">Intento</th><th class="l">Owner</th><th class="l">Origen</th><th class="l">Motivo / Comentario</th><th class="l">Acción</th></tr></thead><tbody>${data.map((r,i)=>`<tr><td class="l"><span class="tag ${r.estatus==='Rollback'?'rb':'pend'}">${esc(r.estatus)}</span></td><td class="l mono">${esc(r.fechaLbl||'Sin fecha')}</td><td class="l mono"><b>${esc(r.servidor)}</b></td><td class="l mono">${esc(r.siglas)}</td><td class="num"><b>${fmt(r.nComp)}</b></td><td class="l mono"><b>${esc(r.oc)}</b></td><td class="l">${esc(r.intento)}</td><td class="l">${esc(r.ownerKyndryl)}</td><td class="l">${esc(r.origenEvento||'—')}</td><td class="l" style="min-width:340px;white-space:normal">${esc(r.comentarios||'—')}</td><td class="l"><button class="btn sm ghost" onclick="abrirFiveWhy(${i})">5 Why</button></td></tr>`).join('')||'<tr><td colspan="11" class="l" style="text-align:center;padding:20px">Sin eventos.</td></tr>'}</tbody></table></div>`;
+  if(scroll){const e=$('#rbRpDetalleSec');if(e)e.scrollIntoView({behavior:'smooth',block:'start'});}
+}
+function fiveWhyKey(r){return `fivewhy___${norm(r.servidor)}___${norm(r.siglas)}___${r.oc}___${r.estatus}___${Number(r.intentoNum||1)}___${r.fechaDate?.getTime()||r.semanaDate?.getTime()||0}`;}
+function abrirFiveWhy(idx){const r=(window.rbRpDetalle||[])[idx];if(!r)return;const key=fiveWhyKey(r);let d={};try{d=JSON.parse(localStorage.getItem(key)||'{}')}catch(e){};const field=(n,label)=>`<div class="sl" style="flex:1 1 45%;min-width:300px"><label>${label}</label><textarea id="fw_${n}" style="width:100%;min-height:64px;border:1px solid var(--k-border);border-radius:6px;padding:8px;font-family:inherit">${esc(d[n]||'')}</textarea></div>`;$('#fiveWhyPanel').innerHTML=`<div style="background:#F8FAFC;border:1px solid var(--k-border);border-radius:8px;padding:12px;margin-bottom:12px"><b>${esc(r.estatus)} · OC ${esc(r.oc)} · ${esc(r.servidor)} / ${esc(r.siglas)}</b><div style="margin-top:5px"><b>Motivo registrado:</b> ${esc(r.comentarios||'—')}</div></div><div style="display:flex;gap:12px;flex-wrap:wrap">${field('why1','Why 1')}${field('why2','Why 2')}${field('why3','Why 3')}${field('why4','Why 4')}${field('why5','Why 5')}${field('causa','Causa raíz')}${field('accion','Acción correctiva')}${field('responsable','Responsable / Owner')}${field('estado','Estado de la acción')}</div><div style="margin-top:12px"><button class="btn" onclick="guardarFiveWhy('${esc(key)}')">Guardar análisis</button></div>`;window.fiveWhyCurrentKey=key;}
+function guardarFiveWhy(key){const d={};['why1','why2','why3','why4','why5','causa','accion','responsable','estado'].forEach(n=>d[n]=$('#fw_'+n)?.value||'');localStorage.setItem(key,JSON.stringify(d));alert('Análisis 5 Why guardado localmente.');}
+function exportRbRp(){const rows=window.rbRpDetalle||[];const wb=XLSX.utils.book_new();const out=rows.map(r=>{let d={};try{d=JSON.parse(localStorage.getItem(fiveWhyKey(r))||'{}')}catch(e){};return {'Evento':r.estatus,'Fecha':r.fechaLbl,'Semana':r.semanaRangoLbl,'Servidor':r.servidor,'SIGLA':r.siglas,'Aplicación':r.app,'Componentes':Number(r.nComp)||0,'OC(3) Migracion':r.oc,'Estado OC':r.estadoOC,'Intento':r.intento,'Owner Kyndryl':r.ownerKyndryl,'Origen Evento':r.origenEvento,'Comentarios de Migracion/Desestimacion':r.comentarios||'','Why 1':d.why1||'','Why 2':d.why2||'','Why 3':d.why3||'','Why 4':d.why4||'','Why 5':d.why5||'','Causa Raíz':d.causa||'','Acción Correctiva':d.accion||'','Responsable':d.responsable||'','Estado Acción':d.estado||''};});const ws=XLSX.utils.json_to_sheet(out);ws['!cols']=[{wch:18},{wch:16},{wch:30},{wch:20},{wch:12},{wch:35},{wch:14},{wch:18},{wch:18},{wch:16},{wch:24},{wch:14},{wch:60},{wch:40},{wch:40},{wch:40},{wch:40},{wch:40},{wch:40},{wch:40},{wch:28},{wch:22}];XLSX.utils.book_append_sheet(wb,ws,'Rollback_Reprogramados');XLSX.writeFile(wb,'Kyndryl_Analisis_Rollback_Reprogramaciones.xlsx');}
+
+/* -------------------------------------------------------------
    V31: REPORTE KMN MENSUAL — LEAD TIME + CUMPLIMIENTO
 ------------------------------------------------------------- */
 function excelSerialToDate(v){
@@ -5103,7 +5227,8 @@ function initEvents() {
       calendario: '📅 Plan de Ejecución de Migraciones y Control de OC',
       detalle: '🖥️ Inventario Completo de Componentes y Servidores',
       'resumen-comp': '📦 Resumen Global de Componentes (Kyndryl vs Arquitectura)',
-      'reporte-kmn': '📑 Reporte KMN Mensual'
+      'reporte-kmn': '📑 Reporte KMN Mensual',
+      'analisis-rb-rp': '📈 Análisis de Rollback y Reprogramaciones'
     };
     $('#pgTitle').textContent = titles[state.page];
     renderApp();
