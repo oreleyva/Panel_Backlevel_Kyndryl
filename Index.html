@@ -192,6 +192,9 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
 .tag.listo-cierre { border-color: var(--k-green); background: #DCFCE7; color: #15803D; font-weight: 800; }
 .tag.incompleto { border-color: var(--k-amber); background: #FEF3C7; color: #B45309; }
 .tag.purple { border-color: var(--k-purple); background: rgba(139, 92, 246, 0.1); color: var(--k-purple); }
+.priority-badge { display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;font-size:10.5px;font-weight:800;border:1px solid;white-space:nowrap; }
+.priority-badge.yes { background:#FFE4E6;color:#BE123C;border-color:#FB7185;box-shadow:0 0 0 2px rgba(225,29,72,.05); }
+.priority-badge.no { background:#F1F5F9;color:#64748B;border-color:#CBD5E1; }
 
 .modal-chip { cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); user-select: none; border-width: 1.5px !important; padding: 4px 10px; font-size: 11.5px; opacity: 0.8; }
 .modal-chip:hover { filter: brightness(0.9); opacity: 1; transform: translateY(-1px); }
@@ -322,6 +325,18 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
         <span>Inventario de Servidores<small>Detalle de componentes</small></span>
       </button>
+      <button class="navbtn" data-pg="reporte-kmn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+        <span>Reporte KMN Mensual<small>Lead Time + Cumplimiento</small></span>
+      </button>
+      <button class="navbtn" data-pg="analisis-rb-rp">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-7"/><circle cx="7" cy="15" r="1"/><circle cx="11" cy="11" r="1"/><circle cx="14" cy="14" r="1"/><circle cx="19" cy="7" r="1"/></svg>
+        <span>Rollback y Reprogramaciones<small>Indicadores · Picos · 5 Why</small></span>
+      </button>
+      <button class="navbtn" data-pg="tres-frentes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.14.37.36.7.66.96.3.26.68.4 1.08.4H21v4h-.1a1.7 1.7 0 0 0-1.5.64z"/></svg>
+        <span>Impacto Backlevel · 3 Frentes<small>Backlevel · Parchados · Vulnerabilidad</small></span>
+      </button>
       <button class="navbtn" data-pg="resumen-comp">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
         <span>Resumen de Componentes<small>Kyndryl vs Arquitectura</small></span>
@@ -338,7 +353,7 @@ table.dt th.sortable:hover { background: #2a2a2a; color: var(--k-red); }
           <div class="sub" id="pgSub">Gestión y control de metas mensuales y KPIs de salud del servicio</div>
         </div>
         <div class="grow"></div>
-        <button class="btn ghost sm" id="btnChangeFile">Cambiar Archivo</button>
+        <button class="btn ghost sm" id="btnChangeFile">Cambiar Consolidado</button>
         <button class="btn ghost sm" id="btnExportXls">Exportar Excel</button>
       </div>
       <div class="slicers">
@@ -429,7 +444,7 @@ const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', '
 const MESES_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
 const MESES_CORTO_LOWER = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
-const ESTATUS_MIGRACION_LIST = ['Migrado', 'Planificado', 'Por Definir', 'Reprogramado', 'Rollback', 'Desestimado'];
+const ESTATUS_MIGRACION_LIST = ['Migrado', 'Planificado', 'Propuesto', 'Por Definir', 'Reprogramado', 'Rollback', 'Desestimado'];
 
 // Dibuja los números sobre las barras, saltando gráficas de tipo dona
 const drawLabelsPlugin = {
@@ -442,7 +457,8 @@ const drawLabelsPlugin = {
       const meta = chart.getDatasetMeta(i);
       if (!meta.hidden) {
         meta.data.forEach((element, index) => {
-          const dataString = dataset.data[index].toString();
+          const rawValue = Number(dataset.data[index]);
+          const dataString = dataset.integerPercentLabels ? (Math.round(rawValue) + '%') : dataset.data[index].toString();
           if (dataString !== '0') {
             ctx.fillStyle = '#1e293b';
             ctx.font = '600 10.5px "Inter", sans-serif';
@@ -459,8 +475,11 @@ const drawLabelsPlugin = {
 Chart.register(drawLabelsPlugin);
 
 function getMetaMensual(anio, mesIdx0) {
+  // Regla oficial KMN: 120 componentes/mes hasta dic-2026; 50 componentes/mes desde ene-2027.
+  // Se conserva la meta historica de 50 para meses hasta jul-2026 ya existente en el dashboard.
   if (anio < 2026 || (anio === 2026 && mesIdx0 <= 6)) return 50;
-  return 120;
+  if (anio === 2026) return 120;
+  return 50;
 }
 
 function normalizarEstadoOC(raw) {
@@ -530,7 +549,7 @@ function clasificarFDS(str) {
 }
 
 const state = {
-  raw: [], view: [], page: 'cumplimiento', charts: {},
+  raw: [], view: [], historyRaw: [], historyView: [], leadTimeRaw: [], leadTimeHeaders: [], leadTimeFileName: '', page: 'cumplimiento', charts: {},
   selectedAnio: '2026',
   selectedQs: new Set(),
   selectedMeses: new Set(),
@@ -543,6 +562,7 @@ const state = {
   filtroEstadoCierreAprov: '__ALL__',
   searchAprovQuery: '',
   searchInvQuery: '',
+  invFiltroPrioridad: '__ALL__',
   calFiltroAnio: '__ALL__',
   calFiltroMes: '__ALL__',
   calFiltroSemana: '__ALL__',
@@ -670,10 +690,89 @@ function normalizeNombreMes(raw) {
   return String(raw).trim();
 }
 
+// Catálogo maestro SIGLA -> Aplicación. Una SIGLA debe conservar un único nombre de aplicación.
+// Se descartan valores que parecen horarios/turnos (ej. 24*7, 24x7) y placeholders.
+function esNombreAplicacionValido(app) {
+  const t = String(app || '').replace(/\s+/g, ' ').trim();
+  if (!t) return false;
+  const n = norm(t);
+  if (['sin aplicacion','sin aplicación','n/a','na','no aplica','-','—','s/s'].includes(n)) return false;
+  if (/^24\s*[x*]\s*7$/i.test(t) || /^24\s*\/\s*7$/i.test(t)) return false;
+  return true;
+}
+
+function aplicarCatalogoAplicaciones(rows) {
+  const porSigla = new Map();
+  rows.forEach(r => {
+    const sigla = String(r.siglas || '').trim();
+    const app = String(r.app || '').replace(/\s+/g, ' ').trim();
+    if (!sigla || sigla === 'S/S' || !esNombreAplicacionValido(app)) return;
+    if (!porSigla.has(sigla)) porSigla.set(sigla, new Map());
+    const m = porSigla.get(sigla);
+    const key = norm(app);
+    if (!m.has(key)) m.set(key, { nombre: app, count: 0 });
+    m.get(key).count++;
+  });
+  const catalogo = new Map();
+  porSigla.forEach((apps, sigla) => {
+    const elegido = Array.from(apps.values()).sort((a,b) => b.count - a.count || b.nombre.length - a.nombre.length || a.nombre.localeCompare(b.nombre))[0];
+    if (elegido) catalogo.set(sigla, elegido.nombre);
+  });
+  rows.forEach(r => {
+    const canon = catalogo.get(String(r.siglas || '').trim());
+    if (canon) r.app = canon;
+    r.esPrioritario = /prioritario/i.test(String(r.priorizadoQ || ''));
+    r.prioridad = r.esPrioritario ? 'PRIORITARIO' : 'NO PRIORITARIO';
+  });
+  return catalogo;
+}
+
+// Normaliza la columna Intento. Vacio se interpreta como 1ER INTENTO.
+function normalizarIntento(raw) {
+  const txt = String(raw == null ? '' : raw).trim();
+  if (!txt || txt === '-' || txt === '—') return { numero: 1, etiqueta: '1ER INTENTO', original: '' };
+  const n = norm(txt);
+  const m = n.match(/(\d+)/);
+  let numero = m ? parseInt(m[1], 10) : 1;
+  if (!Number.isFinite(numero) || numero < 1) numero = 1;
+  let suf = 'TO';
+  if (numero === 1) suf = 'ER';
+  else if (numero === 2) suf = 'DO';
+  else if (numero === 3) suf = 'ER';
+  return { numero, etiqueta: `${numero}${suf} INTENTO`, original: txt };
+}
+
+// V35 - Regla transversal definitiva de universo oficial:
+// 1) Agrupar por Servidor + SIGLA.
+// 2) Identificar el NUMERO MAXIMO de Intento de cada unidad (vacio = 1ER INTENTO).
+// 3) Conservar TODAS las filas/relaciones/subsistemas pertenecientes a ese ultimo intento.
+//    Ej.: mismo servidor/intento con componentes 0 + 2 => suma 2; con 1 + 3 => suma 4.
+// 4) Los intentos anteriores permanecen exclusivamente en historyRaw/historyView y no suman KPIs.
+// No se desempata por fecha/OC dentro del ultimo intento, porque esas filas pueden representar
+// subsistemas/componentes validos y distintos del mismo servidor.
+function obtenerUltimosIntentos(rows) {
+  const maxIntentoPorUnidad = new Map();
+
+  rows.forEach(r => {
+    const key = `${norm(r.servidor)}___${norm(r.siglas)}`;
+    const intento = Number(r.intentoNum) || 1;
+    const actual = maxIntentoPorUnidad.get(key);
+    if (actual == null || intento > actual) maxIntentoPorUnidad.set(key, intento);
+  });
+
+  return rows.filter(r => {
+    const key = `${norm(r.servidor)}___${norm(r.siglas)}`;
+    const intento = Number(r.intentoNum) || 1;
+    return intento === maxIntentoPorUnidad.get(key);
+  });
+}
+
+
 /* -------------------------------------------------------------
-   LECTURA Y NORMALIZACIÓN DE LA PESTAÑA 'CONSOLIDADO'
+   LECTURA Y NORMALIZACIÓN DE LA PESTAÑA 'CONSOLIDADO' 
 ------------------------------------------------------------- */
 async function processWorkbook(file) {
+  state.sourceConsolidadoFile = file;
   const buffer = await file.arrayBuffer();
   const wb = XLSX.read(new Uint8Array(buffer), { type: 'array', cellDates: true });
   
@@ -801,14 +900,27 @@ async function processWorkbook(file) {
     }
 
     const priorizadoQVal = normalizarPriorizadoQ(getVal('priorizadoq', 'priorizado q'));
-    const ownerKyndryl = String(getVal('ownerkyndryl', 'crewleader', 'responsableadministracion', 'owner') || 'Sin Asignar').trim();
-    const ocNum = getVal('oc3migracion', 'oc3migracion', 'ocmigracion', 'oc3', 'oc(3)migracion', 'oc');
+    const getValExact = (...headers) => {
+      const wanted = headers.map(cleanKey);
+      for (const col of Object.keys(o)) {
+        if (wanted.includes(cleanKey(col)) && o[col] != null) return o[col];
+      }
+      return null;
+    };
+    const ownerKyndrylExact = getValExact('Owner Kyndryl');
+    const ownerKyndryl = String(ownerKyndrylExact != null && String(ownerKyndrylExact).trim() !== '' ? ownerKyndrylExact : 'Sin Asignar').trim();
+    const ocNumExact = getValExact('OC(3) Migracion');
+    const ocNum = ocNumExact != null ? ocNumExact : getVal('oc3migracion', 'ocmigracion', 'oc3', 'oc');
     const ocEstado = normalizarEstadoOC(getVal('estadooc3', 'estadooc', 'estadodelaoc'));
 
     const ticketUpg = getVal('ticketupgradecapacidades', 'ticketupgrade', 'upgradecapacidades');
     const estadoUpg = getVal('estadoticketupgradecapacidades', 'estadoticketupgrade', 'estadoupgrade');
-    const ticketAprov = getVal('ticketaprovisionamiento', 'ticketaprov', 'aprovisionamiento');
-    const estadoAprov = getVal('estadoticketaprovisionamiento', 'estadoaprovisionamiento', 'estadoaprov');
+    // Fuente oficial de Aprovisionamiento: priorizar encabezados exactos del Excel.
+    // Evita que getVal() tome por coincidencia parcial columnas vecinas (SET, homologacion, capacidad, etc.).
+    const ticketAprovExact = getValExact('Ticket de Aprovisionamiento');
+    const estadoAprovExact = getValExact('Estado del ticket de Aprovisionamiento');
+    const ticketAprov = ticketAprovExact != null ? ticketAprovExact : getVal('ticketaprovisionamiento', 'ticketaprov', 'aprovisionamiento');
+    const estadoAprov = estadoAprovExact != null ? estadoAprovExact : getVal('estadoticketaprovisionamiento', 'estadoaprovisionamiento', 'estadoaprov');
     const queFalta = getVal('quefalta', 'que falta');
 
     const soOrigen = String(getVal('sistemaoperativoorigen', 'sistemaoperativo', 'so') || 'Sin SO').trim();
@@ -817,7 +929,7 @@ async function processWorkbook(file) {
     const subOrigenCompleto = (subOrigen !== '—' && subOrigen !== '') ? (subOrigen + (verOrigen ? ` ${verOrigen}` : '')) : '—';
     const soDestinoRaw = getVal('sistemaoperativodestino', 'sodestino');
     const soDestino = soDestinoRaw ? String(soDestinoRaw).trim() : '—';
-    const servidorDestino = String(getVal('servidordestino', 'hostdestino', 'targetserver', 'servidor destino', 'host destino', 'servidor dest') || '—').trim();
+    const servidorDestino = String(getVal('hostname_destino', 'hostnamedestino', 'servidordestino', 'hostdestino', 'targetserver', 'servidor destino', 'host destino', 'servidor dest') || '—').trim();
     
     // LECTURA DE COLUMNA TPO (Tipo de Plataforma)
     const tpo = String(getVal('tpo', 'tipo') || '—').trim();
@@ -849,6 +961,7 @@ async function processWorkbook(file) {
     let estatusFinal = 'Por Definir';
     if (valForecastEC.includes('migrad')) estatusFinal = 'Migrado';
     else if (valForecastEC.includes('planific') || valForecastEC.includes('aprobado')) estatusFinal = 'Planificado';
+    else if (valForecastEC.includes('propuest')) estatusFinal = 'Propuesto';
     else if (valForecastEC.includes('desestimad')) estatusFinal = 'Desestimado';
     else if (valForecastEC.includes('rollback')) estatusFinal = 'Rollback';
     else if (valForecastEC.includes('reprogram')) estatusFinal = 'Reprogramado';
@@ -868,13 +981,35 @@ async function processWorkbook(file) {
       }
     }
     
+    const intentoInfo = normalizarIntento(getVal('intento', 'nrointento', 'numerointento', 'númerointento'));
+
+    const relevante = String(getValExact('Relevante') ?? getVal('relevante') ?? '').trim();
+    const rol = String(getValExact('Rol') ?? getVal('rol') ?? '').trim();
+    const database = getValExact('Database') ?? getVal('database');
+    const bdReporte = getValExact('BD') ?? getVal('bd');
+    const wmeIis = getValExact('WME - IIS') ?? getVal('wmeiis','wme');
+    const setAprov = getValExact('SET aprovisionamiento - Homologac') ?? getVal('setaprovisionamientohomologac','setaprovisionamiento');
+    const fechaFinMigracion = parseFecha(getValExact('Fecha Fin Migracion') ?? getVal('fechafinmigracion'));
+    const horaInicioMigracion = getValExact('Hora de Inicio Migracion') ?? getVal('horainiciomigracion','horainicio');
+    const horaFinMigracion = getValExact('Hora Fin Migracion') ?? getVal('horafinmigracion','horafin');
+
     const componentesExtraidos = getNumStrict('componenteskyndryl', 'componenteskydryl', 'sumadecomponenteskyndryl', 'sumadecomponenteskydryl') || 0;
     const componentesExtArq = getNumStrict('componentesarquitectura', 'componentearquitectura', 'sumadecomponentesarquitectura') || 0;
     
     const curFechaNum = fechaExacta ? fechaExacta.getTime() : (semanaDate ? semanaDate.getTime() : Infinity);
 
     rows.push({
+      _sourceRow: o,
       qIbk: qVal,
+      relevante: relevante,
+      rol: rol,
+      database: database,
+      bdReporte: bdReporte,
+      wmeIis: wmeIis,
+      setAprov: setAprov,
+      fechaFinMigracion: fechaFinMigracion,
+      horaInicioMigracion: horaInicioMigracion,
+      horaFinMigracion: horaFinMigracion,
       priorizadoQ: priorizadoQVal,
       anio: anioVal,
       mesIdx: mesIdx,
@@ -897,6 +1032,9 @@ async function processWorkbook(file) {
       nCompArq: componentesExtArq,
       estatus: estatusFinal,
       ejecFDS: ejecFDS,
+      intento: intentoInfo.etiqueta,
+      intentoNum: intentoInfo.numero,
+      intentoOriginal: intentoInfo.original,
       oc: ocNum ? String(ocNum).trim() : 'Sin OC',
       estadoOC: ocEstado,
       ticketUpg: ticketUpg != null && String(ticketUpg).trim() !== '' ? String(ticketUpg).trim() : 'No Aplica',
@@ -917,13 +1055,41 @@ async function processWorkbook(file) {
       semanaRangoLbl: semanaDate ? formatSemanaRango(semanaDate) : (fechaExacta ? formatSemanaRango(fechaExacta) : 'Semana por Definir'),
       fechaLbl: fechaExacta ? formatFechaVisual(fechaExacta) : (semanaDateRaw ? formatFechaVisual(semanaDateRaw) : 'Sin fecha'),
       dia: diaNom,
-      comentarios: String(getVal('comentariosmigracion', 'comentarios') || '').trim()
+      // V24: fuente UNICA y literal; sin aliases ni coincidencias parciales. Si la celda esta vacia, se muestra —.
+      comentarios: String((Object.prototype.hasOwnProperty.call(o, 'Comentarios de Migracion/Desestimacion') ? o['Comentarios de Migracion/Desestimacion'] : '') || '').trim()
     });
   }
 
-  state.raw = rows;
+  aplicarCatalogoAplicaciones(rows);
+  let rowsVigentes = obtenerUltimosIntentos(rows);
 
-  const allQs = Array.from(new Set(rows.map(r => r.qIbk))).filter(Boolean);
+  // V34 - Excepcion controlada Octubre 2026:
+  // Para SBL s467vd8 y s467vd9, conservar como relacion oficial la fila Migrado de Octubre 2026
+  // con componente positivo. V33 podia escoger otra fila del mismo Servidor + SIGLA por fecha/OC.
+  // No se fija el KPI en 174: se preservan las relaciones reales del consolidado.
+  const excepcionesOct2026 = new Set(['s467vd8___sbl', 's467vd9___sbl']);
+  excepcionesOct2026.forEach(key => {
+    const candidatos = rows.filter(r =>
+      `${norm(r.servidor)}___${norm(r.siglas)}` === key &&
+      r.estatus === 'Migrado' && Number(r.anio) === 2026 && r.mes === 'Octubre' &&
+      Number(r.nComp || 0) > 0
+    );
+    if (!candidatos.length) return;
+    candidatos.sort((a,b) =>
+      (Number(b.intentoNum)||1) - (Number(a.intentoNum)||1) ||
+      ((b.fechaDate?.getTime()||0) - (a.fechaDate?.getTime()||0)) ||
+      ((Number(String(b.oc||'').replace(/[^0-9]/g,''))||0) - (Number(String(a.oc||'').replace(/[^0-9]/g,''))||0))
+    );
+    const elegido = candidatos[0];
+    rowsVigentes = rowsVigentes.filter(r => `${norm(r.servidor)}___${norm(r.siglas)}` !== key);
+    rowsVigentes.push(elegido);
+  });
+
+  // Conservar todos los intentos para trazabilidad, pero mantener state.raw solo con el universo oficial vigente.
+  state.historyRaw = rows.slice();
+  state.raw = rowsVigentes;
+
+  const allQs = Array.from(new Set(state.raw.map(r => r.qIbk))).filter(Boolean);
   if (allQs.includes('2026-Q3')) {
     state.selectedQs = new Set(['2026-Q3']);
   } else if (allQs.length > 0) {
@@ -1228,6 +1394,78 @@ function applyFilters() {
   if (f.equipoSO !== '__ALL__') list = list.filter(r => r.equipoSO === f.equipoSO);
   
   state.view = list;
+
+  // V19: vista historica de intentos. Respeta filtros de ambito, pero NO el filtro global de Estatus,
+  // para permitir ver Reprogramados/Rollback anteriores aunque el intento vigente ya sea Migrado.
+  let hist = state.historyRaw.slice();
+  if (state.selectedAnio !== '__ALL__') hist = hist.filter(r => String(r.anio) === String(state.selectedAnio));
+  if (state.selectedQs.size > 0) hist = hist.filter(r => state.selectedQs.has(r.qIbk)); else hist = [];
+  if (state.selectedMeses.has('__NONE__')) hist = [];
+  else if (state.selectedMeses.size > 0) hist = hist.filter(r => state.selectedMeses.has(r.mes));
+  if (state.selectedPriorizadosQ.has('__NONE__')) hist = [];
+  else if (state.selectedPriorizadosQ.size > 0) hist = hist.filter(r => state.selectedPriorizadosQ.has(r.priorizadoQ));
+  if (f.leader !== '__ALL__') hist = hist.filter(r => r.ownerKyndryl === f.leader);
+  if (f.estadoOC !== '__ALL__') hist = hist.filter(r => r.estadoOC === f.estadoOC);
+  if (f.amb !== '__ALL__') hist = hist.filter(r => r.ambiente === f.amb);
+  if (f.equipoSO !== '__ALL__') hist = hist.filter(r => r.equipoSO === f.equipoSO);
+  state.historyView = hist;
+}
+
+
+function renderTresFrentesPage(){
+  const srcB64 = "PCFkb2N0eXBlIGh0bWw+PGh0bWwgbGFuZz0iZXMiPjxoZWFkPjxtZXRhIGNoYXJzZXQ9InV0Zi04Ij48bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLGluaXRpYWwtc2NhbGU9MSI+PHRpdGxlPkJhY2tsZXZlbCDCtyBJbXBhY3RvIDMgRnJlbnRlcyDCtyBWMjAgT3B0aW1pemFkYTwvdGl0bGU+CjxzY3JpcHQgc3JjPSJodHRwczovL2Nkbi5qc2RlbGl2ci5uZXQvbnBtL3hsc3hAMC4xOC41L2Rpc3QveGxzeC5mdWxsLm1pbi5qcyI+PC9zY3JpcHQ+CjxzY3JpcHQgc3JjPSJodHRwczovL2Nkbi5qc2RlbGl2ci5uZXQvbnBtL2NoYXJ0LmpzQDQuNC43L2Rpc3QvY2hhcnQudW1kLm1pbi5qcyI+PC9zY3JpcHQ+CjxzY3JpcHQgc3JjPSJodHRwczovL2Nkbi5qc2RlbGl2ci5uZXQvbnBtL3BwdHhnZW5qc0AzLjEyLjAvZGlzdC9wcHR4Z2VuLmJ1bmRsZS5qcyI+PC9zY3JpcHQ+CjxzdHlsZT4KOnJvb3R7LS1iZzojMDcxMDFkOy0tcGFuZWw6IzEwMWMyYzstLXBhbmVsMjojMGIxNjI1Oy0tbGluZTojMjYzNjRjOy0tdHh0OiNlZWY1ZmY7LS1tdXRlZDojOTFhNGJkOy0tY3lhbjojMTNjNWU2Oy0tZ3JlZW46IzIwZDc4YjstLWFtYmVyOiNmN2I4NGI7LS1yZWQ6I2ZmNjE3NDstLWJsdWU6IzU3OTRmZjstLXB1cnBsZTojYTY3Y2ZmfSp7Ym94LXNpemluZzpib3JkZXItYm94fWJvZHl7bWFyZ2luOjA7YmFja2dyb3VuZDpyYWRpYWwtZ3JhZGllbnQoY2lyY2xlIGF0IDMwJSAtMjAlLCMxNTM0NTQgMCwjMDcxMDFkIDM4JSk7Y29sb3I6dmFyKC0tdHh0KTtmb250OjE0cHggSW50ZXIsU2Vnb2UgVUksQXJpYWwsc2Fucy1zZXJpZn0ud3JhcHttYXgtd2lkdGg6MTUwMHB4O21hcmdpbjphdXRvO3BhZGRpbmc6MjhweH0udG9we2Rpc3BsYXk6ZmxleDtqdXN0aWZ5LWNvbnRlbnQ6c3BhY2UtYmV0d2VlbjtnYXA6MjBweDthbGlnbi1pdGVtczpmbGV4LXN0YXJ0fS5leWVicm93e2NvbG9yOnZhcigtLWN5YW4pO2ZvbnQtd2VpZ2h0OjgwMDtsZXR0ZXItc3BhY2luZzouMDhlbX0udGl0bGV7Zm9udC1zaXplOjMxcHg7Zm9udC13ZWlnaHQ6OTAwO21hcmdpbjo1cHggMH0uc3Vie2NvbG9yOnZhcigtLW11dGVkKTttYXgtd2lkdGg6OTUwcHg7bGluZS1oZWlnaHQ6MS41fS51cGxvYWR7YmFja2dyb3VuZDp2YXIoLS1wYW5lbCk7Ym9yZGVyOjFweCBzb2xpZCB2YXIoLS1saW5lKTtib3JkZXItcmFkaXVzOjE0cHg7cGFkZGluZzoxNHB4O21pbi13aWR0aDozMzBweH0udXBsb2FkIGlucHV0e3dpZHRoOjEwMCU7bWFyZ2luLXRvcDo4cHh9LnN0YXR1c3tmb250LXNpemU6MTJweDtjb2xvcjp2YXIoLS1tdXRlZCk7bWFyZ2luLXRvcDo4cHh9LmZpbHRlcnN7ZGlzcGxheTpmbGV4O2ZsZXgtd3JhcDp3cmFwO2dhcDoxMHB4O21hcmdpbjoyMHB4IDB9LmZpbHRlcnMgc2VsZWN0LC5maWx0ZXJzIGJ1dHRvbiwuc2VhcmNoLC5tdWx0aUJ0bntiYWNrZ3JvdW5kOiMwZDFhMmE7Y29sb3I6dmFyKC0tdHh0KTtib3JkZXI6MXB4IHNvbGlkIHZhcigtLWxpbmUpO2JvcmRlci1yYWRpdXM6OXB4O3BhZGRpbmc6OXB4IDEycHh9Lm11bHRpe3Bvc2l0aW9uOnJlbGF0aXZlfS5tdWx0aUJ0bnttaW4td2lkdGg6MTkwcHg7dGV4dC1hbGlnbjpsZWZ0O2N1cnNvcjpwb2ludGVyfS5tdWx0aU1lbnV7ZGlzcGxheTpub25lO3Bvc2l0aW9uOmFic29sdXRlO3otaW5kZXg6MzA7dG9wOmNhbGMoMTAwJSArIDVweCk7bGVmdDowO21pbi13aWR0aDoyMjBweDttYXgtaGVpZ2h0OjMwMHB4O292ZXJmbG93OmF1dG87YmFja2dyb3VuZDojMGQxYTJhO2JvcmRlcjoxcHggc29saWQgdmFyKC0tbGluZSk7Ym9yZGVyLXJhZGl1czoxMHB4O3BhZGRpbmc6OHB4O2JveC1zaGFkb3c6MCAxMnB4IDMwcHggIzAwMDh9Lm11bHRpLm9wZW4gLm11bHRpTWVudXtkaXNwbGF5OmJsb2NrfS5tdWx0aU1lbnUgbGFiZWx7ZGlzcGxheTpmbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6OHB4O3BhZGRpbmc6N3B4IDZweDtib3JkZXItcmFkaXVzOjdweDtjdXJzb3I6cG9pbnRlcjt3aGl0ZS1zcGFjZTpub3dyYXB9Lm11bHRpTWVudSBsYWJlbDpob3ZlcntiYWNrZ3JvdW5kOiMxNDI0M2F9Lm11bHRpTWVudSBpbnB1dHthY2NlbnQtY29sb3I6IzEzYzVlNn0uZmlsdGVycyBidXR0b257Y3Vyc29yOnBvaW50ZXI7Zm9udC13ZWlnaHQ6NzAwfS5ncmlke2Rpc3BsYXk6Z3JpZDtncmlkLXRlbXBsYXRlLWNvbHVtbnM6cmVwZWF0KDUsMWZyKTtnYXA6MTJweH0uY2FyZHtiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxODBkZWcsIzExMjAzMywjMGQxOTI4KTtib3JkZXI6MXB4IHNvbGlkIHZhcigtLWxpbmUpO2JvcmRlci1yYWRpdXM6MTRweDtwYWRkaW5nOjE2cHg7Y3Vyc29yOnBvaW50ZXJ9LmNhcmQ6aG92ZXJ7Ym9yZGVyLWNvbG9yOiM1NDczOTR9Lmt7Y29sb3I6dmFyKC0tbXV0ZWQpO2ZvbnQtc2l6ZToxMnB4fS52e2ZvbnQtc2l6ZTozMHB4O2ZvbnQtd2VpZ2h0OjkwMDttYXJnaW46NXB4IDB9LmhpbnR7Zm9udC1zaXplOjExcHg7Y29sb3I6IzczODlhNX0uc2VjdGlvbnttYXJnaW4tdG9wOjE4cHg7YmFja2dyb3VuZDpyZ2JhKDEzLDI1LDQwLC45Mik7Ym9yZGVyOjFweCBzb2xpZCB2YXIoLS1saW5lKTtib3JkZXItcmFkaXVzOjE0cHg7cGFkZGluZzoxOHB4fS5zZWN0aW9uIGgye21hcmdpbjowIDAgNHB4O2ZvbnQtc2l6ZToxOXB4fS5zZWN0aW9uIHB7Y29sb3I6dmFyKC0tbXV0ZWQpO21hcmdpbjowIDAgMTRweH0udHdve2Rpc3BsYXk6Z3JpZDtncmlkLXRlbXBsYXRlLWNvbHVtbnM6MWZyIDFmcjtnYXA6MTZweH0udGhyZWV7ZGlzcGxheTpncmlkO2dyaWQtdGVtcGxhdGUtY29sdW1uczpyZXBlYXQoMywxZnIpO2dhcDoxMnB4fS5pbXBhY3R7cGFkZGluZzoxNHB4O2JvcmRlci1yYWRpdXM6MTJweDtiYWNrZ3JvdW5kOiMwYTE3MjU7Ym9yZGVyOjFweCBzb2xpZCB2YXIoLS1saW5lKX0uaW1wYWN0IC5udW17Zm9udC1zaXplOjI3cHg7Zm9udC13ZWlnaHQ6OTAwfS5wcm9qZWN0aW9uR3JpZHtkaXNwbGF5OmdyaWQ7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOnJlcGVhdCgzLDFmcik7Z2FwOjEycHh9LnByb2pDYXJke3BhZGRpbmc6MTRweDtib3JkZXItcmFkaXVzOjEycHg7YmFja2dyb3VuZDojMGExNzI1O2JvcmRlcjoxcHggc29saWQgdmFyKC0tbGluZSk7Y3Vyc29yOnBvaW50ZXJ9LnByb2pDYXJkOmhvdmVye2JvcmRlci1jb2xvcjojNTQ3Mzk0fS5wcm9qQmlne2ZvbnQtc2l6ZToyNXB4O2ZvbnQtd2VpZ2h0OjkwMDttYXJnaW46NXB4IDB9LnByb2pBcnJvd3tjb2xvcjp2YXIoLS1tdXRlZCk7Zm9udC1zaXplOjEycHh9QG1lZGlhKG1heC13aWR0aDoxMDAwcHgpey5wcm9qZWN0aW9uR3JpZHtncmlkLXRlbXBsYXRlLWNvbHVtbnM6MWZyfX0uZ3JlZW57Y29sb3I6dmFyKC0tZ3JlZW4pfS5hbWJlcntjb2xvcjp2YXIoLS1hbWJlcil9LnJlZHtjb2xvcjp2YXIoLS1yZWQpfS5jeWFue2NvbG9yOnZhcigtLWN5YW4pfWNhbnZhc3ttYXgtaGVpZ2h0OjMxMHB4fS50YWJsZXdyYXB7b3ZlcmZsb3c6YXV0bzttYXgtaGVpZ2h0OjUyMHB4O2JvcmRlcjoxcHggc29saWQgdmFyKC0tbGluZSk7Ym9yZGVyLXJhZGl1czoxMHB4fXRhYmxle2JvcmRlci1jb2xsYXBzZTpjb2xsYXBzZTt3aWR0aDoxMDAlO21pbi13aWR0aDoxNTAwcHh9dGh7cG9zaXRpb246c3RpY2t5O3RvcDowO2JhY2tncm91bmQ6IzE0MjQzYTtjb2xvcjojYmNkMGU4O3RleHQtYWxpZ246bGVmdDtwYWRkaW5nOjlweDtib3JkZXItYm90dG9tOjFweCBzb2xpZCAjMzM0NjVlO3doaXRlLXNwYWNlOm5vd3JhcH10ZHtwYWRkaW5nOjhweDtib3JkZXItYm90dG9tOjFweCBzb2xpZCAjMWUzMDQ1O2NvbG9yOiNkY2U4Zjc7d2hpdGUtc3BhY2U6bm93cmFwfS5waWxse3BhZGRpbmc6M3B4IDdweDtib3JkZXItcmFkaXVzOjk5OXB4O2ZvbnQtc2l6ZToxMXB4O2ZvbnQtd2VpZ2h0OjgwMH0ucC1taWd7YmFja2dyb3VuZDojMGQ1MTNjO2NvbG9yOiM2ZmYzYmN9LnAtdHJhY2t7YmFja2dyb3VuZDojNTkzZjEzO2NvbG9yOiNmZmQ3ODN9LnAtcmVje2JhY2tncm91bmQ6IzE1M2U2NDtjb2xvcjojNzZjOGZmfS5wLXZpZ3tiYWNrZ3JvdW5kOiMzMDNhNDk7Y29sb3I6I2JhYzlkY30ubGVnZW5ke2ZvbnQtc2l6ZToxMnB4O2NvbG9yOnZhcigtLW11dGVkKTtsaW5lLWhlaWdodDoxLjV9LmVtcHR5e3RleHQtYWxpZ246Y2VudGVyO2NvbG9yOnZhcigtLW11dGVkKTtwYWRkaW5nOjUwcHh9LmZvb3R7Y29sb3I6IzcxODQ5ZDtmb250LXNpemU6MTFweDttYXJnaW4tdG9wOjE0cHh9LnNlY3Rpb25IZWFke2Rpc3BsYXk6ZmxleDtqdXN0aWZ5LWNvbnRlbnQ6c3BhY2UtYmV0d2VlbjtnYXA6MTRweDthbGlnbi1pdGVtczpjZW50ZXI7ZmxleC13cmFwOndyYXB9LnBwdEJ0bntiYWNrZ3JvdW5kOiMxM2M1ZTY7Y29sb3I6IzA0MTExYjtib3JkZXI6MDtib3JkZXItcmFkaXVzOjlweDtwYWRkaW5nOjEwcHggMTVweDtmb250LXdlaWdodDo5MDA7Y3Vyc29yOnBvaW50ZXJ9LnBwdEJ0bjpob3ZlcntmaWx0ZXI6YnJpZ2h0bmVzcygxLjA4KX0uZXhlY0Zsb3d7ZGlzcGxheTpncmlkO2dyaWQtdGVtcGxhdGUtY29sdW1uczoxZnIgNzBweCAxZnIgNzBweCAxZnI7YWxpZ24taXRlbXM6Y2VudGVyO2dhcDo4cHg7bWFyZ2luLXRvcDoxNnB4fS5leGVjTm9kZXtiYWNrZ3JvdW5kOiMwYTE3MjU7Ym9yZGVyOjFweCBzb2xpZCB2YXIoLS1saW5lKTtib3JkZXItcmFkaXVzOjE0cHg7cGFkZGluZzoxOHB4O3RleHQtYWxpZ246Y2VudGVyO2N1cnNvcjpwb2ludGVyO21pbi1oZWlnaHQ6MTUwcHg7ZGlzcGxheTpmbGV4O2ZsZXgtZGlyZWN0aW9uOmNvbHVtbjtqdXN0aWZ5LWNvbnRlbnQ6Y2VudGVyfS5leGVjTm9kZTpob3Zlcntib3JkZXItY29sb3I6IzU0NzM5NH0uZXhlY05vZGUubWFpbntib3JkZXItY29sb3I6IzFmNzg5MH0uZXhlY05vZGUgLmJpZ3tmb250LXNpemU6MzJweDtmb250LXdlaWdodDo5MDA7bWFyZ2luOjVweCAwfS5leGVjQXJyb3d7Zm9udC1zaXplOjM0cHg7Y29sb3I6IzVmNzg5NTt0ZXh0LWFsaWduOmNlbnRlcjtmb250LXdlaWdodDo5MDB9LmV4ZWNDb250ZXh0e21hcmdpbi10b3A6MTRweDtwYWRkaW5nOjExcHggMTRweDtib3JkZXI6MXB4IHNvbGlkIHZhcigtLWxpbmUpO2JvcmRlci1yYWRpdXM6MTBweDtjb2xvcjp2YXIoLS1tdXRlZCk7Zm9udC1zaXplOjEycHh9LnBwdEZvb3R7dGV4dC1hbGlnbjpjZW50ZXI7bWFyZ2luLXRvcDoxNHB4fUBtZWRpYShtYXgtd2lkdGg6MTAwMHB4KXsuZ3JpZHtncmlkLXRlbXBsYXRlLWNvbHVtbnM6cmVwZWF0KDIsMWZyKX0udHdvLC50aHJlZXtncmlkLXRlbXBsYXRlLWNvbHVtbnM6MWZyfS50b3B7ZmxleC1kaXJlY3Rpb246Y29sdW1ufS51cGxvYWR7d2lkdGg6MTAwJX0uZXhlY0Zsb3d7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjFmcn0uZXhlY0Fycm93e3RyYW5zZm9ybTpyb3RhdGUoOTBkZWcpfX0ucGFnZXJ7ZGlzcGxheTpmbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtqdXN0aWZ5LWNvbnRlbnQ6Y2VudGVyO2dhcDoxMnB4O21hcmdpbjoxMnB4IDAgMnB4fS5wYWdlciBidXR0b257bWluLXdpZHRoOjk2cHh9LnBhZ2VyIGJ1dHRvbjpkaXNhYmxlZHtvcGFjaXR5Oi40O2N1cnNvcjpub3QtYWxsb3dlZH0ucGFnZXIgc3Bhbntjb2xvcjp2YXIoLS1tdXRlZCk7Zm9udC1zaXplOjEycHg7bWluLXdpZHRoOjE4MHB4O3RleHQtYWxpZ246Y2VudGVyfTwvc3R5bGU+PC9oZWFkPjxib2R5PjxkaXYgY2xhc3M9IndyYXAiPgo8ZGl2IGNsYXNzPSJ0b3AiPjxkaXY+PGRpdiBjbGFzcz0iZXllYnJvdyI+S1lORFJZTCDCtyBCQUNLTEVWRUw8L2Rpdj48ZGl2IGNsYXNzPSJ0aXRsZSI+Q29ja3BpdCBRNCDCtyBJbXBhY3RvIEJhY2tsZXZlbCBlbiAzIGZyZW50ZXM8L2Rpdj48ZGl2IGNsYXNzPSJzdWIiPlVuYSBzb2xhIGZ1ZW50ZTogRXhjZWwgQmFja2xldmVsLiBJbnRlZ3JhIGVqZWN1Y2nDs24gQmFja2xldmVsLCBoYWJpbGl0YWNpw7NuIHRlY25vbMOzZ2ljYSBwYXJhIFBhcmNoYWRvcyAoU08gKyBzdWJzaXN0ZW1hcykgeSBhcG9ydGUgYSBWdWxuZXJhYmlsaWRhZCBwb3IgcmV0aXJvIGRlIG9ic29sZXNjZW5jaWEgZGUgU2lzdGVtYSBPcGVyYXRpdm8uPC9kaXY+PC9kaXY+PGRpdiBjbGFzcz0idXBsb2FkIj48Yj4xLiBDYXJnYXIgRXhjZWwgQmFja2xldmVsPC9iPjxpbnB1dCBpZD0iZmlsZSIgdHlwZT0iZmlsZSIgYWNjZXB0PSIueGxzeCwueGxzIj48ZGl2IGNsYXNzPSJzdGF0dXMiIGlkPSJzdGF0dXMiPkVzcGVyYW5kbyBhcmNoaXZv4oCmPC9kaXY+PC9kaXY+PC9kaXY+CjxkaXYgY2xhc3M9ImZpbHRlcnMiPjxzZWxlY3QgaWQ9InEiPjxvcHRpb24+MjAyNi1RNDwvb3B0aW9uPjwvc2VsZWN0PjxkaXYgY2xhc3M9Im11bHRpIiBpZD0ibW9udGhNdWx0aSI+PGJ1dHRvbiB0eXBlPSJidXR0b24iIGNsYXNzPSJtdWx0aUJ0biIgaWQ9Im1vbnRoQnRuIj5Ub2RvcyBsb3MgbWVzZXMg4pa+PC9idXR0b24+PGRpdiBjbGFzcz0ibXVsdGlNZW51IiBpZD0ibW9udGhNZW51Ij48L2Rpdj48L2Rpdj48c2VsZWN0IGlkPSJhbWIiPjxvcHRpb24gdmFsdWU9IiI+VG9kb3MgbG9zIGFtYmllbnRlczwvb3B0aW9uPjwvc2VsZWN0PjxzZWxlY3QgaWQ9InN0YXRlIj48b3B0aW9uIHZhbHVlPSIiPk1pZ3JhZG9zICsgVHJhY2sgKyBEZXNlc3RpbWFkb3M8L29wdGlvbj48b3B0aW9uIHZhbHVlPSJNaWdyYWRvIj5Tb2xvIE1pZ3JhZG9zPC9vcHRpb24+PG9wdGlvbiB2YWx1ZT0iVHJhY2siPlNvbG8gVHJhY2s8L29wdGlvbj48b3B0aW9uIHZhbHVlPSJEZXNlc3RpbWFkbyI+U29sbyBEZXNlc3RpbWFkb3M8L29wdGlvbj48L3NlbGVjdD48YnV0dG9uIGlkPSJleHBvcnQiPkV4cG9ydGFyIGRldGFsbGUgQ1NWPC9idXR0b24+PGJ1dHRvbiBpZD0icmVzZXQiPkxpbXBpYXIgZmlsdHJvczwvYnV0dG9uPjwvZGl2Pgo8ZGl2IGNsYXNzPSJncmlkIiBpZD0iY2FyZHMiPjwvZGl2Pgo8ZGl2IGNsYXNzPSJzZWN0aW9uIj48aDI+TWlncmFkb3MgdnMgRGVzZXN0aW1hZG9zPC9oMj48cD5EaXN0cmlidWNpw7NuIHBvciBzZXJ2aWRvcmVzIMO6bmljb3MuIFBhc2UgZWwgcHVudGVybyBwYXJhIHZlciBzZXJ2aWRvcmVzLCBjb21wb25lbnRlcyBLeW5kcnlsIHkgJSBkZSBzZXJ2aWRvcmVzLiBIYWdhIGNsaWMgZW4gdW4gc2VnbWVudG8gcGFyYSBhYnJpciBzdSBEZXRhbGxlIGF1ZGl0YWJsZS4gVHJhY2sgbm8gcGFydGljaXBhIGVuIGVzdGUgZ3LDoWZpY28uPC9wPjxkaXY+PGNhbnZhcyBpZD0iY2hhcnRTdGF0dXMiPjwvY2FudmFzPjwvZGl2PjwvZGl2Pgo8ZGl2IGNsYXNzPSJzZWN0aW9uIj48aDI+SW1wYWN0byBkZSBCYWNrbGV2ZWwgc29icmUgY2FwYWNpZGFkIHRlY25vbMOzZ2ljYSBkZSBQYXJjaGFkbzwvaDI+PHA+U29sbyBzb2JyZSBzZXJ2aWRvcmVzIE1pZ3JhZG9zLiBTZXBhcmEgbW9kZXJuaXphY2nDs24gc2luIHJlY3VwZXJhY2nDs24gZGUgc2NvcGUgZGUgYXF1ZWxsb3MgcXVlIHPDrSBwYXNhcm9uIGRlIE5vIHZpZ2VudGUg4oaSIFZpZ2VudGUuPC9wPjxkaXYgY2xhc3M9InRocmVlIiBpZD0iaW1wYWN0Ij48L2Rpdj48ZGl2IGNsYXNzPSJ0d28iIHN0eWxlPSJtYXJnaW4tdG9wOjE2cHgiPjxkaXY+PGNhbnZhcyBpZD0iY2hhcnRJbXBhY3QiPjwvY2FudmFzPjwvZGl2PjxkaXYgY2xhc3M9ImltcGFjdCI+PGI+Q8OzbW8gbGVlciBlbCBpbmRpY2Fkb3I8L2I+PGRpdiBjbGFzcz0ibGVnZW5kIiBzdHlsZT0ibWFyZ2luLXRvcDoxMHB4Ij7igKIgPGI+WWEgdmlnZW50ZSBhbnRlczo8L2I+IGVsIHNlcnZpZG9yIG1pZ3LDsywgcGVybyBzdSBTTy9zdWJzaXN0ZW1hcyByZWxldmFudGVzIHlhIGVzdGFiYW4gc29wb3J0YWRvczsgbm8gc2UgYXRyaWJ1eWUgY29tbyBzY29wZSByZWN1cGVyYWRvIHBhcmEgUGFyY2hhZG9zLjxicj7igKIgPGI+UmVjdXBlcmFkbzo8L2I+IHRlbsOtYSBhbCBtZW5vcyB1bmEgY2FwYSBubyB2aWdlbnRlIChTTyB5L28gU1FML09yYWNsZS9JSVMvSUhTL1dBUy9ISVMpIHkgbGEgbWlncmFjacOzbiBkZWphIGVzYSBjYXBhIGVuIHZlcnNpw7NuIHZpZ2VudGUuPGJyPuKAoiA8Yj5Tb2xvIFNPIC8gU29sbyBzdWJzaXN0ZW1hIC8gU08gKyBzdWJzaXN0ZW1hOjwvYj4gaWRlbnRpZmljYSBkw7NuZGUgZXN0YWJhIGxhIG9ic29sZXNjZW5jaWEgcXVlIEJhY2tsZXZlbCByZXRpcsOzLjxicj7igKIgU2kgdW5hIGNvbHVtbmEgZGVzdGlubyBkZSBzdWJzaXN0ZW1hIGVzdMOhIHZhY8OtYSwgbm8gc2UgYXN1bWUgbWlncmFjacOzbiBkZWwgc3Vic2lzdGVtYS48L2Rpdj48L2Rpdj48L2Rpdj48L2Rpdj4KPGRpdiBjbGFzcz0ic2VjdGlvbiIgaWQ9InRocmVlRnJvbnRTZWN0aW9uIj48ZGl2IGNsYXNzPSJzZWN0aW9uSGVhZCI+PGRpdj48aDI+SW1wYWN0byBCYWNrbGV2ZWwgZW4gbG9zIDMgZnJlbnRlczwvaDI+PHA+QmFja2xldmVsIGNvbW8gaGFiaWxpdGFkb3I6IGVsIGF2YW5jZSBlamVjdXRhZG8gZ2VuZXJhIGRvcyBiZW5lZmljaW9zIHBhcmFsZWxvcyBzb2JyZSBQYXJjaGFkb3MgeSBWdWxuZXJhYmlsaWRhZC48L3A+PC9kaXY+PGJ1dHRvbiBjbGFzcz0icHB0QnRuIiBpZD0iZXhwb3J0UHB0VG9wIiB0eXBlPSJidXR0b24iPkV4cG9ydGFyIFBQVCBFamVjdXRpdm88L2J1dHRvbj48L2Rpdj48ZGl2IGNsYXNzPSJleGVjRmxvdyIgaWQ9ImV4ZWN1dGl2ZUZsb3ciPjwvZGl2PjxkaXYgY2xhc3M9ImV4ZWNDb250ZXh0IiBpZD0iZXhlY0NvbnRleHQiPjwvZGl2PjwvZGl2Pgo8ZGl2IGNsYXNzPSJzZWN0aW9uIiBpZD0icHJvamVjdGlvblNlY3Rpb24iPjxoMj5Qcm95ZWNjacOzbiBkZSBpbXBhY3RvIHBvdGVuY2lhbCDCtyBUcmFjayB2aWdlbnRlPC9oMj48cD5TaW11bGEgY3XDoW50byBtw6FzIHBvZHLDrWFuIGFwb3J0YXIgUGFyY2hhZG9zIHkgVnVsbmVyYWJpbGlkYWQgc2kgY3VsbWluYXJhbiBleGl0b3NhbWVudGUgbG9zIHNlcnZpZG9yZXMgcXVlIHBlcm1hbmVjZW4gZW4gVHJhY2sgdmlnZW50ZSB5IGN1eW8gZGVzdGlubyB0ZWNub2zDs2dpY28gcGVybWl0ZSBldmFsdWFyIGxhIHRyYW5zaWNpw7NuLiBIaXN0w7NyaWNvcyB5IERlc2VzdGltYWRvcyBubyBwYXJ0aWNpcGFuLjwvcD48ZGl2IGNsYXNzPSJ0d28iPjxkaXYgY2xhc3M9ImltcGFjdCI+PGI+UEFSQ0hBRE9TIMK3IEFjdHVhbCB2cyBwcm95ZWNjacOzbjwvYj48ZGl2IGNsYXNzPSJwcm9qZWN0aW9uR3JpZCIgaWQ9InByb2pQYXJjaCIgc3R5bGU9Im1hcmdpbi10b3A6MTJweCI+PC9kaXY+PC9kaXY+PGRpdiBjbGFzcz0iaW1wYWN0Ij48Yj5WVUxORVJBQklMSURBRCDCtyBBY3R1YWwgdnMgcHJveWVjY2nDs248L2I+PGRpdiBjbGFzcz0icHJvamVjdGlvbkdyaWQiIGlkPSJwcm9qVnVsbiIgc3R5bGU9Im1hcmdpbi10b3A6MTJweCI+PC9kaXY+PC9kaXY+PC9kaXY+PGRpdiBjbGFzcz0idHdvIiBzdHlsZT0ibWFyZ2luLXRvcDoxNnB4Ij48ZGl2PjxjYW52YXMgaWQ9ImNoYXJ0UHJvamVjdGlvbiI+PC9jYW52YXM+PC9kaXY+PGRpdiBjbGFzcz0iaW1wYWN0Ij48Yj5Dw7NtbyBsZWVyIGxhIHByb3llY2Npw7NuPC9iPjxkaXYgY2xhc3M9ImxlZ2VuZCIgaWQ9InByb2pOb3RlIiBzdHlsZT0ibWFyZ2luLXRvcDoxMHB4Ij48L2Rpdj48L2Rpdj48L2Rpdj48L2Rpdj48ZGl2IGNsYXNzPSJzZWN0aW9uIiBpZD0iZGV0YWlsU2VjdGlvbiI+PGgyIGlkPSJkZXRhaWxIZWFkaW5nIj5EZXRhbGxlIGF1ZGl0YWJsZSDCtyBPcmlnZW4g4oaSIERlc3Rpbm88L2gyPjxwPkNsaWNrIGVuIGxhcyB0YXJqZXRhcyBzdXBlcmlvcmVzIHBhcmEgZmlsdHJhci4gUHVlZGVzIGJ1c2NhciBwb3IgaG9zdG5hbWUsIHNlcnZpZG9yIG9yaWdlbiwgU08gbyBzdWJzaXN0ZW1hLjwvcD48ZGl2IHN0eWxlPSJkaXNwbGF5OmZsZXg7Z2FwOjEwcHg7YWxpZ24taXRlbXM6Y2VudGVyO2ZsZXgtd3JhcDp3cmFwO21hcmdpbi1ib3R0b206MTBweCI+PGlucHV0IGNsYXNzPSJzZWFyY2giIGlkPSJzZWFyY2giIHBsYWNlaG9sZGVyPSJCdXNjYXLigKYiIHN0eWxlPSJ3aWR0aDozMjBweCI+PGJ1dHRvbiBpZD0iZXhwb3J0RXhjZWwiIHR5cGU9ImJ1dHRvbiI+RXhwb3J0YXIgRXhjZWw8L2J1dHRvbj48L2Rpdj48ZGl2IGNsYXNzPSJ0YWJsZXdyYXAiPjx0YWJsZT48dGhlYWQ+PHRyPjx0aCBkYXRhLWtleT0iX3EiPlEgLSBJQks8L3RoPjx0aCBkYXRhLWtleT0iX2hvc3QiPkhvc3RuYW1lX0Rlc3Rpbm88L3RoPjx0aCBkYXRhLWtleT0iU2lnbGEiPlNJR0xBPC90aD48dGggZGF0YS1rZXk9IlNlcnZpZG9yIj5TZXJ2aWRvciBvcmlnZW48L3RoPjx0aCBkYXRhLWtleT0iX2FtYiI+QW1iaWVudGU8L3RoPjx0aCBkYXRhLWtleT0iX3N0YXRlIj5Fc3RhZG88L3RoPjx0aCBkYXRhLWtleT0iX2dycCI+R3J1cG88L3RoPjx0aCBkYXRhLWtleT0iX2NvbXAiIGRhdGEtbnVtPSIxIj5Db21wb25lbnRlczwvdGg+PHRoIGRhdGEta2V5PSJfc28wIj5TTyBvcmlnZW48L3RoPjx0aCBkYXRhLWtleT0iX3NvMSI+U08gZGVzdGlubzwvdGg+PHRoIGRhdGEta2V5PSJDb21wb25lbnRlIFN1YiBTaXN0ZW1hIj5TdWJzaXN0ZW1hIG9yaWdlbjwvdGg+PHRoIGRhdGEta2V5PSJfc3YiPlZlcnNpw7NuPC90aD48dGggZGF0YS1rZXk9IkJEIj5CRCBkZXN0aW5vPC90aD48dGggZGF0YS1rZXk9IldNRSAtIElJUyI+V01FIC0gSUlTPC90aD48dGggZGF0YS1rZXk9Il9vc3YwIj5WaWdlbmNpYSBvcmlnZW48L3RoPjx0aCBkYXRhLWtleT0iX29zdjEiPlZpZ2VuY2lhIGRlc3Rpbm88L3RoPjx0aCBkYXRhLWtleT0iX2ltcGFjdCI+SW1wYWN0byBQYXJjaGFkbzwvdGg+PHRoIGRhdGEta2V5PSJfdnVsbkltcGFjdCI+SW1wYWN0byBWdWxuZXJhYmlsaWRhZCAoU08pPC90aD48L3RyPjwvdGhlYWQ+PHRib2R5IGlkPSJ0Ym9keSI+PC90Ym9keT48L3RhYmxlPjwvZGl2PjxkaXYgY2xhc3M9InBhZ2VyIiBpZD0iZGV0YWlsUGFnZXIiPjxidXR0b24gaWQ9InBhZ2VQcmV2IiB0eXBlPSJidXR0b24iPkFudGVyaW9yPC9idXR0b24+PHNwYW4gaWQ9InBhZ2VJbmZvIj5Nb3N0cmFuZG8gMOKAkzAgZGUgMDwvc3Bhbj48YnV0dG9uIGlkPSJwYWdlTmV4dCIgdHlwZT0iYnV0dG9uIj5TaWd1aWVudGU8L2J1dHRvbj48L2Rpdj48ZGl2IGNsYXNzPSJmb290Ij5SZWdsYSBkZSBpbnRlZ3JpZGFkOiBzZXJ2aWRvcmVzID0gSG9zdG5hbWVfRGVzdGlubyDDum5pY29zIGNvbiBhbCBtZW5vcyAxIGNvbXBvbmVudGUgcmVwcmVzZW50YWRvOyBjb21wb25lbnRlcyBjb25zZXJ2YW4gc3UgY29udGVvIG9maWNpYWwuIFJlZ2xhcyBkZSB2aWdlbmNpYSBvcmllbnRhZGFzIGFsIGFuw6FsaXNpcyBCYWNrbGV2ZWwgYSBub3YtMjAyNi4gUkhFTCBzZSBldmFsw7phIHBvciBtaW5vciByZWxlYXNlIGN1YW5kbyBlc3TDoSBkaXNwb25pYmxlIGVuIGVsIHRleHRvOyBTUUwvT3JhY2xlL0lJUy9JSFMvV0FTL0hJUyBzZSBldmFsw7phbiBwb3IgdmVyc2nDs24gaWRlbnRpZmljYWJsZS4gQ2Fzb3Mgbm8gaWRlbnRpZmljYWJsZXMgcXVlZGFuIGNvbW8g4oCcUmV2aXNhcuKAnSwgbm8gc2UgZnVlcnphbi48L2Rpdj48L2Rpdj48ZGl2IGNsYXNzPSJzZWN0aW9uIj48aDI+SGlzdG9yaWFsIGRlIGludGVudG9zIMK3IE5vIGNvbnRhYmlsaXphIGVuIHRvdGFsZXMgb2ZpY2lhbGVzPC9oMj48cD5FdmVudG9zIFJlcHJvZ3JhbWFkby9Sb2xsYmFjayBkZSBpbnRlbnRvcyBhbnRlcmlvcmVzLiBTZSBjb25zZXJ2YW4gc29sbyBwYXJhIHRyYXphYmlsaWRhZCB5IG5vIHBhcnRpY2lwYW4gZW4gVHJhY2sgdmlnZW50ZSwgY29tcG9uZW50ZXMsIHBvcmNlbnRhamVzIG5pIGdyw6FmaWNvcyBlamVjdXRpdm9zLjwvcD48ZGl2IGlkPSJoaXN0b3J5U3VtbWFyeSIgY2xhc3M9ImxlZ2VuZCI+PC9kaXY+PGRpdiBjbGFzcz0idGFibGV3cmFwIiBzdHlsZT0ibWF4LWhlaWdodDozMjBweCI+PHRhYmxlIHN0eWxlPSJtaW4td2lkdGg6OTAwcHgiPjx0aGVhZD48dHI+PHRoPlEgLSBJQks8L3RoPjx0aD5NZXM8L3RoPjx0aD5Ib3N0bmFtZTwvdGg+PHRoPlNlcnZpZG9yPC90aD48dGg+RXN0YWRvIGhpc3TDs3JpY288L3RoPjx0aD5JbnRlbnRvPC90aD48dGg+Q29tcG9uZW50ZXM8L3RoPjwvdHI+PC90aGVhZD48dGJvZHkgaWQ9Imhpc3RvcnlCb2R5Ij48L3Rib2R5PjwvdGFibGU+PC9kaXY+PC9kaXY+CjwvZGl2PjxzY3JpcHQ+CmxldCByYXc9W10sIHZpZXc9W10sIGNoYXJ0cz1bXSwgZGV0YWlsUm93cz1bXTsgY29uc3QgJD1pZD0+ZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoaWQpOyBjb25zdCBub3JtPXM9PlN0cmluZyhzPz8nJykudHJpbSgpOyBjb25zdCBua2V5PXM9Pm5vcm0ocykudG9Mb3dlckNhc2UoKS5yZXBsYWNlKC9ccysvZywnICcpLnJlcGxhY2UoL1xzKi1ccyovZywnLScpOwpmdW5jdGlvbiBmaW5kSGVhZGVyKHJvd3Mpe2ZvcihsZXQgaT0wO2k8TWF0aC5taW4ocm93cy5sZW5ndGgsMjApO2krKyl7bGV0IGtzPXJvd3NbaV0ubWFwKG5rZXkpOyBpZihrcy5pbmNsdWRlcygnaG9zdG5hbWVfZGVzdGlubycpJiZrcy5zb21lKHg9Png9PT0nZm9yZWNhc3QtZXN0YWRvJykpIHJldHVybiBpO31yZXR1cm4gLTF9CmZ1bmN0aW9uIG9ialJvd3Mocm93cyxoaSl7bGV0IGg9cm93c1toaV0ubWFwKG5vcm0pO3JldHVybiByb3dzLnNsaWNlKGhpKzEpLmZpbHRlcihyPT5yLnNvbWUodj0+bm9ybSh2KSkpLm1hcChyPT5PYmplY3QuZnJvbUVudHJpZXMoaC5tYXAoKHgsaSk9Plt4LHJbaV0/PycnXSkpKX0KZnVuY3Rpb24gZ2V0KG8sLi4ubmFtZXMpe2xldCBtYXA9e307T2JqZWN0LmtleXMobykuZm9yRWFjaChrPT5tYXBbbmtleShrKV09b1trXSk7Zm9yKGNvbnN0IG4gb2YgbmFtZXMpe2xldCBrPW5rZXkobik7aWYoayBpbiBtYXApcmV0dXJuIG1hcFtrXX1yZXR1cm4gJyd9CmZ1bmN0aW9uIGhvc3Qocyl7cmV0dXJuIG5vcm0ocykuc3BsaXQoJy4nKVswXS50b1VwcGVyQ2FzZSgpfQpmdW5jdGlvbiBvc0NsYXNzKHMpe2xldCB4PW5vcm0ocykudG9Mb3dlckNhc2UoKTsgaWYoIXgpcmV0dXJuICdSZXZpc2FyJzsgaWYoeC5pbmNsdWRlcygnd2luZG93cyBzZXJ2ZXInKXx8eC5pbmNsdWRlcygnbWljcm9zb2Z0IHdpbmRvd3Mgc2VydmVyJykpe2Zvcihjb25zdCB5IG9mIFsyMDI1LDIwMjIsMjAxOSwyMDE2XSlpZih4LmluY2x1ZGVzKFN0cmluZyh5KSkpcmV0dXJuICdWaWdlbnRlJzsgaWYoLzIwMTJ8MjAwOHwyMDAzfDIwMDAvLnRlc3QoeCkpcmV0dXJuICdObyB2aWdlbnRlJztyZXR1cm4gJ1JldmlzYXInfSBpZih4LmluY2x1ZGVzKCdyZWQgaGF0Jyl8fHguaW5jbHVkZXMoJ3JoZWwnKSl7bGV0IG09eC5tYXRjaCgvKD86cmhlbHxyZWQgaGF0W14wLTldKikoXGQrKSg/OlwuKFxkKykpPy8pOyBpZihtKXtsZXQgbWFqPSttWzFdLG1pbj1tWzJdPT1udWxsP251bGw6K21bMl07IGlmKG1haj49OSlyZXR1cm4gJ1ZpZ2VudGUnOyBpZihtYWo8PTcpcmV0dXJuICdObyB2aWdlbnRlJzsgaWYobWFqPT09OCl7aWYobWluPT1udWxsKXJldHVybiAnUmV2aXNhcic7IHJldHVybiBtaW4+PTEwPydWaWdlbnRlJzonTm8gdmlnZW50ZSd9fSByZXR1cm4gJ1JldmlzYXInfSByZXR1cm4gJ0Z1ZXJhIHJhZGFyJ30KZnVuY3Rpb24gc3ViRmFtaWx5KGMpe2xldCB4PW5vcm0oYykudG9Mb3dlckNhc2UoKTsgaWYoeC5pbmNsdWRlcygnc3FsJykpcmV0dXJuICdTUUwnO2lmKHguaW5jbHVkZXMoJ29yYWNsZScpKXJldHVybiAnT3JhY2xlJztpZigvXGJpaXNcYi8udGVzdCh4KSlyZXR1cm4gJ0lJUyc7aWYoeC5pbmNsdWRlcygnaWhzJyl8fHguaW5jbHVkZXMoJ2h0dHAgc2VydmVyJykpcmV0dXJuICdJSFMnO2lmKHguaW5jbHVkZXMoJ3dlYnNwaGVyZScpfHwvXGJ3YXNcYi8udGVzdCh4KSlyZXR1cm4gJ1dBUyc7aWYoL1xiaGlzXGIvLnRlc3QoeCl8fHguaW5jbHVkZXMoJ2hvc3QgaW50ZWdyYXRpb24gc2VydmVyJykpcmV0dXJuICdISVMnO3JldHVybiAnJ30KZnVuY3Rpb24gc3ViQ2xhc3MoZix2KXtsZXQgeD1ub3JtKHYpLnRvTG93ZXJDYXNlKCk7IGlmKCFmKXJldHVybiAnTi9BJzsgaWYoIXgpcmV0dXJuICdSZXZpc2FyJzsgaWYoZj09PSdTUUwnKXtsZXQgbT14Lm1hdGNoKC8yMFxkezJ9Lyk7aWYoIW0pcmV0dXJuICdSZXZpc2FyJztyZXR1cm4gK21bMF0+PTIwMTc/J1ZpZ2VudGUnOidObyB2aWdlbnRlJ30gaWYoZj09PSdPcmFjbGUnKXtsZXQgbT14Lm1hdGNoKC8oXGR7Mn0pLyk7aWYoIW0pcmV0dXJuICdSZXZpc2FyJztyZXR1cm4gK21bMV0+PTE5PydWaWdlbnRlJzonTm8gdmlnZW50ZSd9IGlmKGY9PT0nSUlTJyl7bGV0IG09eC5tYXRjaCgvKFxkKyg/OlwuXGQrKT8pLyk7aWYoIW0pcmV0dXJuICdSZXZpc2FyJztyZXR1cm4gK21bMV0+PTEwPydWaWdlbnRlJzonTm8gdmlnZW50ZSd9IGlmKGY9PT0nV0FTJ3x8Zj09PSdJSFMnKXtsZXQgbT14Lm1hdGNoKC8oXGQrKVwuKFxkKykoPzpcLihcZCspKT8vKTtpZighbSlyZXR1cm4gJ1JldmlzYXInO2xldCBhPSttWzFdLGI9K21bMl0sYz0rKG1bM118fDApOyBpZihhPj05KXJldHVybiAnVmlnZW50ZSc7aWYoYT09PTgmJmI9PT01JiZjPj01KXJldHVybiAnVmlnZW50ZSc7cmV0dXJuICdObyB2aWdlbnRlJ30gaWYoZj09PSdISVMnKXtsZXQgbT14Lm1hdGNoKC8yMFxkezJ9Lyk7aWYoIW0pcmV0dXJuICdSZXZpc2FyJztyZXR1cm4gK21bMF0+PTIwMjA/J1ZpZ2VudGUnOidObyB2aWdlbnRlJ30gcmV0dXJuICdSZXZpc2FyJ30KZnVuY3Rpb24gZGVzdFN1Yihyb3csZil7aWYoZj09PSdTUUwnfHxmPT09J09yYWNsZScpcmV0dXJuIG5vcm0oZ2V0KHJvdywnQkQnKSk7IGlmKGY9PT0nSUlTJ3x8Zj09PSdISVMnKXJldHVybiBub3JtKGdldChyb3csJ1dNRSAtIElJUycsJ1dNRS1JSVMnKSk7IHJldHVybiAnJ30KZnVuY3Rpb24gY2Fub25pY2FsU3RhdGUocyl7bGV0IHg9bm9ybShzKS5yZXBsYWNlKC9ccysvZywnICcpLnRyaW0oKTtsZXQgbD14LnRvTG93ZXJDYXNlKCk7Y29uc3QgbT17J21pZ3JhZG8nOidNaWdyYWRvJywncmVwcm9ncmFtYWRvJzonUmVwcm9ncmFtYWRvJywncm9sbGJhY2snOidSb2xsYmFjaycsJ2Rlc2VzdGltYWRvJzonRGVzZXN0aW1hZG8nLCdkZXNlc3RpbWFkb3MnOidEZXNlc3RpbWFkbycsJ3Byb3B1ZXN0byc6J1Byb3B1ZXN0bycsJ3BsYW5pZmljYWRvJzonUGxhbmlmaWNhZG8nLCdwb3IgZGVmaW5pcic6J1BvciBkZWZpbmlyJywncG9yIGRlZmluaWNpcic6J1BvciBkZWZpbmlyJywncGVuZGllbnRlJzonUGVuZGllbnRlJ307cmV0dXJuIG1bbF18fHguY2hhckF0KDApLnRvVXBwZXJDYXNlKCkreC5zbGljZSgxKS50b0xvd2VyQ2FzZSgpfQpmdW5jdGlvbiBlbnJpY2gocil7bGV0IHN0PWNhbm9uaWNhbFN0YXRlKGdldChyLCdGb3JlY2FzdCAtIEVzdGFkbycpKTtsZXQgc2w9c3QudG9Mb3dlckNhc2UoKTtsZXQgZ3JwPXNsPT09J21pZ3JhZG8nPydNaWdyYWRvJzooc2wuaW5jbHVkZXMoJ2Rlc2VzdGltJyk/J0Rlc2VzdGltYWRvJzonVHJhY2snKTtsZXQgc28wPW5vcm0oZ2V0KHIsJ1Npc3RlbWEgT3BlcmF0aXZvJykpLHNvMT1ub3JtKGdldChyLCdTaXN0ZW1hIE9wZXJhdGl2b19EZXN0aW5vJykpO2xldCBzZj1zdWJGYW1pbHkoZ2V0KHIsJ0NvbXBvbmVudGUgU3ViIFNpc3RlbWEnKSk7bGV0IHN2PW5vcm0oZ2V0KHIsJ1ZlcnNpw7NuJykpO2lmKHNmPT09J0hJUycmJiFzdilzdj1ub3JtKGdldChyLCdDb21wb25lbnRlIFN1YiBTaXN0ZW1hJykpO2xldCBzZD1kZXN0U3ViKHIsc2YpO2xldCBvc3YwPW9zQ2xhc3Moc28wKSxvc3YxPW9zQ2xhc3Moc28xKTtsZXQgc3N2MD1zZj9zdWJDbGFzcyhzZixzdik6J04vQScsc3N2MT1zZD9zdWJDbGFzcyhzZixzZCk6J1NpbiBjYW1iaW8nO2xldCBvc1JlY292ZXJlZD1vc3YwPT09J05vIHZpZ2VudGUnJiZvc3YxPT09J1ZpZ2VudGUnO2xldCBzdWJSZWNvdmVyZWQ9c3N2MD09PSdObyB2aWdlbnRlJyYmc3N2MT09PSdWaWdlbnRlJztsZXQgaW1wYWN0PSBvc1JlY292ZXJlZCYmc3ViUmVjb3ZlcmVkPydTTyArIHN1YnNpc3RlbWEnOm9zUmVjb3ZlcmVkPydTb2xvIFNPJzpzdWJSZWNvdmVyZWQ/J1NvbG8gc3Vic2lzdGVtYSc6J1NpbiByZWN1cGVyYWNpw7NuJztyZXR1cm4gey4uLnIsX2hvc3Q6aG9zdChnZXQociwnSG9zdG5hbWVfRGVzdGlubycpKSxfcTpub3JtKGdldChyLCdRIC0gSUJLJywnUS1JQksnKSksX21vbnRoOm5vcm0oZ2V0KHIsJ01FUycpKSxfYW1iOm5vcm0oZ2V0KHIsJ0FtYmllbnRlJykpLF9zdGF0ZTpzdCxfZ3JwOmdycCxfY29tcDorZ2V0KHIsJ0NvbXBvbmVudGVzIEt5ZHJ5bCcpfHwwLF9zbzA6c28wLF9zbzE6c28xLF9zZjpzZixfc3Y6c3YsX3NkOnNkLF9vc3YwOm9zdjAsX29zdjE6b3N2MSxfc3N2MDpzc3YwLF9zc3YxOnNzdjEsX2ltcGFjdDppbXBhY3R9fQpmdW5jdGlvbiB1bmlxdWVTZXJ2ZXJzKHJvd3Mpe2xldCBhbGw9bmV3IE1hcCgpO2Zvcihjb25zdCByIG9mIHJvd3Mpe2lmKCFyLl9ob3N0KWNvbnRpbnVlO2lmKCFhbGwuaGFzKHIuX2hvc3QpKWFsbC5zZXQoci5faG9zdCxbXSk7YWxsLmdldChyLl9ob3N0KS5wdXNoKHIpfWxldCBtPW5ldyBNYXAoKTtmb3IoY29uc3QgW2gscnNdIG9mIGFsbCl7bGV0IGNvbXA9cnMucmVkdWNlKChhLHIpPT5hKyhOdW1iZXIoci5fY29tcCl8fDApLDApO2lmKGNvbXA+MCltLnNldChoLHJzKX1yZXR1cm4gbX0KZnVuY3Rpb24gc2VydmVySW1wYWN0KHJzKXtsZXQgbWlnPXJzLmZpbHRlcihyPT5yLl9ncnA9PT0nTWlncmFkbycpO2xldCBpbXBzPW5ldyBTZXQobWlnLm1hcChyPT5yLl9pbXBhY3QpKTtpZihpbXBzLmhhcygnU08gKyBzdWJzaXN0ZW1hJyl8fChpbXBzLmhhcygnU29sbyBTTycpJiZpbXBzLmhhcygnU29sbyBzdWJzaXN0ZW1hJykpKXJldHVybiAnU08gKyBzdWJzaXN0ZW1hJztpZihpbXBzLmhhcygnU29sbyBTTycpKXJldHVybiAnU29sbyBTTyc7aWYoaW1wcy5oYXMoJ1NvbG8gc3Vic2lzdGVtYScpKXJldHVybiAnU29sbyBzdWJzaXN0ZW1hJztyZXR1cm4gJ1NpbiByZWN1cGVyYWNpw7NuJ30KZnVuY3Rpb24gZ3JvdXBDb21wKGVudHJpZXMpe3JldHVybiBlbnRyaWVzLnJlZHVjZSgoYSxbaCxyc10pPT5hK3JzLnJlZHVjZSgoeCxyKT0+eCtyLl9jb21wLDApLDApfQpmdW5jdGlvbiBpbnRlZ3JpdHlDaGVjayhsYWJlbCxlbnRyaWVzKXtsZXQgc3J2PWVudHJpZXMubGVuZ3RoLGNvbXA9Z3JvdXBDb21wKGVudHJpZXMpO2lmKHNydj5jb21wKXtjb25zb2xlLndhcm4oJ0luY29uc2lzdGVuY2lhIEtQSSAnK2xhYmVsKyc6ICcrc3J2Kycgc2Vydmlkb3JlcyA+ICcrY29tcCsnIGNvbXBvbmVudGVzJyk7cmV0dXJuIGZhbHNlfXJldHVybiB0cnVlfQpmdW5jdGlvbiBwcm9qZWN0ZWRTZXJ2ZXJJbXBhY3QocnMpe2xldCBpbXBzPW5ldyBTZXQocnMubWFwKHI9PnIuX2ltcGFjdCkpO2lmKGltcHMuaGFzKCdTTyArIHN1YnNpc3RlbWEnKXx8KGltcHMuaGFzKCdTb2xvIFNPJykmJmltcHMuaGFzKCdTb2xvIHN1YnNpc3RlbWEnKSkpcmV0dXJuICdTTyArIHN1YnNpc3RlbWEnO2lmKGltcHMuaGFzKCdTb2xvIFNPJykpcmV0dXJuICdTb2xvIFNPJztpZihpbXBzLmhhcygnU29sbyBzdWJzaXN0ZW1hJykpcmV0dXJuICdTb2xvIHN1YnNpc3RlbWEnO3JldHVybiAnU2luIHJlY3VwZXJhY2nDs24nfQpmdW5jdGlvbiBwYXJjaFRyYWNrRXZhbHVhYmxlKHJzKXtyZXR1cm4gcnMuc29tZShyPT5yLl9vc3YxPT09J1ZpZ2VudGUnfHxyLl9vc3YxPT09J05vIHZpZ2VudGUnfHwoci5fc2YmJnIuX3NzdjEhPT0nU2luIGNhbWJpbycmJnIuX3NzdjEhPT0nUmV2aXNhcicpKX0KZnVuY3Rpb24gdnVsblRyYWNrRXZhbHVhYmxlKHJzKXtyZXR1cm4gcnMuc29tZShyPT5yLl9vc3YxPT09J1ZpZ2VudGUnfHxyLl9vc3YxPT09J05vIHZpZ2VudGUnKX0KZnVuY3Rpb24gc2VsZWN0ZWRNb250aHMoKXtyZXR1cm4gWy4uLmRvY3VtZW50LnF1ZXJ5U2VsZWN0b3JBbGwoJyNtb250aE1lbnUgaW5wdXRbZGF0YS1tb250aF06Y2hlY2tlZCcpXS5tYXAoeD0+eC5kYXRhc2V0Lm1vbnRoKX0KZnVuY3Rpb24gdXBkYXRlTW9udGhMYWJlbCgpe2xldCBtcz1zZWxlY3RlZE1vbnRocygpOyQoJ21vbnRoQnRuJykudGV4dENvbnRlbnQ9KG1zLmxlbmd0aD9tcy5qb2luKCcsICcpOidUb2RvcyBsb3MgbWVzZXMnKSsnIOKWvid9CmZ1bmN0aW9uIGJ1aWxkTW9udGhzKG1vbnRocyl7Y29uc3Qgb3JkZXI9WydlbmVybycsJ2ZlYnJlcm8nLCdtYXJ6bycsJ2FicmlsJywnbWF5bycsJ2p1bmlvJywnanVsaW8nLCdhZ29zdG8nLCdzZXB0aWVtYnJlJywnc2V0aWVtYnJlJywnb2N0dWJyZScsJ25vdmllbWJyZScsJ2RpY2llbWJyZSddO2xldCBzb3J0ZWQ9Wy4uLm1vbnRoc10uc29ydCgoYSxiKT0+e2xldCBpYT1vcmRlci5pbmRleE9mKGEudG9Mb3dlckNhc2UoKSksaWI9b3JkZXIuaW5kZXhPZihiLnRvTG93ZXJDYXNlKCkpO2lmKGlhPDApaWE9OTk7aWYoaWI8MClpYj05OTtyZXR1cm4gaWEtaWJ8fGEubG9jYWxlQ29tcGFyZShiKX0pOyQoJ21vbnRoTWVudScpLmlubmVySFRNTD0nPGxhYmVsPjxpbnB1dCB0eXBlPSJjaGVja2JveCIgaWQ9Im1vbnRoQWxsIiBjaGVja2VkPiA8Yj5Ub2RvczwvYj48L2xhYmVsPicrc29ydGVkLm1hcChtPT5gPGxhYmVsPjxpbnB1dCB0eXBlPSJjaGVja2JveCIgZGF0YS1tb250aD0iJHttLnJlcGxhY2VBbGwoJ1wiJywnJnF1b3Q7Jyl9Ij4gJHttfTwvbGFiZWw+YCkuam9pbignJyk7JCgnbW9udGhBbGwnKS5vbmNoYW5nZT1lPT57aWYoZS50YXJnZXQuY2hlY2tlZClkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCcjbW9udGhNZW51IGlucHV0W2RhdGEtbW9udGhdJykuZm9yRWFjaCh4PT54LmNoZWNrZWQ9ZmFsc2UpO3VwZGF0ZU1vbnRoTGFiZWwoKTthcHBseSgpfTtkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCcjbW9udGhNZW51IGlucHV0W2RhdGEtbW9udGhdJykuZm9yRWFjaCh4PT54Lm9uY2hhbmdlPSgpPT57bGV0IGFueT1zZWxlY3RlZE1vbnRocygpLmxlbmd0aD4wOyQoJ21vbnRoQWxsJykuY2hlY2tlZD0hYW55O3VwZGF0ZU1vbnRoTGFiZWwoKTthcHBseSgpfSk7dXBkYXRlTW9udGhMYWJlbCgpfQpmdW5jdGlvbiBhdHRlbXB0TnVtKHIpe2xldCBzPW5vcm0oZ2V0KHIsJ0ludGVudG9zJywnSW50ZW50bycpKS50b0xvd2VyQ2FzZSgpLG09cy5tYXRjaCgvKFxkKykvKTtyZXR1cm4gbT8rbVsxXToxfQpmdW5jdGlvbiBrZXlTZXJ2ZXJTaWdsYShyKXtyZXR1cm4gbm9ybShnZXQociwnU2Vydmlkb3InKSkudG9VcHBlckNhc2UoKSsnfHwnK25vcm0oZ2V0KHIsJ1NpZ2xhJykpLnRvVXBwZXJDYXNlKCl9CmZ1bmN0aW9uIG9mZmljaWFsUGVyaW9kUm93cyhxLG1vbnRocyxhbWIpewogIC8vIFJlZ2xhIG9maWNpYWw6IHByaW1lcm8gcmVzb2x2ZXIgZWwgdWx0aW1vIGludGVudG8gR0xPQkFMIHBvciBTZXJ2aWRvciArIFNJR0xBLgogIC8vIFNvbG8gZGVzcHVlcyBhcGxpY2FyIFEsIE1FUyB5IEFtYmllbnRlLiBVbiBSZXByb2dyYW1hZG8vUm9sbGJhY2sgYW50ZXJpb3IgbnVuY2EKICAvLyBwdWVkZSByZWFwYXJlY2VyIGNvbW8gVHJhY2sgdmlnZW50ZSBzaSBleGlzdGUgdW4gaW50ZW50byBwb3N0ZXJpb3IuCiAgbGV0IGdyb3Vwcz1uZXcgTWFwKCk7IHJhdy5mb3JFYWNoKHI9PntsZXQgaz1rZXlTZXJ2ZXJTaWdsYShyKTtpZighZ3JvdXBzLmhhcyhrKSlncm91cHMuc2V0KGssW10pO2dyb3Vwcy5nZXQoaykucHVzaChyKX0pOwogIGxldCBsYXRlc3Q9W10sIGhpc3RvcmljYWw9W107CiAgZ3JvdXBzLmZvckVhY2gocnM9PnsKICAgIGxldCBteD1NYXRoLm1heCguLi5ycy5tYXAoYXR0ZW1wdE51bSkpOwogICAgbGV0IGxyPXJzLmZpbHRlcihyPT5hdHRlbXB0TnVtKHIpPT09bXgpOwogICAgbGF0ZXN0LnB1c2goLi4ubHIpOwogICAgcnMuZm9yRWFjaChyPT57CiAgICAgIGxldCBzbD1yLl9zdGF0ZS50b0xvd2VyQ2FzZSgpOwogICAgICBpZihhdHRlbXB0TnVtKHIpPG14ICYmIChzbC5pbmNsdWRlcygncmVwcm9ncmFtJyl8fHNsLmluY2x1ZGVzKCdyb2xsYmFjaycpKSl7CiAgICAgICAgaGlzdG9yaWNhbC5wdXNoKHsuLi5yLF9oaXN0b3JpY2FsOnRydWUsX2dycDonVHJhY2snfSk7CiAgICAgIH0KICAgIH0pOwogIH0pOwogIGxldCBjdXJyZW50PWxhdGVzdC5maWx0ZXIocj0+KCFxfHxyLl9xPT09cSkmJighbW9udGhzLmxlbmd0aHx8bW9udGhzLmluY2x1ZGVzKHIuX21vbnRoKSkmJighYW1ifHxyLl9hbWI9PT1hbWIpKTsKICBsZXQgaGlzdEZpbHRlcmVkPWhpc3RvcmljYWwuZmlsdGVyKHI9PighcXx8ci5fcT09PXEpJiYoIW1vbnRocy5sZW5ndGh8fG1vbnRocy5pbmNsdWRlcyhyLl9tb250aCkpJiYoIWFtYnx8ci5fYW1iPT09YW1iKSk7CiAgcmV0dXJuIHtjdXJyZW50LGhpc3RvcmljYWw6aGlzdEZpbHRlcmVkLGFsbDpjdXJyZW50fTsKfQpmdW5jdGlvbiBhcHBseSgpe2RldGFpbFBhZ2U9MTtsZXQgcT0kKCdxJykudmFsdWUsbW9udGhzPXNlbGVjdGVkTW9udGhzKCksYW1iPSQoJ2FtYicpLnZhbHVlLHN0YXRlPSQoJ3N0YXRlJykudmFsdWU7bGV0IHA9b2ZmaWNpYWxQZXJpb2RSb3dzKHEsbW9udGhzLGFtYik7dmlldz1wLmN1cnJlbnQ7aWYoc3RhdGUpdmlldz12aWV3LmZpbHRlcihyPT5yLl9ncnA9PT1zdGF0ZSk7d2luZG93Ll9wZXJpb2Q9cDtyZW5kZXIoKX0KZnVuY3Rpb24gc2hvd0RldGFpbChyb3dzLGxhYmVsKXtkZXRhaWxSb3dzPXJvd3N8fFtdO2RldGFpbFBhZ2U9MTskKCdkZXRhaWxIZWFkaW5nJykudGV4dENvbnRlbnQ9J0RldGFsbGUgYXVkaXRhYmxlIMK3ICcrKGxhYmVsfHwnT3JpZ2VuIOKGkiBEZXN0aW5vJyk7cmVuZGVyVGFibGUoZGV0YWlsUm93cyk7c2V0VGltZW91dCgoKT0+JCgnZGV0YWlsU2VjdGlvbicpLnNjcm9sbEludG9WaWV3KHtiZWhhdmlvcjonc21vb3RoJyxibG9jazonc3RhcnQnfSksMzApfQpmdW5jdGlvbiByZW5kZXIoKXtsZXQgcD13aW5kb3cuX3BlcmlvZHx8e2N1cnJlbnQ6dmlldyxoaXN0b3JpY2FsOltdLGFsbDp2aWV3fTtsZXQgY3VycmVudD1wLmN1cnJlbnQsIGhpc3RvcmljYWw9cC5oaXN0b3JpY2FsOwpsZXQgY3VyTWFwPXVuaXF1ZVNlcnZlcnMoY3VycmVudCksY3VyU2VydmVycz1bLi4uY3VyTWFwLmVudHJpZXMoKV07CmxldCBtaWc9Y3VyU2VydmVycy5maWx0ZXIoKFtoLHJzXSk9PnJzLnNvbWUocj0+ci5fZ3JwPT09J01pZ3JhZG8nKSkubWFwKChbaCxyc10pPT5baCxycy5maWx0ZXIocj0+ci5fZ3JwPT09J01pZ3JhZG8nKV0pOwpsZXQgZGVzPWN1clNlcnZlcnMuZmlsdGVyKChbaCxyc10pPT4hcnMuc29tZShyPT5yLl9ncnA9PT0nTWlncmFkbycpJiZycy5zb21lKHI9PnIuX2dycD09PSdEZXNlc3RpbWFkbycpKS5tYXAoKFtoLHJzXSk9PltoLHJzLmZpbHRlcihyPT5yLl9ncnA9PT0nRGVzZXN0aW1hZG8nKV0pOwpsZXQgdHJhY2tDdXJyZW50PWN1clNlcnZlcnMuZmlsdGVyKChbaCxyc10pPT4hcnMuc29tZShyPT5yLl9ncnA9PT0nTWlncmFkbycpJiYhcnMuc29tZShyPT5yLl9ncnA9PT0nRGVzZXN0aW1hZG8nKSkubWFwKChbaCxyc10pPT5baCxycy5maWx0ZXIocj0+ci5fZ3JwPT09J1RyYWNrJyldKTsKbGV0IGhpc3RNYXA9dW5pcXVlU2VydmVycyhoaXN0b3JpY2FsKSwgaGlzdEVudHJpZXM9Wy4uLmhpc3RNYXAuZW50cmllcygpXTsKbGV0IHRyYWNrPXRyYWNrQ3VycmVudDsKbGV0IHNjb3BlUm93cz1jdXJyZW50O2xldCBzY29wZVNlcnZlcnM9dW5pcXVlU2VydmVycyhzY29wZVJvd3MpO2xldCBjb21wcz1zY29wZVJvd3MucmVkdWNlKChhLHIpPT5hKyhyLl9jb21wfHwwKSwwKTsKbGV0IHJlYz1taWcuZmlsdGVyKChbaCxyc10pPT5zZXJ2ZXJJbXBhY3QocnMpIT09J1NpbiByZWN1cGVyYWNpw7NuJyk7bGV0IGFscmVhZHk9bWlnLmxlbmd0aC1yZWMubGVuZ3RoOwpsZXQgdnVsbkhlbHA9bWlnLmZpbHRlcigoW2gscnNdKT0+cnMuc29tZShyPT5yLl9vc3YwPT09J05vIHZpZ2VudGUnJiZyLl9vc3YxPT09J1ZpZ2VudGUnKSk7CmxldCB2dWxuTm89bWlnLmZpbHRlcigoW2gscnNdKT0+IXJzLnNvbWUocj0+ci5fb3N2MD09PSdObyB2aWdlbnRlJyYmci5fb3N2MT09PSdWaWdlbnRlJykpOwpsZXQgdnVsblZWPW1pZy5maWx0ZXIoKFtoLHJzXSk9PnJzLnNvbWUocj0+ci5fb3N2MD09PSdWaWdlbnRlJyYmci5fb3N2MT09PSdWaWdlbnRlJykpO2xldCB2dWxuVlZQY3Q9bWlnLmxlbmd0aD8odnVsblZWLmxlbmd0aC9taWcubGVuZ3RoKjEwMCk6MDsKbGV0IHZ1bG5QY3Q9bWlnLmxlbmd0aD8odnVsbkhlbHAubGVuZ3RoL21pZy5sZW5ndGgqMTAwKTowOwpsZXQgcGFyY2hQY3Q9bWlnLmxlbmd0aD8ocmVjLmxlbmd0aC9taWcubGVuZ3RoKjEwMCk6MDsKbGV0IHRyYWNrUGFyY2hFdmFsPXRyYWNrLmZpbHRlcigoW2gscnNdKT0+cGFyY2hUcmFja0V2YWx1YWJsZShycykpO2xldCB0cmFja1BhcmNoUG90ZW50aWFsPXRyYWNrUGFyY2hFdmFsLmZpbHRlcigoW2gscnNdKT0+cHJvamVjdGVkU2VydmVySW1wYWN0KHJzKSE9PSdTaW4gcmVjdXBlcmFjacOzbicpO2xldCB0cmFja1BhcmNoTkQ9dHJhY2subGVuZ3RoLXRyYWNrUGFyY2hFdmFsLmxlbmd0aDtsZXQgcGFyY2hQcm9qRGVuPW1pZy5sZW5ndGgrdHJhY2tQYXJjaEV2YWwubGVuZ3RoO2xldCBwYXJjaFByb2pOdW09cmVjLmxlbmd0aCt0cmFja1BhcmNoUG90ZW50aWFsLmxlbmd0aDtsZXQgcGFyY2hQcm9qUGN0PXBhcmNoUHJvakRlbj8ocGFyY2hQcm9qTnVtL3BhcmNoUHJvakRlbioxMDApOjA7CmxldCB0cmFja1Z1bG5FdmFsPXRyYWNrLmZpbHRlcigoW2gscnNdKT0+dnVsblRyYWNrRXZhbHVhYmxlKHJzKSk7bGV0IHRyYWNrVnVsblBvdGVudGlhbD10cmFja1Z1bG5FdmFsLmZpbHRlcigoW2gscnNdKT0+cnMuc29tZShyPT5yLl9vc3YwPT09J05vIHZpZ2VudGUnJiZyLl9vc3YxPT09J1ZpZ2VudGUnKSk7bGV0IHRyYWNrVnVsbk5EPXRyYWNrLmxlbmd0aC10cmFja1Z1bG5FdmFsLmxlbmd0aDtsZXQgdnVsblByb2pEZW49bWlnLmxlbmd0aCt0cmFja1Z1bG5FdmFsLmxlbmd0aDtsZXQgdnVsblByb2pOdW09dnVsbkhlbHAubGVuZ3RoK3RyYWNrVnVsblBvdGVudGlhbC5sZW5ndGg7bGV0IHZ1bG5Qcm9qUGN0PXZ1bG5Qcm9qRGVuPyh2dWxuUHJvak51bS92dWxuUHJvakRlbioxMDApOjA7aW50ZWdyaXR5Q2hlY2soJ01pZ3JhZG9zJyxtaWcpO2ludGVncml0eUNoZWNrKCdUcmFjaycsdHJhY2spO2ludGVncml0eUNoZWNrKCdEZXNlc3RpbWFkb3MnLGRlcyk7aW50ZWdyaXR5Q2hlY2soJ1BhcmNoYWRvcycscmVjKTtpbnRlZ3JpdHlDaGVjaygnVnVsbmVyYWJpbGlkYWQnLHZ1bG5IZWxwKTsKbGV0IGNhcmRzPVtbJ1RvdGFsIGRlbCBhbGNhbmNlJyxzY29wZVNlcnZlcnMuc2l6ZSxgJHtjb21wcy50b0xvY2FsZVN0cmluZygpfSBjb21wb25lbnRlcyBLeW5kcnlsYCwnYWxsJ10sWydNaWdyYWRvcycsbWlnLmxlbmd0aCxgJHtncm91cENvbXAobWlnKS50b0xvY2FsZVN0cmluZygpfSBjb21wb25lbnRlcyBLeW5kcnlsYCwnbWlnJ10sWydUcmFjayB2aWdlbnRlJyx0cmFjay5sZW5ndGgsYCR7Z3JvdXBDb21wKHRyYWNrKS50b0xvY2FsZVN0cmluZygpfSBjb21wb25lbnRlcyBLeW5kcnlsIMK3IGhpc3TDs3JpY29zIGV4Y2x1aWRvc2AsJ3RyYWNrJ10sWydEZXNlc3RpbWFkb3MnLGRlcy5sZW5ndGgsYCR7Z3JvdXBDb21wKGRlcykudG9Mb2NhbGVTdHJpbmcoKX0gY29tcG9uZW50ZXMgS3luZHJ5bGAsJ2RlcyddLFsnUmVjdXBlcmFkb3MgcGFyYSBQYXJjaGFkbycscmVjLmxlbmd0aCxgJHtncm91cENvbXAocmVjKS50b0xvY2FsZVN0cmluZygpfSBjb21wb25lbnRlcyBLeW5kcnlsIMK3IE5vIHZpZ2VudGUg4oaSIFZpZ2VudGVgLCdyZWMnXV07JCgnY2FyZHMnKS5pbm5lckhUTUw9Y2FyZHMubWFwKGM9PmA8ZGl2IGNsYXNzPSJjYXJkIiBkYXRhLWY9IiR7Y1szXX0iPjxkaXYgY2xhc3M9ImsiPiR7Y1swXX08L2Rpdj48ZGl2IGNsYXNzPSJ2Ij4ke2NbMV19IDxzcGFuIHN0eWxlPSJmb250LXNpemU6MTNweDtjb2xvcjojOTFhNGJkO2ZvbnQtd2VpZ2h0OjYwMCI+c2Vydmlkb3Jlczwvc3Bhbj48L2Rpdj48ZGl2IGNsYXNzPSJoaW50Ij4ke2NbMl19PC9kaXY+PC9kaXY+YCkuam9pbignJyk7ZG9jdW1lbnQucXVlcnlTZWxlY3RvckFsbCgnLmNhcmQnKS5mb3JFYWNoKHg9Pngub25jbGljaz0oKT0+e2xldCBmPXguZGF0YXNldC5mO2lmKGY9PT0nbWlnJylzaG93RGV0YWlsKG1pZy5mbGF0TWFwKHg9PnhbMV0pLCdNaWdyYWRvcycpO2Vsc2UgaWYoZj09PSd0cmFjaycpc2hvd0RldGFpbCh0cmFjay5mbGF0TWFwKHg9PnhbMV0pLCdUcmFjayB2aWdlbnRlJyk7ZWxzZSBpZihmPT09J2Rlcycpc2hvd0RldGFpbChkZXMuZmxhdE1hcCh4PT54WzFdKSwnRGVzZXN0aW1hZG9zJyk7ZWxzZSBpZihmPT09J3JlYycpc2hvd0RldGFpbChyZWMuZmxhdE1hcCh4PT54WzFdKS5maWx0ZXIocj0+ci5faW1wYWN0IT09J1NpbiByZWN1cGVyYWNpw7NuJyksJ1JlY3VwZXJhZG9zIHBhcmEgUGFyY2hhZG8nKTtlbHNlIHNob3dEZXRhaWwoc2NvcGVSb3dzLCdUb3RhbCBkZWwgYWxjYW5jZScpfSk7CmxldCBjYXRzPXsnU29sbyBTTyc6MCwnU29sbyBzdWJzaXN0ZW1hJzowLCdTTyArIHN1YnNpc3RlbWEnOjAsJ1NpbiByZWN1cGVyYWNpw7NuJzowfTttaWcuZm9yRWFjaCgoW2gscnNdKT0+Y2F0c1tzZXJ2ZXJJbXBhY3QocnMpXSsrKTskKCdpbXBhY3QnKS5pbm5lckhUTUw9YDxkaXYgY2xhc3M9ImltcGFjdCIgZGF0YS1pbXBhY3Q9InJlYyIgc3R5bGU9ImN1cnNvcjpwb2ludGVyIj48ZGl2IGNsYXNzPSJrIj5Db24gdmFsb3IgaW5jcmVtZW50YWw8L2Rpdj48ZGl2IGNsYXNzPSJudW0gZ3JlZW4iPiR7cmVjLmxlbmd0aH08L2Rpdj48ZGl2IGNsYXNzPSJsZWdlbmQiPiR7Z3JvdXBDb21wKHJlYykudG9Mb2NhbGVTdHJpbmcoKX0gY29tcG9uZW50ZXMgwrcgc2Vydmlkb3JlcyBjb24gb2Jzb2xlc2NlbmNpYSByZXRpcmFkYTwvZGl2PjwvZGl2PjxkaXYgY2xhc3M9ImltcGFjdCIgZGF0YS1pbXBhY3Q9ImFscmVhZHkiIHN0eWxlPSJjdXJzb3I6cG9pbnRlciI+PGRpdiBjbGFzcz0iayI+WWEgdmlnZW50ZXMgYW50ZXM8L2Rpdj48ZGl2IGNsYXNzPSJudW0gYW1iZXIiPiR7YWxyZWFkeX08L2Rpdj48ZGl2IGNsYXNzPSJsZWdlbmQiPk1pZ3Jhcm9uIHNpbiByZWN1cGVyYXIgc2NvcGUgcG9yIG9ic29sZXNjZW5jaWE8L2Rpdj48L2Rpdj48ZGl2IGNsYXNzPSJpbXBhY3QiIGRhdGEtaW1wYWN0PSJyZWMiIHN0eWxlPSJjdXJzb3I6cG9pbnRlciI+PGRpdiBjbGFzcz0iayI+JSB2YWxvciBpbmNyZW1lbnRhbDwvZGl2PjxkaXYgY2xhc3M9Im51bSBjeWFuIj4ke21pZy5sZW5ndGg/KChyZWMubGVuZ3RoL21pZy5sZW5ndGgpKjEwMCkudG9GaXhlZCgxKTonMC4wJ30lPC9kaXY+PGRpdiBjbGFzcz0ibGVnZW5kIj5SZWN1cGVyYWRvcyAvIE1pZ3JhZG9zPC9kaXY+PC9kaXY+YDtkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCdbZGF0YS1pbXBhY3RdJykuZm9yRWFjaChlbD0+ZWwub25jbGljaz0oKT0+e2xldCBmPWVsLmRhdGFzZXQuaW1wYWN0O2lmKGY9PT0ncmVjJylzaG93RGV0YWlsKHJlYy5mbGF0TWFwKHg9PnhbMV0pLmZpbHRlcihyPT5yLl9pbXBhY3QhPT0nU2luIHJlY3VwZXJhY2nDs24nKSwnUmVjdXBlcmFkb3MgcGFyYSBQYXJjaGFkbycpO2Vsc2Ugc2hvd0RldGFpbChtaWcuZmxhdE1hcCh4PT54WzFdKS5maWx0ZXIocj0+ci5faW1wYWN0PT09J1NpbiByZWN1cGVyYWNpw7NuJyksJ1lhIHZpZ2VudGVzIGFudGVzJyl9KTsKJCgnZXhlY3V0aXZlRmxvdycpLmlubmVySFRNTD1gPGRpdiBjbGFzcz0iZXhlY05vZGUgbWFpbiIgZGF0YS1mcm9udD0iYmFjayI+PGRpdiBjbGFzcz0iayI+QkFDS0xFVkVMIMK3IEVKRUNVVEFETzwvZGl2PjxkaXYgY2xhc3M9ImJpZyBjeWFuIj4ke21pZy5sZW5ndGh9PC9kaXY+PGRpdj48Yj5zZXJ2aWRvcmVzIG1pZ3JhZG9zPC9iPjwvZGl2PjxkaXYgY2xhc3M9ImxlZ2VuZCI+JHtncm91cENvbXAobWlnKS50b0xvY2FsZVN0cmluZygpfSBjb21wb25lbnRlcyDCtyBiYXNlIDEwMCU8L2Rpdj48L2Rpdj48ZGl2IGNsYXNzPSJleGVjQXJyb3ciPuKGkjwvZGl2PjxkaXYgY2xhc3M9ImV4ZWNOb2RlIiBkYXRhLWZyb250PSJwYXJjaCI+PGRpdiBjbGFzcz0iayI+QkVORUZJQ0lPIMK3IFBBUkNIQURPUzwvZGl2PjxkaXYgY2xhc3M9ImJpZyBncmVlbiI+JHtyZWMubGVuZ3RofTwvZGl2PjxkaXY+PGI+JHtwYXJjaFBjdC50b0ZpeGVkKDEpfSUgYmVuZWZpY2lhZG88L2I+PC9kaXY+PGRpdiBjbGFzcz0ibGVnZW5kIj4ke2dyb3VwQ29tcChyZWMpLnRvTG9jYWxlU3RyaW5nKCl9IGNvbXBvbmVudGVzIMK3IHJlY3VwZXJhZG9zIHBvciBTTyArIHN1YnNpc3RlbWFzPC9kaXY+PC9kaXY+PGRpdiBjbGFzcz0iZXhlY0Fycm93Ij4rPC9kaXY+PGRpdiBjbGFzcz0iZXhlY05vZGUiIGRhdGEtZnJvbnQ9InZ1bG4iPjxkaXYgY2xhc3M9ImsiPkJFTkVGSUNJTyDCtyBWVUxORVJBQklMSURBRDwvZGl2PjxkaXYgY2xhc3M9ImJpZyBncmVlbiI+JHt2dWxuSGVscC5sZW5ndGh9PC9kaXY+PGRpdj48Yj4ke3Z1bG5QY3QudG9GaXhlZCgxKX0lIGJlbmVmaWNpYWRvPC9iPjwvZGl2PjxkaXYgY2xhc3M9ImxlZ2VuZCI+JHtncm91cENvbXAodnVsbkhlbHApLnRvTG9jYWxlU3RyaW5nKCl9IGNvbXBvbmVudGVzIMK3IFNPIE5vIHZpZ2VudGUg4oaSIFZpZ2VudGU8L2Rpdj48L2Rpdj5gOyQoJ2V4ZWNDb250ZXh0JykuaW5uZXJIVE1MPWA8Yj5MZWN0dXJhIGVqZWN1dGl2YTo8L2I+IERlICR7bWlnLmxlbmd0aH0gc2Vydmlkb3JlcyBtaWdyYWRvcyBwb3IgQmFja2xldmVsLCA8Yj4ke3JlYy5sZW5ndGh9ICgke3BhcmNoUGN0LnRvRml4ZWQoMSl9JSk8L2I+IHJlY3VwZXJhcm9uIGNhcGFjaWRhZCB0ZWNub2zDs2dpY2EgcGFyYSBQYXJjaGFkb3MgeSA8Yj4ke3Z1bG5IZWxwLmxlbmd0aH0gKCR7dnVsblBjdC50b0ZpeGVkKDEpfSUpPC9iPiByZXRpcmFyb24gb2Jzb2xlc2NlbmNpYSBkZSBTTyByZWxldmFudGUgcGFyYSBWdWxuZXJhYmlsaWRhZC4gQ29tbyBjb250ZXh0bywgJHt2dWxuVlYubGVuZ3RofSBzZXJ2aWRvcmVzICgke3Z1bG5WVlBjdC50b0ZpeGVkKDEpfSUpIGZ1ZXJvbiBWaWdlbnRlIOKGkiBWaWdlbnRlOiBtb2Rlcm5pemFjacOzbiBzaW4gcmV0aXJvIGluY3JlbWVudGFsIGRlIG9ic29sZXNjZW5jaWEgZGUgU08uYDsKZG9jdW1lbnQucXVlcnlTZWxlY3RvckFsbCgnW2RhdGEtZnJvbnRdJykuZm9yRWFjaChlbD0+ZWwub25jbGljaz0oKT0+e2xldCBmPWVsLmRhdGFzZXQuZnJvbnQ7aWYoZj09PSdiYWNrJylzaG93RGV0YWlsKG1pZy5mbGF0TWFwKHg9PnhbMV0pLCdCYWNrbGV2ZWwgwrcgTWlncmFkb3MnKTtlbHNlIGlmKGY9PT0ncGFyY2gnKXNob3dEZXRhaWwocmVjLmZsYXRNYXAoeD0+eFsxXSkuZmlsdGVyKHI9PnIuX2ltcGFjdCE9PSdTaW4gcmVjdXBlcmFjacOzbicpLCdQYXJjaGFkb3MgwrcgUmVjdXBlcmFkb3MnKTtlbHNlIGlmKGY9PT0ndnVsbnZ2JylzaG93RGV0YWlsKHZ1bG5WVi5mbGF0TWFwKHg9PnhbMV0pLmZpbHRlcihyPT5yLl9vc3YwPT09J1ZpZ2VudGUnJiZyLl9vc3YxPT09J1ZpZ2VudGUnKSwnVnVsbmVyYWJpbGlkYWQgwrcgVmlnZW50ZSDihpIgVmlnZW50ZScpO2Vsc2Ugc2hvd0RldGFpbCh2dWxuSGVscC5mbGF0TWFwKHg9PnhbMV0pLmZpbHRlcihyPT5yLl9vc3YwPT09J05vIHZpZ2VudGUnJiZyLl9vc3YxPT09J1ZpZ2VudGUnKSwnVnVsbmVyYWJpbGlkYWQgwrcgTm8gdmlnZW50ZSDihpIgVmlnZW50ZScpfSk7CmNvbnN0IGV4cG9ydFBwdEV4ZWN1dGl2ZT1hc3luYygpPT57dHJ5e2lmKHR5cGVvZiBQcHR4R2VuSlM9PT0ndW5kZWZpbmVkJyl0aHJvdyBuZXcgRXJyb3IoJ05vIHNlIHB1ZG8gY2FyZ2FyIGVsIGdlbmVyYWRvciBQUFQuIFZlcmlmaWNhIGNvbmV4acOzbiBhIEludGVybmV0LicpO2NvbnN0IHBwdHg9bmV3IFBwdHhHZW5KUygpO3BwdHgubGF5b3V0PSdMQVlPVVRfV0lERSc7cHB0eC5hdXRob3I9J0t5bmRyeWwnO3BwdHguc3ViamVjdD0nSW1wYWN0byBCYWNrbGV2ZWwgZW4gbG9zIDMgZnJlbnRlcyc7cHB0eC50aXRsZT0nSW1wYWN0byBCYWNrbGV2ZWwgZW4gbG9zIDMgZnJlbnRlcyc7cHB0eC5jb21wYW55PSdLeW5kcnlsJztwcHR4Lmxhbmc9J2VzLVBFJztjb25zdCBxdj0kKCdxJykudmFsdWV8fCdUb2Rvcyc7Y29uc3QgbXY9c2VsZWN0ZWRNb250aHMoKTtjb25zdCBtZXM9bXYubGVuZ3RoP212LmpvaW4oJywgJyk6J1RvZG9zIGxvcyBtZXNlcyc7Y29uc3QgYXY9JCgnYW1iJykudmFsdWV8fCdUb2RvcyBsb3MgYW1iaWVudGVzJztsZXQgc2w9cHB0eC5hZGRTbGlkZSgpO3NsLmJhY2tncm91bmQ9e2NvbG9yOicwNzEwMUQnfTtzbC5hZGRUZXh0KCdJbXBhY3RvIEJhY2tsZXZlbCBlbiBsb3MgMyBmcmVudGVzJyx7eDouNTUseTouMzUsdzo4LjcsaDouNDUsZm9udEZhY2U6J0FwdG9zIERpc3BsYXknLGZvbnRTaXplOjI0LGJvbGQ6dHJ1ZSxjb2xvcjonRUVGNUZGJ30pO3NsLmFkZFRleHQoYEZpbHRyb3M6ICR7cXZ9IMK3ICR7bWVzfSDCtyAke2F2fWAse3g6LjU1LHk6Ljg2LHc6OS40LGg6LjI4LGZvbnRGYWNlOidBcHRvcycsZm9udFNpemU6MTAsY29sb3I6JzkxQTRCRCd9KTtjb25zdCBjYXJkcz1be3g6LjYsdDonQkFDS0xFVkVMIMK3IEVKRUNVVEFETycsbjptaWcubGVuZ3RoLGM6Z3JvdXBDb21wKG1pZykscDoxMDAsY29sOicxM0M1RTYnLGQ6J3NlcnZpZG9yZXMgbWlncmFkb3MnfSx7eDo0LjU1LHQ6J1BBUkNIQURPUyDCtyBCRU5FRklDSU8nLG46cmVjLmxlbmd0aCxjOmdyb3VwQ29tcChyZWMpLHA6cGFyY2hQY3QsY29sOicyMEQ3OEInLGQ6J3JlY3VwZXJhZG9zIHBvciBTTyArIHN1YnNpc3RlbWFzJ30se3g6OC41LHQ6J1ZVTE5FUkFCSUxJREFEIMK3IEJFTkVGSUNJTycsbjp2dWxuSGVscC5sZW5ndGgsYzpncm91cENvbXAodnVsbkhlbHApLHA6dnVsblBjdCxjb2w6JzU3OTRGRicsZDonU08gTm8gdmlnZW50ZSDihpIgVmlnZW50ZSd9XTtjYXJkcy5mb3JFYWNoKHo9PntzbC5hZGRTaGFwZShwcHR4LlNoYXBlVHlwZS5yb3VuZFJlY3Qse3g6ei54LHk6MS40NSx3OjMuMzUsaDoyLjQ1LHJlY3RSYWRpdXM6LjA4LGZpbGw6e2NvbG9yOicwQTE3MjUnfSxsaW5lOntjb2xvcjonMjYzNjRDJyx3aWR0aDoxLjJ9fSk7c2wuYWRkVGV4dCh6LnQse3g6ei54Ky4xOCx5OjEuNjgsdzozLGg6LjMsZm9udFNpemU6MTEsYm9sZDp0cnVlLGNvbG9yOnouY29sLGFsaWduOidjZW50ZXInfSk7c2wuYWRkVGV4dChTdHJpbmcoei5uKSx7eDp6LngrLjE4LHk6Mi4wOCx3OjMsaDouNTgsZm9udFNpemU6MzEsYm9sZDp0cnVlLGNvbG9yOnouY29sLGFsaWduOidjZW50ZXInfSk7c2wuYWRkVGV4dChgJHt6LmN9IGNvbXBvbmVudGVzYCx7eDp6LngrLjE4LHk6Mi42OCx3OjMsaDouMyxmb250U2l6ZToxMixib2xkOnRydWUsY29sb3I6J0VFRjVGRicsYWxpZ246J2NlbnRlcid9KTtzbC5hZGRUZXh0KGAke3oucC50b0ZpeGVkKDEpfSUgwrcgJHt6LmR9YCx7eDp6LngrLjE4LHk6My4wOCx3OjMsaDouNSxmb250U2l6ZToxMCxjb2xvcjonOTFBNEJEJyxhbGlnbjonY2VudGVyJyxicmVha0xpbmU6ZmFsc2V9KTt9KTtzbC5hZGRUZXh0KCfihpInLHt4OjMuOTMseToyLjM1LHc6LjQ1LGg6LjUsZm9udFNpemU6MjgsYm9sZDp0cnVlLGNvbG9yOic1Rjc4OTUnLGFsaWduOidjZW50ZXInfSk7c2wuYWRkVGV4dCgnKycse3g6Ny44OCx5OjIuMzUsdzouNDUsaDouNSxmb250U2l6ZToyOCxib2xkOnRydWUsY29sb3I6JzVGNzg5NScsYWxpZ246J2NlbnRlcid9KTtzbC5hZGRTaGFwZShwcHR4LlNoYXBlVHlwZS5yb3VuZFJlY3Qse3g6LjYseTo0LjM1LHc6MTEuMjUsaDoxLjI1LGZpbGw6e2NvbG9yOicxMDFDMkMnfSxsaW5lOntjb2xvcjonMjYzNjRDJ319KTtzbC5hZGRUZXh0KGBEZSAke21pZy5sZW5ndGh9IHNlcnZpZG9yZXMgbWlncmFkb3MsICR7cmVjLmxlbmd0aH0gKCR7cGFyY2hQY3QudG9GaXhlZCgxKX0lKSByZWN1cGVyYXJvbiBjYXBhY2lkYWQgcGFyYSBQYXJjaGFkb3MgeSAke3Z1bG5IZWxwLmxlbmd0aH0gKCR7dnVsblBjdC50b0ZpeGVkKDEpfSUpIHJldGlyYXJvbiBvYnNvbGVzY2VuY2lhIGRlIFNPLiAke3Z1bG5WVi5sZW5ndGh9ICgke3Z1bG5WVlBjdC50b0ZpeGVkKDEpfSUpIGZ1ZXJvbiBWaWdlbnRlIOKGkiBWaWdlbnRlLmAse3g6LjkseTo0LjY1LHc6MTAuNjUsaDouNjIsZm9udFNpemU6MTUsYm9sZDp0cnVlLGNvbG9yOidFRUY1RkYnLGFsaWduOidjZW50ZXInLHZhbGlnbjonbWlkJ30pO2xldCBwc2w9cHB0eC5hZGRTbGlkZSgpO3BzbC5iYWNrZ3JvdW5kPXtjb2xvcjonMDcxMDFEJ307cHNsLmFkZFRleHQoJ1Byb3llY2Npw7NuIHBvdGVuY2lhbCBkZWwgVHJhY2sgdmlnZW50ZScse3g6LjU1LHk6LjM1LHc6OSxoOi40NSxmb250U2l6ZToyNCxib2xkOnRydWUsY29sb3I6J0VFRjVGRid9KTtwc2wuYWRkVGV4dChgRmlsdHJvczogJHtxdn0gwrcgJHttZXN9IMK3ICR7YXZ9YCx7eDouNTUseTouODYsdzo5LjQsaDouMjgsZm9udFNpemU6MTAsY29sb3I6JzkxQTRCRCd9KTtjb25zdCBwcm9qPVt7eDouNzUsdDonUEFSQ0hBRE9TJyxhOnJlYy5sZW5ndGgsYWRkOnRyYWNrUGFyY2hQb3RlbnRpYWwubGVuZ3RoLHRvdGFsOnBhcmNoUHJvak51bSxwOnBhcmNoUHJvalBjdH0se3g6Ni43NSx0OidWVUxORVJBQklMSURBRCcsYTp2dWxuSGVscC5sZW5ndGgsYWRkOnRyYWNrVnVsblBvdGVudGlhbC5sZW5ndGgsdG90YWw6dnVsblByb2pOdW0scDp2dWxuUHJvalBjdH1dO3Byb2ouZm9yRWFjaCh6PT57cHNsLmFkZFRleHQoei50LHt4OnoueCx5OjEuNDUsdzo1LjEsaDouMzUsZm9udFNpemU6MTcsYm9sZDp0cnVlLGNvbG9yOicxM0M1RTYnLGFsaWduOidjZW50ZXInfSk7W1snQWN0dWFsJyx6LmEsJzIwRDc4QiddLFsnUG90ZW5jaWFsIGFkaWNpb25hbCcsJysnK3ouYWRkLCdGN0I4NEInXSxbJ1Byb3llY2Npw7NuIHRvdGFsJyx6LnRvdGFsLCc1Nzk0RkYnXV0uZm9yRWFjaCgodixrKT0+e3BzbC5hZGRTaGFwZShwcHR4LlNoYXBlVHlwZS5yb3VuZFJlY3Qse3g6ei54Ky4xNStrKjEuNjUseToyLjA1LHc6MS41LGg6MS42NSxmaWxsOntjb2xvcjonMEExNzI1J30sbGluZTp7Y29sb3I6JzI2MzY0Qyd9fSk7cHNsLmFkZFRleHQodlswXSx7eDp6LngrLjI1K2sqMS42NSx5OjIuMjUsdzoxLjMsaDouMyxmb250U2l6ZTo5LGNvbG9yOic5MUE0QkQnLGFsaWduOidjZW50ZXInfSk7cHNsLmFkZFRleHQoU3RyaW5nKHZbMV0pLHt4OnoueCsuMjUrayoxLjY1LHk6Mi43Mix3OjEuMyxoOi40OCxmb250U2l6ZToyNSxib2xkOnRydWUsY29sb3I6dlsyXSxhbGlnbjonY2VudGVyJ30pO30pO3BzbC5hZGRUZXh0KGBQcm95ZWNjacOzbjogJHt6LnAudG9GaXhlZCgxKX0lYCx7eDp6LngrLjQseTo0LjA1LHc6NC4zLGg6LjQ1LGZvbnRTaXplOjE4LGJvbGQ6dHJ1ZSxjb2xvcjonRUVGNUZGJyxhbGlnbjonY2VudGVyJ30pO30pO3BzbC5hZGRUZXh0KCdMYSBwcm95ZWNjacOzbiBjb25zaWRlcmEgc29sbyBUcmFjayB2aWdlbnRlIGNvbiBkZXN0aW5vIHRlY25vbMOzZ2ljbyBldmFsdWFibGUuIEhpc3TDs3JpY29zIHkgRGVzZXN0aW1hZG9zIG5vIHBhcnRpY2lwYW4uJyx7eDoxLjE1LHk6NS4zNSx3OjExLGg6LjUsZm9udFNpemU6MTIsY29sb3I6JzkxQTRCRCcsYWxpZ246J2NlbnRlcid9KTthd2FpdCBwcHR4LndyaXRlRmlsZSh7ZmlsZU5hbWU6J0ltcGFjdG9fQmFja2xldmVsXzNfRnJlbnRlc19FamVjdXRpdm8ucHB0eCd9KTt9Y2F0Y2goZXJyKXthbGVydCgnTm8gc2UgcHVkbyBleHBvcnRhciBQUFQ6ICcrZXJyLm1lc3NhZ2UpO2NvbnNvbGUuZXJyb3IoZXJyKX19OyQoJ2V4cG9ydFBwdFRvcCcpLm9uY2xpY2s9ZXhwb3J0UHB0RXhlY3V0aXZlOwoKbGV0IGhpc3RSb3dzPWhpc3RvcmljYWw7bGV0IGhpc3RDb21wcz1oaXN0Um93cy5yZWR1Y2UoKGEscik9PmErKHIuX2NvbXB8fDApLDApOyQoJ2hpc3RvcnlTdW1tYXJ5JykudGV4dENvbnRlbnQ9YCR7aGlzdEVudHJpZXMubGVuZ3RofSBzZXJ2aWRvcmVzIGhpc3TDs3JpY29zIMK3ICR7aGlzdENvbXBzLnRvTG9jYWxlU3RyaW5nKCl9IGNvbXBvbmVudGVzIGhpc3TDs3JpY29zIMK3IE5PIGNvbnRhYmlsaXphbiBlbiB0b3RhbGVzIG9maWNpYWxlc2A7JCgnaGlzdG9yeUJvZHknKS5pbm5lckhUTUw9aGlzdFJvd3MubWFwKHI9PmA8dHI+PHRkPiR7ci5fcX08L3RkPjx0ZD4ke3IuX21vbnRofTwvdGQ+PHRkPjxiPiR7ci5faG9zdH08L2I+PC90ZD48dGQ+JHtub3JtKGdldChyLCdTaWdsYScpKX08L3RkPjx0ZD4ke25vcm0oZ2V0KHIsJ1NlcnZpZG9yJykpfTwvdGQ+PHRkPiR7ci5fc3RhdGV9PC90ZD48dGQ+JHtub3JtKGdldChyLCdJbnRlbnRvcycsJ0ludGVudG8nKSl9PC90ZD48dGQ+JHtyLl9jb21wfTwvdGQ+PC90cj5gKS5qb2luKCcnKXx8Jzx0cj48dGQgY29sc3Bhbj0iNyIgY2xhc3M9ImVtcHR5Ij5TaW4gZXZlbnRvcyBoaXN0w7NyaWNvcyBwYXJhIGxvcyBmaWx0cm9zIHNlbGVjY2lvbmFkb3M8L3RkPjwvdHI+JzsKJCgncHJvalBhcmNoJykuaW5uZXJIVE1MPWA8ZGl2IGNsYXNzPSJwcm9qQ2FyZCIgZGF0YS1wcm9qPSJwYXJjaEFjdHVhbCI+PGRpdiBjbGFzcz0iayI+QWN0dWFsIG1hdGVyaWFsaXphZG88L2Rpdj48ZGl2IGNsYXNzPSJwcm9qQmlnIGdyZWVuIj4ke3JlYy5sZW5ndGh9PC9kaXY+PGRpdiBjbGFzcz0ibGVnZW5kIj4ke2dyb3VwQ29tcChyZWMpfSBjb21wb25lbnRlcyDCtyAke3BhcmNoUGN0LnRvRml4ZWQoMSl9JTwvZGl2PjwvZGl2PjxkaXYgY2xhc3M9InByb2pDYXJkIiBkYXRhLXByb2o9InBhcmNoUG90ZW50aWFsIj48ZGl2IGNsYXNzPSJrIj5Qb3RlbmNpYWwgYWRpY2lvbmFsPC9kaXY+PGRpdiBjbGFzcz0icHJvakJpZyBhbWJlciI+KyR7dHJhY2tQYXJjaFBvdGVudGlhbC5sZW5ndGh9PC9kaXY+PGRpdiBjbGFzcz0ibGVnZW5kIj4rJHtncm91cENvbXAodHJhY2tQYXJjaFBvdGVudGlhbCl9IGNvbXBvbmVudGVzIMK3ICskeyhwYXJjaFByb2pQY3QtcGFyY2hQY3QpLnRvRml4ZWQoMSl9IHBwPC9kaXY+PC9kaXY+PGRpdiBjbGFzcz0icHJvakNhcmQiIGRhdGEtcHJvaj0icGFyY2hQcm9qZWN0ZWQiPjxkaXYgY2xhc3M9ImsiPlByb3llY2Npw7NuIHRvdGFsPC9kaXY+PGRpdiBjbGFzcz0icHJvakJpZyBjeWFuIj4ke3BhcmNoUHJvak51bX08L2Rpdj48ZGl2IGNsYXNzPSJsZWdlbmQiPiR7KGdyb3VwQ29tcChyZWMpK2dyb3VwQ29tcCh0cmFja1BhcmNoUG90ZW50aWFsKSkudG9Mb2NhbGVTdHJpbmcoKX0gY29tcG9uZW50ZXMgwrcgJHtwYXJjaFByb2pQY3QudG9GaXhlZCgxKX0lPC9kaXY+PC9kaXY+YDsKJCgncHJvalZ1bG4nKS5pbm5lckhUTUw9YDxkaXYgY2xhc3M9InByb2pDYXJkIiBkYXRhLXByb2o9InZ1bG5BY3R1YWwiPjxkaXYgY2xhc3M9ImsiPkFjdHVhbCBtYXRlcmlhbGl6YWRvPC9kaXY+PGRpdiBjbGFzcz0icHJvakJpZyBncmVlbiI+JHt2dWxuSGVscC5sZW5ndGh9PC9kaXY+PGRpdiBjbGFzcz0ibGVnZW5kIj4ke2dyb3VwQ29tcCh2dWxuSGVscCl9IGNvbXBvbmVudGVzIMK3ICR7dnVsblBjdC50b0ZpeGVkKDEpfSU8L2Rpdj48L2Rpdj48ZGl2IGNsYXNzPSJwcm9qQ2FyZCIgZGF0YS1wcm9qPSJ2dWxuUG90ZW50aWFsIj48ZGl2IGNsYXNzPSJrIj5Qb3RlbmNpYWwgYWRpY2lvbmFsPC9kaXY+PGRpdiBjbGFzcz0icHJvakJpZyBhbWJlciI+KyR7dHJhY2tWdWxuUG90ZW50aWFsLmxlbmd0aH08L2Rpdj48ZGl2IGNsYXNzPSJsZWdlbmQiPiske2dyb3VwQ29tcCh0cmFja1Z1bG5Qb3RlbnRpYWwpfSBjb21wb25lbnRlcyDCtyArJHsodnVsblByb2pQY3QtdnVsblBjdCkudG9GaXhlZCgxKX0gcHA8L2Rpdj48L2Rpdj48ZGl2IGNsYXNzPSJwcm9qQ2FyZCIgZGF0YS1wcm9qPSJ2dWxuUHJvamVjdGVkIj48ZGl2IGNsYXNzPSJrIj5Qcm95ZWNjacOzbiB0b3RhbDwvZGl2PjxkaXYgY2xhc3M9InByb2pCaWcgY3lhbiI+JHt2dWxuUHJvak51bX08L2Rpdj48ZGl2IGNsYXNzPSJsZWdlbmQiPiR7KGdyb3VwQ29tcCh2dWxuSGVscCkrZ3JvdXBDb21wKHRyYWNrVnVsblBvdGVudGlhbCkpLnRvTG9jYWxlU3RyaW5nKCl9IGNvbXBvbmVudGVzIMK3ICR7dnVsblByb2pQY3QudG9GaXhlZCgxKX0lPC9kaXY+PC9kaXY+YDsKJCgncHJvak5vdGUnKS5pbm5lckhUTUw9YOKAoiBQYXJjaGFkb3M6ICR7dHJhY2tQYXJjaEV2YWwubGVuZ3RofSBUcmFjayBldmFsdWFibGVzOyAke3RyYWNrUGFyY2hQb3RlbnRpYWwubGVuZ3RofSBhcG9ydGFyw61hbiByZWN1cGVyYWNpw7NuIGFkaWNpb25hbDsgJHt0cmFja1BhcmNoTkR9IG5vIGRldGVybWluYWJsZXMgcG9yIGRlc3Rpbm8gaW5zdWZpY2llbnRlLjxicj7igKIgVnVsbmVyYWJpbGlkYWQ6ICR7dHJhY2tWdWxuRXZhbC5sZW5ndGh9IFRyYWNrIGV2YWx1YWJsZXMgcG9yIFNPOyAke3RyYWNrVnVsblBvdGVudGlhbC5sZW5ndGh9IHBhc2Fyw61hbiBkZSBTTyBObyB2aWdlbnRlIOKGkiBWaWdlbnRlOyAke3RyYWNrVnVsbk5EfSBubyBkZXRlcm1pbmFibGVzLjxicj7igKIgTG9zIHBvcmNlbnRhamVzIHByb3llY3RhZG9zIHVzYW4gY29tbyBkZW5vbWluYWRvciBNaWdyYWRvcyArIFRyYWNrIGV2YWx1YWJsZS4gTm8gaW5jbHV5ZW4gaGlzdMOzcmljb3MgbmkgRGVzZXN0aW1hZG9zLmA7CmRvY3VtZW50LnF1ZXJ5U2VsZWN0b3JBbGwoJ1tkYXRhLXByb2pdJykuZm9yRWFjaChlbD0+ZWwub25jbGljaz0oKT0+e2xldCBmPWVsLmRhdGFzZXQucHJvajtpZihmPT09J3BhcmNoQWN0dWFsJylzaG93RGV0YWlsKHJlYy5mbGF0TWFwKHg9PnhbMV0pLCdQcm95ZWNjacOzbiBQYXJjaGFkb3MgwrcgQWN0dWFsJyk7ZWxzZSBpZihmPT09J3BhcmNoUG90ZW50aWFsJylzaG93RGV0YWlsKHRyYWNrUGFyY2hQb3RlbnRpYWwuZmxhdE1hcCh4PT54WzFdKSwnUHJveWVjY2nDs24gUGFyY2hhZG9zIMK3IFBvdGVuY2lhbCBhZGljaW9uYWwnKTtlbHNlIGlmKGY9PT0ncGFyY2hQcm9qZWN0ZWQnKXNob3dEZXRhaWwoWy4uLnJlYywuLi50cmFja1BhcmNoUG90ZW50aWFsXS5mbGF0TWFwKHg9PnhbMV0pLCdQcm95ZWNjacOzbiBQYXJjaGFkb3MgwrcgVG90YWwnKTtlbHNlIGlmKGY9PT0ndnVsbkFjdHVhbCcpc2hvd0RldGFpbCh2dWxuSGVscC5mbGF0TWFwKHg9PnhbMV0pLCdQcm95ZWNjacOzbiBWdWxuZXJhYmlsaWRhZCDCtyBBY3R1YWwnKTtlbHNlIGlmKGY9PT0ndnVsblBvdGVudGlhbCcpc2hvd0RldGFpbCh0cmFja1Z1bG5Qb3RlbnRpYWwuZmxhdE1hcCh4PT54WzFdKSwnUHJveWVjY2nDs24gVnVsbmVyYWJpbGlkYWQgwrcgUG90ZW5jaWFsIGFkaWNpb25hbCcpO2Vsc2Ugc2hvd0RldGFpbChbLi4udnVsbkhlbHAsLi4udHJhY2tWdWxuUG90ZW50aWFsXS5mbGF0TWFwKHg9PnhbMV0pLCdQcm95ZWNjacOzbiBWdWxuZXJhYmlsaWRhZCDCtyBUb3RhbCcpfSk7CmNoYXJ0cy5mb3JFYWNoKGM9PmMuZGVzdHJveSgpKTtjaGFydHM9W107Y29uc3Qgc3RhdHVzVG90YWw9bWlnLmxlbmd0aCtkZXMubGVuZ3RoO2NvbnN0IHN0YXR1c0NvbXA9W2dyb3VwQ29tcChtaWcpLGdyb3VwQ29tcChkZXMpXTtjaGFydHMucHVzaChuZXcgQ2hhcnQoJCgnY2hhcnRTdGF0dXMnKSx7dHlwZTonZG91Z2hudXQnLGRhdGE6e2xhYmVsczpbJ01pZ3JhZG9zJywnRGVzZXN0aW1hZG9zJ10sZGF0YXNldHM6W3tsYWJlbDonU2Vydmlkb3JlcycsZGF0YTpbbWlnLmxlbmd0aCxkZXMubGVuZ3RoXSxiYWNrZ3JvdW5kQ29sb3I6WycjMjBkNzhiJywnI2ZmNWY3YSddLGJvcmRlckNvbG9yOicjMGIxNTIyJyxib3JkZXJXaWR0aDozLGhvdmVyT2Zmc2V0Ojh9XX0sb3B0aW9uczp7Y3V0b3V0Oic1OCUnLG9uSG92ZXI6KGUsZWxzKT0+e2UubmF0aXZlLnRhcmdldC5zdHlsZS5jdXJzb3I9ZWxzLmxlbmd0aD8ncG9pbnRlcic6J2RlZmF1bHQnfSxvbkNsaWNrOihlLGVscyk9PntpZighZWxzLmxlbmd0aClyZXR1cm47bGV0IGk9ZWxzWzBdLmluZGV4O2lmKGk9PT0wKXNob3dEZXRhaWwobWlnLmZsYXRNYXAoeD0+eFsxXSksJ01pZ3JhZG9zJyk7ZWxzZSBzaG93RGV0YWlsKGRlcy5mbGF0TWFwKHg9PnhbMV0pLCdEZXNlc3RpbWFkb3MnKX0scGx1Z2luczp7bGVnZW5kOntwb3NpdGlvbjonYm90dG9tJyxsYWJlbHM6e2NvbG9yOicjY2ZlMGY0JyxwYWRkaW5nOjE4fX0sdG9vbHRpcDp7Y2FsbGJhY2tzOntsYWJlbDooY3R4KT0+e2NvbnN0IGk9Y3R4LmRhdGFJbmRleDtjb25zdCBzcnY9Y3R4LnJhd3x8MDtjb25zdCBwY3Q9c3RhdHVzVG90YWw/KChzcnYvc3RhdHVzVG90YWwpKjEwMCkudG9GaXhlZCgxKTonMC4wJztyZXR1cm4gY3R4LmxhYmVsKyc6ICcrc3J2Kycgc2Vydmlkb3JlcyDCtyAnK3N0YXR1c0NvbXBbaV0rJyBjb21wb25lbnRlcyDCtyAnK3BjdCsnJSBkZSBzZXJ2aWRvcmVzJ319fX19fSkpO2NoYXJ0cy5wdXNoKG5ldyBDaGFydCgkKCdjaGFydEltcGFjdCcpLHt0eXBlOidiYXInLGRhdGE6e2xhYmVsczpPYmplY3Qua2V5cyhjYXRzKSxkYXRhc2V0czpbe2RhdGE6T2JqZWN0LnZhbHVlcyhjYXRzKSxiYWNrZ3JvdW5kQ29sb3I6WycjNTc5NGZmJywnI2E2N2NmZicsJyMyMGQ3OGInLCcjNjQ3NDhiJ119XX0sb3B0aW9uczp7b25Ib3ZlcjooZSxlbHMpPT57ZS5uYXRpdmUudGFyZ2V0LnN0eWxlLmN1cnNvcj1lbHMubGVuZ3RoPydwb2ludGVyJzonZGVmYXVsdCd9LG9uQ2xpY2s6KGUsZWxzKT0+e2lmKCFlbHMubGVuZ3RoKXJldHVybjtsZXQgbGFiZWw9T2JqZWN0LmtleXMoY2F0cylbZWxzWzBdLmluZGV4XTtsZXQgcm93cz1taWcuZmxhdE1hcCh4PT54WzFdKS5maWx0ZXIocj0+c2VydmVySW1wYWN0KG1pZy5maW5kKHk9PnlbMF09PT1yLl9ob3N0KT8uWzFdfHxbXSk9PT1sYWJlbCk7c2hvd0RldGFpbChyb3dzLCdQYXJjaGFkb3MgwrcgJytsYWJlbCl9LHBsdWdpbnM6e2xlZ2VuZDp7ZGlzcGxheTpmYWxzZX19LHNjYWxlczp7eTp7YmVnaW5BdFplcm86dHJ1ZSx0aWNrczp7Y29sb3I6JyM5MWE0YmQnfSxncmlkOntjb2xvcjonIzFkMzA0Nid9fSx4Ont0aWNrczp7Y29sb3I6JyNjZmUwZjQnfSxncmlkOntkaXNwbGF5OmZhbHNlfX19fX0pKTtjaGFydHMucHVzaChuZXcgQ2hhcnQoJCgnY2hhcnRQcm9qZWN0aW9uJykse3R5cGU6J2JhcicsZGF0YTp7bGFiZWxzOlsnUGFyY2hhZG9zJywnVnVsbmVyYWJpbGlkYWQnXSxkYXRhc2V0czpbe2xhYmVsOidBY3R1YWwnLGRhdGE6W3JlYy5sZW5ndGgsdnVsbkhlbHAubGVuZ3RoXSxiYWNrZ3JvdW5kQ29sb3I6JyMyMGQ3OGInfSx7bGFiZWw6J1BvdGVuY2lhbCBhZGljaW9uYWwnLGRhdGE6W3RyYWNrUGFyY2hQb3RlbnRpYWwubGVuZ3RoLHRyYWNrVnVsblBvdGVudGlhbC5sZW5ndGhdLGJhY2tncm91bmRDb2xvcjonI2Y3Yjg0Yid9XX0sb3B0aW9uczp7b25Ib3ZlcjooZSxlbHMpPT57ZS5uYXRpdmUudGFyZ2V0LnN0eWxlLmN1cnNvcj1lbHMubGVuZ3RoPydwb2ludGVyJzonZGVmYXVsdCd9LG9uQ2xpY2s6KGUsZWxzKT0+e2lmKCFlbHMubGVuZ3RoKXJldHVybjtsZXQgZHM9ZWxzWzBdLmRhdGFzZXRJbmRleCxpPWVsc1swXS5pbmRleDtpZihpPT09MClzaG93RGV0YWlsKChkcz09PTA/cmVjOnRyYWNrUGFyY2hQb3RlbnRpYWwpLmZsYXRNYXAoeD0+eFsxXSksZHM9PT0wPydQYXJjaGFkb3MgwrcgQWN0dWFsJzonUGFyY2hhZG9zIMK3IFBvdGVuY2lhbCBhZGljaW9uYWwnKTtlbHNlIHNob3dEZXRhaWwoKGRzPT09MD92dWxuSGVscDp0cmFja1Z1bG5Qb3RlbnRpYWwpLmZsYXRNYXAoeD0+eFsxXSksZHM9PT0wPydWdWxuZXJhYmlsaWRhZCDCtyBBY3R1YWwnOidWdWxuZXJhYmlsaWRhZCDCtyBQb3RlbmNpYWwgYWRpY2lvbmFsJyl9LHBsdWdpbnM6e2xlZ2VuZDp7bGFiZWxzOntjb2xvcjonI2NmZTBmNCd9fX0sc2NhbGVzOnt5OntiZWdpbkF0WmVybzp0cnVlLHRpY2tzOntjb2xvcjonIzkxYTRiZCd9LGdyaWQ6e2NvbG9yOicjMWQzMDQ2J319LHg6e3RpY2tzOntjb2xvcjonI2NmZTBmNCd9LGdyaWQ6e2Rpc3BsYXk6ZmFsc2V9fX19fSkpO2RldGFpbFJvd3M9dmlldzskKCdkZXRhaWxIZWFkaW5nJykudGV4dENvbnRlbnQ9J0RldGFsbGUgYXVkaXRhYmxlIMK3IE9yaWdlbiDihpIgRGVzdGlubyc7cmVuZGVyVGFibGUoZGV0YWlsUm93cyl9CmxldCBkZXRhaWxTb3J0PXtrZXk6JycsZGlyOjF9LGRldGFpbFBhZ2U9MSxkZXRhaWxQYWdlU2l6ZT01MCxkZXRhaWxQcmVwYXJlZD1bXTtmdW5jdGlvbiBzb3J0VmFsKHIsayl7aWYoaz09PSdTaWdsYSd8fGs9PT0nU2Vydmlkb3InfHxrPT09J0NvbXBvbmVudGUgU3ViIFNpc3RlbWEnfHxrPT09J0JEJ3x8az09PSdXTUUgLSBJSVMnKXJldHVybiBub3JtKGdldChyLGssaz09PSdXTUUgLSBJSVMnPydXTUUtSUlTJzp1bmRlZmluZWQpKTtpZihrPT09J192dWxuSW1wYWN0JylyZXR1cm4gci5fb3N2MD09PSdObyB2aWdlbnRlJyYmci5fb3N2MT09PSdWaWdlbnRlJz8nTm8gdmlnZW50ZSDihpIgVmlnZW50ZSc6KHIuX29zdjA9PT0nVmlnZW50ZScmJnIuX29zdjE9PT0nVmlnZW50ZSc/J1ZpZ2VudGUg4oaSIFZpZ2VudGUnOidTaW4gaW1wYWN0byBpbmNyZW1lbnRhbCcpO3JldHVybiByW2tdPz8nJ31mdW5jdGlvbiB1cGRhdGVTb3J0SGVhZGVycygpe2RvY3VtZW50LnF1ZXJ5U2VsZWN0b3JBbGwoJ3RoZWFkIHRoW2RhdGEta2V5XScpLmZvckVhY2godGg9PntsZXQgYmFzZT10aC5kYXRhc2V0LmxhYmVsfHx0aC50ZXh0Q29udGVudC5yZXBsYWNlKC9bIOKWsuKWvF0kLywnJyk7dGguZGF0YXNldC5sYWJlbD1iYXNlO3RoLmNsYXNzTGlzdC50b2dnbGUoJ3NvcnQtYWN0aXZlJyx0aC5kYXRhc2V0LmtleT09PWRldGFpbFNvcnQua2V5KTt0aC50ZXh0Q29udGVudD1iYXNlKyh0aC5kYXRhc2V0LmtleT09PWRldGFpbFNvcnQua2V5PyhkZXRhaWxTb3J0LmRpcj09PTE/JyDilrInOicg4pa8Jyk6JycpfSl9ZnVuY3Rpb24gcHJlcGFyZURldGFpbChyb3dzKXtsZXQgcT1ub3JtKCQoJ3NlYXJjaCcpLnZhbHVlKS50b0xvd2VyQ2FzZSgpO2xldCBkYXRhPXJvd3MuZmlsdGVyKHI9PiFxfHxKU09OLnN0cmluZ2lmeShyKS50b0xvd2VyQ2FzZSgpLmluY2x1ZGVzKHEpKTtpZihkZXRhaWxTb3J0LmtleSl7bGV0IGs9ZGV0YWlsU29ydC5rZXksbnVtPWRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoYHRoZWFkIHRoW2RhdGEta2V5PSIke2t9Il1gKT8uZGF0YXNldC5udW09PT0nMSc7ZGF0YT1bLi4uZGF0YV0uc29ydCgoYSxiKT0+e2xldCBhdj1zb3J0VmFsKGEsayksYnY9c29ydFZhbChiLGspO2lmKG51bSlyZXR1cm4gKChOdW1iZXIoYXYpfHwwKS0oTnVtYmVyKGJ2KXx8MCkpKmRldGFpbFNvcnQuZGlyO3JldHVybiBTdHJpbmcoYXYpLmxvY2FsZUNvbXBhcmUoU3RyaW5nKGJ2KSwnZXMnLHtudW1lcmljOnRydWUsc2Vuc2l0aXZpdHk6J2Jhc2UnfSkqZGV0YWlsU29ydC5kaXJ9KX1kZXRhaWxQcmVwYXJlZD1kYXRhO3JldHVybiBkYXRhfQpmdW5jdGlvbiByZW5kZXJUYWJsZShyb3dzLHJlcHJlcGFyZT10cnVlKXtsZXQgZGF0YT1yZXByZXBhcmU/cHJlcGFyZURldGFpbChyb3dzKTpkZXRhaWxQcmVwYXJlZDtsZXQgdG90YWw9ZGF0YS5sZW5ndGgscGFnZXM9TWF0aC5tYXgoMSxNYXRoLmNlaWwodG90YWwvZGV0YWlsUGFnZVNpemUpKTtkZXRhaWxQYWdlPU1hdGgubWluKE1hdGgubWF4KDEsZGV0YWlsUGFnZSkscGFnZXMpO2xldCBmcm9tPXRvdGFsPyhkZXRhaWxQYWdlLTEpKmRldGFpbFBhZ2VTaXplOjAsdG89TWF0aC5taW4oZnJvbStkZXRhaWxQYWdlU2l6ZSx0b3RhbCkscGFnZT1kYXRhLnNsaWNlKGZyb20sdG8pO3VwZGF0ZVNvcnRIZWFkZXJzKCk7JCgndGJvZHknKS5pbm5lckhUTUw9cGFnZS5tYXAocj0+YDx0cj48dGQ+JHtyLl9xfTwvdGQ+PHRkPjxiPiR7ci5faG9zdH08L2I+PC90ZD48dGQ+JHtub3JtKGdldChyLCdTaWdsYScpKX08L3RkPjx0ZD4ke25vcm0oZ2V0KHIsJ1NlcnZpZG9yJykpfTwvdGQ+PHRkPiR7ci5fYW1ifTwvdGQ+PHRkPiR7ci5fc3RhdGV9JHtyLl9oaXN0b3JpY2FsPycgPHNwYW4gY2xhc3M9InBpbGwgcC10cmFjayI+SGlzdMOzcmljbzwvc3Bhbj4nOicnfTwvdGQ+PHRkPjxzcGFuIGNsYXNzPSJwaWxsICR7ci5fZ3JwPT09J01pZ3JhZG8nPydwLW1pZyc6J3AtdHJhY2snfSI+JHtyLl9ncnB9PC9zcGFuPjwvdGQ+PHRkPiR7ci5fY29tcH08L3RkPjx0ZD4ke3IuX3NvMH08L3RkPjx0ZD4ke3IuX3NvMX08L3RkPjx0ZD4ke25vcm0oZ2V0KHIsJ0NvbXBvbmVudGUgU3ViIFNpc3RlbWEnKSl9PC90ZD48dGQ+JHtyLl9zdn08L3RkPjx0ZD4ke25vcm0oZ2V0KHIsJ0JEJykpfTwvdGQ+PHRkPiR7bm9ybShnZXQociwnV01FIC0gSUlTJywnV01FLUlJUycpKX08L3RkPjx0ZD4ke3IuX29zdjB9JHtyLl9zZj8nIC8gJytyLl9zc3YwOicnfTwvdGQ+PHRkPiR7ci5fb3N2MX0ke3IuX3NmPycgLyAnK3IuX3NzdjE6Jyd9PC90ZD48dGQ+PHNwYW4gY2xhc3M9InBpbGwgJHtyLl9pbXBhY3Q9PT0nU2luIHJlY3VwZXJhY2nDs24nPydwLXZpZyc6J3AtcmVjJ30iPiR7ci5faW1wYWN0fTwvc3Bhbj48L3RkPjx0ZD48c3BhbiBjbGFzcz0icGlsbCAke3IuX29zdjA9PT0nTm8gdmlnZW50ZScmJnIuX29zdjE9PT0nVmlnZW50ZSc/J3AtcmVjJzoncC12aWcnfSI+JHtyLl9vc3YwPT09J05vIHZpZ2VudGUnJiZyLl9vc3YxPT09J1ZpZ2VudGUnPydObyB2aWdlbnRlIOKGkiBWaWdlbnRlJzooci5fb3N2MD09PSdWaWdlbnRlJyYmci5fb3N2MT09PSdWaWdlbnRlJz8nVmlnZW50ZSDihpIgVmlnZW50ZSc6J1NpbiBpbXBhY3RvIGluY3JlbWVudGFsJyl9PC9zcGFuPjwvdGQ+PC90cj5gKS5qb2luKCcnKXx8Jzx0cj48dGQgY29sc3Bhbj0iMTgiIGNsYXNzPSJlbXB0eSI+U2luIHJlZ2lzdHJvczwvdGQ+PC90cj4nOyQoJ3BhZ2VJbmZvJykudGV4dENvbnRlbnQ9dG90YWw/YE1vc3RyYW5kbyAke2Zyb20rMX3igJMke3RvfSBkZSAke3RvdGFsLnRvTG9jYWxlU3RyaW5nKCl9YDonTW9zdHJhbmRvIDDigJMwIGRlIDAnOyQoJ3BhZ2VQcmV2JykuZGlzYWJsZWQ9ZGV0YWlsUGFnZTw9MTskKCdwYWdlTmV4dCcpLmRpc2FibGVkPWRldGFpbFBhZ2U+PXBhZ2VzfQokKCdmaWxlJykub25jaGFuZ2U9YXN5bmMgZT0+e2xldCBmPWUudGFyZ2V0LmZpbGVzWzBdO2lmKCFmKXJldHVybjskKCdzdGF0dXMnKS50ZXh0Q29udGVudD0nTGV5ZW5kbyAnK2YubmFtZSsn4oCmJzt0cnl7bGV0IHdiPVhMU1gucmVhZChuZXcgVWludDhBcnJheShhd2FpdCBmLmFycmF5QnVmZmVyKCkpLHt0eXBlOidhcnJheSd9KTtsZXQgbmFtZXM9d2IuU2hlZXROYW1lc3x8T2JqZWN0LmtleXMod2IuU2hlZXRzfHx7fSk7bGV0IGNhbmRpZGF0ZXM9WydDb25zb2xpZGFkbycsLi4ubmFtZXMuZmlsdGVyKG49Pm4hPT0nQ29uc29saWRhZG8nKV07bGV0IHJvd3M9bnVsbCx1c2VkPScnO2Zvcihjb25zdCBuIG9mIGNhbmRpZGF0ZXMpe2lmKCF3Yi5TaGVldHNbbl0pY29udGludWU7bGV0IHJyPVhMU1gudXRpbHMuc2hlZXRfdG9fanNvbih3Yi5TaGVldHNbbl0se2hlYWRlcjoxLGRlZnZhbDonJyxyYXc6ZmFsc2V9KTtpZihmaW5kSGVhZGVyKHJyKT49MCl7cm93cz1ycjt1c2VkPW47YnJlYWt9fWlmKCFyb3dzKXRocm93IG5ldyBFcnJvcignTm8gc2UgZW5jb250csOzIHVuYSBob2phIGNvbiBIb3N0bmFtZV9EZXN0aW5vIHkgRm9yZWNhc3QgLSBFc3RhZG8uJyk7bGV0IGhpPWZpbmRIZWFkZXIocm93cyk7cmF3PW9ialJvd3Mocm93cyxoaSkubWFwKGVucmljaCkuZmlsdGVyKHI9PnIuX2hvc3QpO2xldCBxcz1bLi4ubmV3IFNldChyYXcubWFwKHI9PnIuX3EpLmZpbHRlcihCb29sZWFuKSldLnNvcnQoKTskKCdxJykuaW5uZXJIVE1MPXFzLm1hcCh4PT5gPG9wdGlvbiAke3g9PT0nMjAyNi1RNCc/J3NlbGVjdGVkJzonJ30+JHt4fTwvb3B0aW9uPmApLmpvaW4oJycpO2xldCBtb250aHM9Wy4uLm5ldyBTZXQocmF3Lm1hcChyPT5yLl9tb250aCkuZmlsdGVyKEJvb2xlYW4pKV07YnVpbGRNb250aHMobW9udGhzKTtsZXQgYW1iPVsuLi5uZXcgU2V0KHJhdy5tYXAocj0+ci5fYW1iKS5maWx0ZXIoQm9vbGVhbikpXS5zb3J0KCk7JCgnYW1iJykuaW5uZXJIVE1MPSc8b3B0aW9uIHZhbHVlPSIiPlRvZG9zIGxvcyBhbWJpZW50ZXM8L29wdGlvbj4nK2FtYi5tYXAoeD0+YDxvcHRpb24+JHt4fTwvb3B0aW9uPmApLmpvaW4oJycpOyQoJ3N0YXR1cycpLnRleHRDb250ZW50PWBPSyDCtyBob2phICR7dXNlZH0gwrcgJHtyYXcubGVuZ3RoLnRvTG9jYWxlU3RyaW5nKCl9IHJlZ2lzdHJvcyDCtyAke25ldyBTZXQocmF3Lm1hcChyPT5yLl9ob3N0KSkuc2l6ZS50b0xvY2FsZVN0cmluZygpfSBob3N0bmFtZXNgOyQoJ3EnKS52YWx1ZT1xcy5pbmNsdWRlcygnMjAyNi1RNCcpPycyMDI2LVE0JzoocXNbMF18fCcnKTthcHBseSgpfWNhdGNoKGVycil7JCgnc3RhdHVzJykudGV4dENvbnRlbnQ9J0Vycm9yOiAnK2Vyci5tZXNzYWdlO2NvbnNvbGUuZXJyb3IoZXJyKX19OwpbJ3EnLCdhbWInLCdzdGF0ZSddLmZvckVhY2goaWQ9PiQoaWQpLm9uY2hhbmdlPWFwcGx5KTskKCdtb250aEJ0bicpLm9uY2xpY2s9ZT0+e2Uuc3RvcFByb3BhZ2F0aW9uKCk7JCgnbW9udGhNdWx0aScpLmNsYXNzTGlzdC50b2dnbGUoJ29wZW4nKX07ZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignY2xpY2snLGU9PntpZighJCgnbW9udGhNdWx0aScpLmNvbnRhaW5zKGUudGFyZ2V0KSkkKCdtb250aE11bHRpJykuY2xhc3NMaXN0LnJlbW92ZSgnb3BlbicpfSk7JCgnc2VhcmNoJykub25pbnB1dD0oKT0+e2RldGFpbFBhZ2U9MTtyZW5kZXJUYWJsZShkZXRhaWxSb3dzLmxlbmd0aHx8dmlldy5sZW5ndGg/ZGV0YWlsUm93czp2aWV3LHRydWUpfTskKCdyZXNldCcpLm9uY2xpY2s9KCk9Pntkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCcjbW9udGhNZW51IGlucHV0W2RhdGEtbW9udGhdJykuZm9yRWFjaCh4PT54LmNoZWNrZWQ9ZmFsc2UpO2lmKCQoJ21vbnRoQWxsJykpJCgnbW9udGhBbGwnKS5jaGVja2VkPXRydWU7dXBkYXRlTW9udGhMYWJlbCgpOyQoJ2FtYicpLnZhbHVlPScnOyQoJ3N0YXRlJykudmFsdWU9Jyc7aWYoWy4uLiQoJ3EnKS5vcHRpb25zXS5zb21lKG89Pm8udmFsdWU9PT0nMjAyNi1RNCcpKSQoJ3EnKS52YWx1ZT0nMjAyNi1RNCc7JCgnc2VhcmNoJykudmFsdWU9Jyc7YXBwbHkoKX07JCgnZXhwb3J0RXhjZWwnKS5vbmNsaWNrPSgpPT57bGV0IGJhc2U9ZGV0YWlsUm93cy5sZW5ndGh8fHZpZXcubGVuZ3RoP2RldGFpbFJvd3M6dmlldztpZighYmFzZS5sZW5ndGgpcmV0dXJuO2xldCBxPW5vcm0oJCgnc2VhcmNoJykudmFsdWUpLnRvTG93ZXJDYXNlKCk7bGV0IGRhdGE9YmFzZS5maWx0ZXIocj0+IXF8fEpTT04uc3RyaW5naWZ5KHIpLnRvTG93ZXJDYXNlKCkuaW5jbHVkZXMocSkpO2lmKGRldGFpbFNvcnQua2V5KXtsZXQgaz1kZXRhaWxTb3J0LmtleSxudW09ZG9jdW1lbnQucXVlcnlTZWxlY3RvcihgdGhlYWQgdGhbZGF0YS1rZXk9IiR7a30iXWApPy5kYXRhc2V0Lm51bT09PScxJztkYXRhPVsuLi5kYXRhXS5zb3J0KChhLGIpPT57bGV0IGF2PXNvcnRWYWwoYSxrKSxidj1zb3J0VmFsKGIsayk7aWYobnVtKXJldHVybiAoKE51bWJlcihhdil8fDApLShOdW1iZXIoYnYpfHwwKSkqZGV0YWlsU29ydC5kaXI7cmV0dXJuIFN0cmluZyhhdikubG9jYWxlQ29tcGFyZShTdHJpbmcoYnYpLCdlcycse251bWVyaWM6dHJ1ZSxzZW5zaXRpdml0eTonYmFzZSd9KSpkZXRhaWxTb3J0LmRpcn0pfWxldCBhb2E9W1snUSAtIElCSycsJ0hvc3RuYW1lX0Rlc3Rpbm8nLCdTSUdMQScsJ1NlcnZpZG9yIG9yaWdlbicsJ0FtYmllbnRlJywnRXN0YWRvJywnR3J1cG8nLCdDb21wb25lbnRlcycsJ1NPIG9yaWdlbicsJ1NPIGRlc3Rpbm8nLCdTdWJzaXN0ZW1hIG9yaWdlbicsJ1ZlcnNpw7NuJywnQkQgZGVzdGlubycsJ1dNRSAtIElJUycsJ1ZpZ2VuY2lhIG9yaWdlbicsJ1ZpZ2VuY2lhIGRlc3Rpbm8nLCdJbXBhY3RvIFBhcmNoYWRvJywnSW1wYWN0byBWdWxuZXJhYmlsaWRhZCAoU08pJ11dO2Zvcihjb25zdCByIG9mIGRhdGEpYW9hLnB1c2goW3IuX3Esci5faG9zdCxub3JtKGdldChyLCdTaWdsYScpKSxub3JtKGdldChyLCdTZXJ2aWRvcicpKSxyLl9hbWIsci5fc3RhdGUsci5fZ3JwLHIuX2NvbXAsci5fc28wLHIuX3NvMSxub3JtKGdldChyLCdDb21wb25lbnRlIFN1YiBTaXN0ZW1hJykpLHIuX3N2LG5vcm0oZ2V0KHIsJ0JEJykpLG5vcm0oZ2V0KHIsJ1dNRSAtIElJUycsJ1dNRS1JSVMnKSksci5fb3N2MCsoci5fc2Y/JyAvICcrci5fc3N2MDonJyksci5fb3N2MSsoci5fc2Y/JyAvICcrci5fc3N2MTonJyksci5faW1wYWN0LChyLl9vc3YwPT09J05vIHZpZ2VudGUnJiZyLl9vc3YxPT09J1ZpZ2VudGUnPydObyB2aWdlbnRlIOKGkiBWaWdlbnRlJzooci5fb3N2MD09PSdWaWdlbnRlJyYmci5fb3N2MT09PSdWaWdlbnRlJz8nVmlnZW50ZSDihpIgVmlnZW50ZSc6J1NpbiBpbXBhY3RvIGluY3JlbWVudGFsJykpXSk7bGV0IHdzPVhMU1gudXRpbHMuYW9hX3RvX3NoZWV0KGFvYSk7d3NbJyFjb2xzJ109YW9hWzBdLm1hcCgoXyxpKT0+KHt3Y2g6TWF0aC5taW4oNDIsTWF0aC5tYXgoMTIsLi4uYW9hLnNsaWNlKDAsNTAwKS5tYXAocm93PT5TdHJpbmcocm93W2ldPz8nJykubGVuZ3RoKzIpKSl9KSk7bGV0IHdiPVhMU1gudXRpbHMuYm9va19uZXcoKTtYTFNYLnV0aWxzLmJvb2tfYXBwZW5kX3NoZWV0KHdiLHdzLCdEZXRhbGxlIGF1ZGl0YWJsZScpO1hMU1gud3JpdGVGaWxlKHdiLCdCYWNrbGV2ZWxfRGV0YWxsZV9BdWRpdGFibGUueGxzeCcpfTskKCdleHBvcnQnKS5vbmNsaWNrPSgpPT57aWYoIXZpZXcubGVuZ3RoKXJldHVybjtsZXQgY29scz1bJ1EgLSBJQksnLCdIb3N0bmFtZV9EZXN0aW5vJywnU2lnbGEnLCdTZXJ2aWRvcicsJ0FtYmllbnRlJywnRm9yZWNhc3QgLSBFc3RhZG8nLCdHcnVwbycsJ0NvbXBvbmVudGVzIEt5ZHJ5bCcsJ1Npc3RlbWEgT3BlcmF0aXZvJywnU2lzdGVtYSBPcGVyYXRpdm9fRGVzdGlubycsJ0NvbXBvbmVudGUgU3ViIFNpc3RlbWEnLCdWZXJzacOzbicsJ0JEJywnV01FIC0gSUlTJywnVmlnZW5jaWEgT3JpZ2VuJywnVmlnZW5jaWEgRGVzdGlubycsJ0ltcGFjdG8gUGFyY2hhZG8nLCdJbXBhY3RvIFZ1bG5lcmFiaWxpZGFkIChTTyknXTtsZXQgZXNjPXg9PiciJytTdHJpbmcoeD8/JycpLnJlcGxhY2VBbGwoJyInLCciIicpKyciJztsZXQgbGluZXM9W2NvbHMubWFwKGVzYykuam9pbignLCcpXTtmb3IoY29uc3QgciBvZiB2aWV3KWxpbmVzLnB1c2goW3IuX3Esci5faG9zdCxnZXQociwnU2lnbGEnKSxnZXQociwnU2Vydmlkb3InKSxyLl9hbWIsci5fc3RhdGUsci5fZ3JwLHIuX2NvbXAsci5fc28wLHIuX3NvMSxnZXQociwnQ29tcG9uZW50ZSBTdWIgU2lzdGVtYScpLHIuX3N2LGdldChyLCdCRCcpLGdldChyLCdXTUUgLSBJSVMnLCdXTUUtSUlTJyksci5fb3N2MCsoci5fc2Y/JyAvICcrci5fc3N2MDonJyksci5fb3N2MSsoci5fc2Y/JyAvICcrci5fc3N2MTonJyksci5faW1wYWN0LChyLl9vc3YwPT09J05vIHZpZ2VudGUnJiZyLl9vc3YxPT09J1ZpZ2VudGUnPydObyB2aWdlbnRlIOKGkiBWaWdlbnRlJzooci5fb3N2MD09PSdWaWdlbnRlJyYmci5fb3N2MT09PSdWaWdlbnRlJz8nVmlnZW50ZSDihpIgVmlnZW50ZSc6J1NpbiBpbXBhY3RvIGluY3JlbWVudGFsJykpXS5tYXAoZXNjKS5qb2luKCcsJykpO2xldCBiPW5ldyBCbG9iKFsnXHVmZWZmJytsaW5lcy5qb2luKCdcbicpXSx7dHlwZTondGV4dC9jc3Y7Y2hhcnNldD11dGYtOCd9KSxhPWRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoJ2EnKTthLmhyZWY9VVJMLmNyZWF0ZU9iamVjdFVSTChiKTthLmRvd25sb2FkPSdCYWNrbGV2ZWxfUTRfSW1wYWN0b19QYXJjaGFkby5jc3YnO2EuY2xpY2soKTtVUkwucmV2b2tlT2JqZWN0VVJMKGEuaHJlZil9Owpkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCd0aGVhZCB0aFtkYXRhLWtleV0nKS5mb3JFYWNoKHRoPT50aC5hZGRFdmVudExpc3RlbmVyKCdjbGljaycsKCk9PntsZXQgaz10aC5kYXRhc2V0LmtleTtpZihkZXRhaWxTb3J0LmtleT09PWspZGV0YWlsU29ydC5kaXIqPS0xO2Vsc2V7ZGV0YWlsU29ydC5rZXk9aztkZXRhaWxTb3J0LmRpcj0xfWRldGFpbFBhZ2U9MTtyZW5kZXJUYWJsZShkZXRhaWxSb3dzLmxlbmd0aD9kZXRhaWxSb3dzOnZpZXcsdHJ1ZSl9KSk7CiQoJ3BhZ2VQcmV2Jykub25jbGljaz0oKT0+e2lmKGRldGFpbFBhZ2U+MSl7ZGV0YWlsUGFnZS0tO3JlbmRlclRhYmxlKGRldGFpbFJvd3MubGVuZ3RoP2RldGFpbFJvd3M6dmlldyxmYWxzZSl9fTskKCdwYWdlTmV4dCcpLm9uY2xpY2s9KCk9PntsZXQgcGFnZXM9TWF0aC5tYXgoMSxNYXRoLmNlaWwoZGV0YWlsUHJlcGFyZWQubGVuZ3RoL2RldGFpbFBhZ2VTaXplKSk7aWYoZGV0YWlsUGFnZTxwYWdlcyl7ZGV0YWlsUGFnZSsrO3JlbmRlclRhYmxlKGRldGFpbFJvd3MubGVuZ3RoP2RldGFpbFJvd3M6dmlldyxmYWxzZSl9fTsKJCgnY2FyZHMnKS5pbm5lckhUTUw9JzxkaXYgY2xhc3M9ImVtcHR5IiBzdHlsZT0iZ3JpZC1jb2x1bW46MS8tMSI+Q2FyZ2EgZWwgRXhjZWwgQmFja2xldmVsIHBhcmEgaW5pY2lhci48L2Rpdj4nOwo8L3NjcmlwdD48L2JvZHk+PC9odG1sPg==";
+  const srcHtml = decodeURIComponent(escape(atob(srcB64)));
+  $('#page').innerHTML = `
+    <div class="tile" style="padding:0;overflow:hidden;border-radius:16px;">
+      <div style="padding:14px 18px;border-bottom:1px solid #e5e7eb;background:#fff;">
+        <h3 style="margin:0;">Impacto Backlevel en los 3 frentes</h3>
+        <div class="sb">Dashboard integrado de Backlevel, Parchados y Vulnerabilidad · <b>Usa automáticamente el Consolidado y los filtros principales.</b></div>
+      </div>
+      <iframe id="threeFrontFrame" title="Impacto Backlevel en los 3 frentes" scrolling="no" style="width:100%;height:900px;border:0;background:#07101d;display:block;overflow:hidden;"></iframe>
+    </div>`;
+  const frame = $('#threeFrontFrame');
+  frame.onload = () => {
+    try {
+      const doc = frame.contentDocument;
+      const win = frame.contentWindow;
+      const upload = doc.querySelector('.upload');
+      if(upload) upload.style.display='none';
+      const top = doc.querySelector('.top');
+      if(top) top.style.display='none';
+      // V51: la pestaña 3 Frentes no mantiene filtros propios. Consume exactamente
+      // el universo ya filtrado por la barra principal del dashboard.
+      const internalFilters = doc.querySelector('.filters');
+      if(internalFilters) internalFilters.style.display='none';
+      const current = (state.view || []).filter(r=>r._sourceRow).map(r=>win.enrich(r._sourceRow));
+      const historical = (state.historyView || []).filter(r=>r._sourceRow).map(r=>({...win.enrich(r._sourceRow),_historical:true,_grp:'Track'}));
+      win.raw = [...current, ...historical];
+      win.view = current;
+      win._period = {current, historical, all:current};
+      const st=doc.getElementById('status');
+      if(st) st.textContent=`Sincronizado · ${current.length.toLocaleString()} registros vigentes`;
+      win.render();
+      // V52: altura natural del contenido para usar un solo scroll (el del dashboard principal).
+      // El iframe queda sin scroll propio y se expande cuando cambian graficos, detalle o filtros.
+      const syncThreeFrontHeight = () => {
+        try {
+          const body = doc.body, html = doc.documentElement;
+          const h = Math.max(body ? body.scrollHeight : 0, html ? html.scrollHeight : 0, 900);
+          frame.style.height = (h + 12) + 'px';
+          if (body) body.style.overflow = 'hidden';
+          if (html) html.style.overflow = 'hidden';
+        } catch(e) {}
+      };
+      syncThreeFrontHeight();
+      setTimeout(syncThreeFrontHeight, 100);
+      setTimeout(syncThreeFrontHeight, 400);
+      if (win.ResizeObserver) {
+        const ro = new win.ResizeObserver(syncThreeFrontHeight);
+        ro.observe(doc.documentElement);
+        frame._threeFrontResizeObserver = ro;
+      }
+    } catch(err){ console.error('No se pudo sincronizar 3 Frentes con el Consolidado principal',err); }
+  };
+  frame.srcdoc = srcHtml;
 }
 
 function renderApp() {
@@ -1255,6 +1493,9 @@ function renderApp() {
   else if (state.page === 'cierre-aprov') renderCierreAprovPage();
   else if (state.page === 'calendario') renderCalendarioPage();
   else if (state.page === 'resumen-comp') renderResumenCompPage();
+  else if (state.page === 'reporte-kmn') renderReporteKMNPage();
+  else if (state.page === 'analisis-rb-rp') renderAnalisisRbRpPage();
+  else if (state.page === 'tres-frentes') renderTresFrentesPage();
   else renderDetallePage();
 }
 
@@ -1264,7 +1505,7 @@ function renderApp() {
    * División de Pendientes en (Regular) vs (FDS)
 ------------------------------------------------------------- */
 function renderResumenCompPage() {
-  const prio = { 'Migrado': 6, 'Desestimado': 5, 'Planificado': 4, 'Reprogramado': 3, 'Por Definir': 2, 'Rollback': 1 };
+  const prio = { 'Migrado': 7, 'Desestimado': 6, 'Planificado': 5, 'Propuesto': 4, 'Reprogramado': 3, 'Por Definir': 2, 'Rollback': 1 };
   
   const unitMap = new Map();
   state.view.forEach(r => {
@@ -1291,7 +1532,9 @@ function renderResumenCompPage() {
   const stats = {};
   labels.forEach(l => stats[l] = { k: 0, a: 0, srv: new Set(), rows: [] });
 
-  uniqueRows.forEach(r => {
+  // V13: Los KPIs oficiales se calculan sobre TODAS las relaciones filtradas.
+  // La deduplicacion Servidor + SIGLA se conserva exclusivamente para la tabla de auditoria visual.
+  state.view.forEach(r => {
      totK += r.nComp;
      totA += (r.nCompArq || 0);
 
@@ -1327,27 +1570,27 @@ function renderResumenCompPage() {
   window.resumenFiltroCategory = '__ALL__';
 
   $('#page').innerHTML = `
-    <div class="section-label-bar">📦 Resumen Global de Componentes Únicos (Deduplicados)</div>
+    <div class="section-label-bar">📦 Resumen Global de Componentes</div>
     <div class="row r-4">
       <div class="tile kpi navy">
         <div class="lbl">Total Comp. Kyndryl</div>
         <div class="val">${fmt(totK)}</div>
-        <div class="sub">Columna "Componentes Kyndryl"</div>
+        <div class="sub">Alcance oficial bajo los filtros actuales</div>
       </div>
       <div class="tile kpi amber">
         <div class="lbl">Pendientes Kyndryl</div>
         <div class="val" style="color:var(--k-amber);">${fmt(totalPendientesKyndryl)}</div>
-        <div class="sub">${fmt(pendK_Reg)} en Días Regulares · ${fmt(pendK_Fds)} en Fines de Semana</div>
+        <div class="sub">${fmt(pendK_Reg)} Regular + ${fmt(pendK_Fds)} FDS · Excluye Migrados y Desestimados</div>
       </div>
       <div class="tile kpi blue">
         <div class="lbl">Total Comp. Arquitectura</div>
         <div class="val">${fmt(totA)}</div>
-        <div class="sub">Columna "Componentes Arquitectura"</div>
+        <div class="sub">Alcance oficial bajo los filtros actuales</div>
       </div>
       <div class="tile kpi amber">
         <div class="lbl">Pendientes Arquitectura</div>
         <div class="val" style="color:var(--k-amber);">${fmt(totalPendientesArq)}</div>
-        <div class="sub">${fmt(pendA_Reg)} en Días Regulares · ${fmt(pendA_Fds)} en Fines de Semana</div>
+        <div class="sub">${fmt(pendA_Reg)} Regular + ${fmt(pendA_Fds)} FDS · Excluye Migrados y Desestimados</div>
       </div>
     </div>
 
@@ -1401,7 +1644,8 @@ function renderResumenCompPage() {
                    <th class="l sortable" onclick="setResumenSort('servidor')">Srv. Origen <span id="sr_servidor" class="sort-icon"></span></th>
                    <th class="l sortable" onclick="setResumenSort('servidorDestino')">Srv. Destino <span id="sr_servidorDestino" class="sort-icon"></span></th>
                    <th class="l">Resumen del Componente (TPO / SO / APP / SubSist)</th>
-                   <th class="l sortable" onclick="setResumenSort('estatus')">Estatus Migración <span id="sr_estatus" class="sort-icon"></span></th>
+                   <th class="l sortable" onclick="setResumenSort('intentoNum')">Intento Vigente <span id="sr_intentoNum" class="sort-icon"></span></th>
+                    <th class="l sortable" onclick="setResumenSort('estatus')">Estatus Migración <span id="sr_estatus" class="sort-icon"></span></th>
                    <th class="l sortable" onclick="setResumenSort('ejecFDS')">Días de Ejecución <span id="sr_ejecFDS" class="sort-icon"></span></th>
                    <th class="sortable" style="background:#0F3A70; color:#fff;" onclick="setResumenSort('nComp')">Comp. Kyndryl <span id="sr_nComp" class="sort-icon"></span></th>
                    <th class="sortable" style="background:#0284C7; color:#fff;" onclick="setResumenSort('nCompArq')">Comp. Arq <span id="sr_nCompArq" class="sort-icon"></span></th>
@@ -1690,25 +1934,37 @@ function coberturaCardsHtml(rows, modo) {
   const totalComp = rows.reduce((a,r)=>a+(Number(r[compField])||0),0);
   const totalSrv = new Set(rows.map(r=>r.servidor).filter(Boolean)).size;
   const totalTkt = getTicketsAprovUnicos(rows).size;
-  const pendientes = rows.filter(r => r.estatus !== 'Migrado');
+  const pendientes = rows.filter(r => r.estatus !== 'Migrado' && r.estatus !== 'Desestimado');
+  const desestimados = rows.filter(r => r.estatus === 'Desestimado');
+  const migrados = rows.filter(r => r.estatus === 'Migrado');
   const pendComp = pendientes.reduce((a,r)=>a+(Number(r[compField])||0),0);
   const pendSrv = new Set(pendientes.map(r=>r.servidor).filter(Boolean)).size;
   const pendTkt = getTicketsAprovUnicos(pendientes).size;
+  const desComp = desestimados.reduce((a,r)=>a+(Number(r[compField])||0),0);
+  const desSrv = new Set(desestimados.map(r=>r.servidor).filter(Boolean)).size;
+  const desTkt = getTicketsAprovUnicos(desestimados).size;
+  const migComp = migrados.reduce((a,r)=>a+(Number(r[compField])||0),0);
   const suffix = esArq ? 'Arq' : 'Main';
   const nombre = esArq ? 'Arquitectura' : 'Kyndryl';
   return `
     <div class="section-label-bar">🧭 Cobertura del Alcance ${nombre}</div>
-    <div class="row r-2">
+    <div class="row r-3">
       <div class="tile kpi navy kpi-clickable" onclick="mostrarDetalleCobertura('${suffix}','total')" title="Clic para auditar todo el alcance bajo los filtros actuales">
         <div class="lbl">Total del Alcance</div>
         <div class="val">${fmt(totalComp)} <span style="font-size:15px;color:var(--k-text-muted);">componentes</span></div>
         <div class="sub"><b>${fmt(totalSrv)}</b> servidores únicos · <b>${fmt(totalTkt)}</b> tickets de aprovisionamiento únicos · <b>Clic para ver detalle</b></div>
       </div>
-      <div class="tile kpi amber kpi-clickable" onclick="mostrarDetalleCobertura('${suffix}','pendiente')" title="Clic para auditar lo que falta migrar">
+      <div class="tile kpi amber kpi-clickable" onclick="mostrarDetalleCobertura('${suffix}','pendiente')" title="Clic para auditar lo que realmente falta migrar">
         <div class="lbl">Pendiente de Migración</div>
         <div class="val" style="color:var(--k-amber);">${fmt(pendComp)} <span style="font-size:15px;color:var(--k-text-muted);">componentes</span></div>
-        <div class="sub"><b>${fmt(pendSrv)}</b> servidores únicos · <b>${fmt(pendTkt)}</b> tickets de aprovisionamiento únicos · Estatus distinto de Migrado · <b>Clic para ver detalle</b></div>
+        <div class="sub"><b>${fmt(pendSrv)}</b> servidores únicos · <b>${fmt(pendTkt)}</b> tickets únicos · Excluye Migrados y Desestimados · <b>Clic para ver detalle</b></div>
       </div>
+      <div class="tile kpi alert kpi-clickable" onclick="mostrarDetalleCobertura('${suffix}','desestimado')" title="Clic para auditar componentes desestimados que no se ejecutarán">
+        <div class="lbl">Desestimados / No se Ejecutarán</div>
+        <div class="val" style="color:var(--k-alert);">${fmt(desComp)} <span style="font-size:15px;color:var(--k-text-muted);">componentes</span></div>
+        <div class="sub"><b>${fmt(desSrv)}</b> servidores únicos · <b>${fmt(desTkt)}</b> tickets únicos · Forecast - Estado: Desestimado · <b>Clic para ver detalle</b></div>
+      </div>
+      <div style="grid-column:1/-1;font-size:11.5px;color:var(--k-text-muted);padding:0 4px 2px;">Conciliación: <b>${fmt(migComp)} Migrados + ${fmt(pendComp)} Pendientes + ${fmt(desComp)} Desestimados = ${fmt(totalComp)} Total del Alcance</b>.</div>
     </div>
     <div class="row r-1" id="coberturaDetalle${suffix}">
       <div class="tile" style="border:1.5px solid #CBD5E1;border-radius:16px;">
@@ -1728,7 +1984,8 @@ function mostrarDetalleCobertura(suffix, tipo) {
   const esArq = suffix === 'Arq';
   const compField = esArq ? 'nCompArq' : 'nComp';
   let base = state.view.slice();
-  if (tipo === 'pendiente') base = base.filter(r => r.estatus !== 'Migrado');
+  if (tipo === 'pendiente') base = base.filter(r => r.estatus !== 'Migrado' && r.estatus !== 'Desestimado');
+  else if (tipo === 'desestimado') base = base.filter(r => r.estatus === 'Desestimado');
   window['coberturaRows' + suffix] = base;
   window['coberturaFiltro' + suffix] = '__ALL__';
   window['coberturaSearch' + suffix] = '';
@@ -1740,9 +1997,21 @@ function pintarDetalleCobertura(suffix, compField, tipo) {
   const rowsBase = window['coberturaRows' + suffix] || [];
   const filtro = window['coberturaFiltro' + suffix] || '__ALL__';
   const q = norm(window['coberturaSearch' + suffix] || '');
+  const sortCol = window['coberturaSortCol' + suffix] || 'servidor';
+  const sortAsc = window['coberturaSortAsc' + suffix] !== false;
   let rows = rowsBase.slice();
   if (filtro !== '__ALL__') rows = rows.filter(r => r.estatus === filtro);
-  if (q) rows = rows.filter(r => norm(`${r.servidor} ${r.servidorDestino} ${r.siglas} ${r.app} ${r.ticketAprov} ${r.ownerKyndryl} ${r.priorizadoQ} ${r.estatus}`).includes(q));
+  if (q) rows = rows.filter(r => norm(`${r.servidor} ${r.servidorDestino} ${r.siglas} ${r.app} ${r.ticketAprov} ${r.estadoAprov} ${r.priorizadoQ} ${r.estatus} ${r.comentarios || ''}`).includes(q));
+  rows.sort((a,b) => {
+    let va = sortCol === 'componentes' ? Number(a[compField] || 0) : (sortCol === 'comentarios' ? (a.comentarios || '') : a[sortCol]);
+    let vb = sortCol === 'componentes' ? Number(b[compField] || 0) : (sortCol === 'comentarios' ? (b.comentarios || '') : b[sortCol]);
+    if (typeof va === 'string') va = norm(va);
+    if (typeof vb === 'string') vb = norm(vb);
+    if (va == null) va = ''; if (vb == null) vb = '';
+    if (va < vb) return sortAsc ? -1 : 1;
+    if (va > vb) return sortAsc ? 1 : -1;
+    return 0;
+  });
   const comp = rows.reduce((a,r)=>a+(Number(r[compField])||0),0);
   const srv = new Set(rows.map(r=>r.servidor).filter(Boolean)).size;
   const tkt = getTicketsAprovUnicos(rows).size;
@@ -1751,7 +2020,8 @@ function pintarDetalleCobertura(suffix, compField, tipo) {
   window['coberturaTipo' + suffix] = tipo;
   const btnExp = $('#btnExportCobertura' + suffix); if (btnExp) btnExp.classList.remove('hide');
   const estatus = ESTATUS_MIGRACION_LIST.filter(e => rowsBase.some(r=>r.estatus===e));
-  $('#coberturaTitle'+suffix).textContent = tipo === 'pendiente' ? 'Detalle — Pendiente de Migración' : 'Detalle — Total del Alcance';
+  const th = (label, col, left=true) => `<th class="${left?'l ':''}sortable" onclick="setCoberturaSort('${suffix}','${col}','${compField}','${tipo}')" title="Clic para ordenar">${label} <span class="sort-icon">${sortCol===col ? (sortAsc?'▲':'▼') : ''}</span></th>`;
+  $('#coberturaTitle'+suffix).textContent = tipo === 'pendiente' ? 'Detalle — Pendiente de Migración' : (tipo === 'desestimado' ? 'Detalle — Desestimados / No se Ejecutarán' : 'Detalle — Total del Alcance');
   $('#coberturaSub'+suffix).innerHTML = `<b>${fmt(comp)}</b> componentes · <b>${fmt(srv)}</b> servidores únicos · <b>${fmt(tkt)}</b> tickets únicos · ${fmt(rows.length)} relaciones mostradas`;
   $('#coberturaContent'+suffix).innerHTML = `
     <div style="display:flex;gap:8px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px;">
@@ -1759,13 +2029,18 @@ function pintarDetalleCobertura(suffix, compField, tipo) {
         <button class="btn sm ${filtro==='__ALL__'?'':'ghost'}" onclick="setCoberturaFiltro('${suffix}','__ALL__','${compField}','${tipo}')">Todos</button>
         ${estatus.map(e=>`<button class="btn sm ${filtro===e?'':'ghost'}" onclick="setCoberturaFiltro('${suffix}','${e}','${compField}','${tipo}')">${esc(e)}</button>`).join('')}
       </div>
-      <input type="text" id="coberturaSearch${suffix}" placeholder="🔍 Buscar servidor, SIGLA, ticket, owner..." value="${esc(window['coberturaSearch'+suffix]||'')}" style="min-width:280px;">
+      <input type="text" id="coberturaSearch${suffix}" placeholder="🔍 Buscar servidor, SIGLA, ticket, estado, motivo..." value="${esc(window['coberturaSearch'+suffix]||'')}" style="min-width:300px;">
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"><span class="stat-pill all">Componentes: ${fmt(comp)}</span><span class="stat-pill all">Servidores: ${fmt(srv)}</span><span class="stat-pill all">Tickets: ${fmt(tkt)}</span></div>
-    <div class="tw" style="max-height:480px;"><table class="dt"><thead><tr><th class="l">Servidor</th><th class="l">Srv. Destino</th><th class="l">SIGLA</th><th class="l">Aplicación</th><th>Componentes</th><th class="l">Ticket Aprovisionamiento</th><th class="l">Estado Aprov.</th><th class="l">Priorizado Q</th><th class="l">Owner</th><th class="l">Estatus</th></tr></thead><tbody>
-      ${rows.map(r=>`<tr><td class="l mono"><b>${esc(r.servidor)}</b></td><td class="l mono">${esc(r.servidorDestino)}</td><td class="l mono"><b>${esc(r.siglas)}</b></td><td class="l">${esc(r.app)}</td><td class="num"><b>${fmt(r[compField]||0)}</b></td><td class="l mono" style="color:var(--k-navy);font-weight:700;">${esc(r.ticketAprov)}</td><td class="l">${esc(r.estadoAprov)}</td><td class="l">${esc(r.priorizadoQ)}</td><td class="l"><b>${esc(r.ownerKyndryl)}</b></td><td class="l"><span class="tag ${r.estatus==='Migrado'?'mig':(r.estatus==='Desestimado'?'des':(r.estatus==='Rollback'?'rb':(r.estatus==='Planificado'?'plan':'pend')))}">${esc(r.estatus)}</span></td></tr>`).join('') || `<tr><td colspan="10" class="l" style="text-align:center;padding:22px;color:#888;">No hay registros para el filtro seleccionado.</td></tr>`}
+    <div class="tw" style="max-height:480px;"><table class="dt"><thead><tr>${th('Servidor','servidor')}${th('Srv. Destino','servidorDestino')}${th('SIGLA','siglas')}${th('Aplicación','app')}${th('Componentes','componentes',false)}${th('Ticket Aprovisionamiento','ticketAprov')}${th('Estado Aprov.','estadoAprov')}${th('Priorizado Q','priorizadoQ')}${th('Estatus','estatus')}${tipo === 'desestimado' ? th('Motivo de Desestimación','comentarios') : ''}</tr></thead><tbody>
+      ${rows.map(r=>`<tr><td class="l mono"><b>${esc(r.servidor)}</b></td><td class="l mono">${esc(r.servidorDestino)}</td><td class="l mono"><b>${esc(r.siglas)}</b></td><td class="l">${esc(r.app)}</td><td class="num"><b>${fmt(r[compField]||0)}</b></td><td class="l mono" style="color:var(--k-navy);font-weight:700;">${esc(r.ticketAprov)}</td><td class="l">${esc(r.estadoAprov)}</td><td class="l">${esc(r.priorizadoQ)}</td><td class="l"><span class="tag ${r.estatus==='Migrado'?'mig':(r.estatus==='Desestimado'?'des':(r.estatus==='Rollback'?'rb':(r.estatus==='Planificado'?'plan':'pend')))}">${esc(r.estatus)}</span></td>${tipo === 'desestimado' ? `<td class="l" style="min-width:320px;white-space:normal;word-break:break-word;">${esc(r.comentarios || '—')}</td>` : ''}</tr>`).join('') || `<tr><td colspan="${tipo === 'desestimado' ? 10 : 9}" class="l" style="text-align:center;padding:22px;color:#888;">No hay registros para el filtro seleccionado.</td></tr>`}
     </tbody></table></div>`;
   const inp=$('#coberturaSearch'+suffix); if(inp) inp.oninput=e=>{window['coberturaSearch'+suffix]=e.target.value;pintarDetalleCobertura(suffix,compField,tipo); const ni=$('#coberturaSearch'+suffix); if(ni){ni.focus();ni.setSelectionRange(ni.value.length,ni.value.length);}};
+}
+function setCoberturaSort(suffix, col, compField, tipo){
+  const key='coberturaSortCol'+suffix, ascKey='coberturaSortAsc'+suffix;
+  if(window[key]===col) window[ascKey]=!(window[ascKey]!==false); else { window[key]=col; window[ascKey]=true; }
+  pintarDetalleCobertura(suffix,compField,tipo);
 }
 function setCoberturaFiltro(suffix, filtro, compField, tipo){ window['coberturaFiltro'+suffix]=filtro; pintarDetalleCobertura(suffix,compField,tipo); }
 function exportarDetalleCobertura(suffix){
@@ -1777,13 +2052,14 @@ function exportarDetalleCobertura(suffix){
     'Servidor Origen': r.servidor, 'Servidor Destino': r.servidorDestino, 'SIGLA': r.siglas, 'Aplicación': r.app,
     'Componentes': Number(r[compField]) || 0, 'Componentes Kyndryl': Number(r.nComp) || 0, 'Componentes Arquitectura': Number(r.nCompArq) || 0,
     'Ticket Aprovisionamiento': r.ticketAprov, 'Estado Aprovisionamiento': r.estadoAprov, 'Priorizado Q': r.priorizadoQ,
-    'Owner Kyndryl': r.ownerKyndryl, 'Ambiente': r.ambiente, 'Estatus Migración': r.estatus,
+    'Ambiente': r.ambiente, 'Estatus Migración': r.estatus,
+    ...(tipo === 'desestimado' ? { 'Motivo de Desestimación': r.comentarios || '—' } : {}),
     'OC Migración': r.oc, 'Estado OC': r.estadoOC, 'Trimestre': r.qIbk, 'Mes': r.mes
   }));
   const ws = XLSX.utils.json_to_sheet(exportRows);
   ws['!cols'] = [{wch:22},{wch:22},{wch:14},{wch:36},{wch:14},{wch:20},{wch:24},{wch:24},{wch:24},{wch:24},{wch:24},{wch:14},{wch:20},{wch:20},{wch:18},{wch:14},{wch:14}];
   XLSX.utils.book_append_sheet(wb, ws, 'Detalle_Cobertura');
-  const alcance = tipo === 'pendiente' ? 'Pendiente_Migracion' : 'Total_Alcance';
+  const alcance = tipo === 'pendiente' ? 'Pendiente_Migracion' : (tipo === 'desestimado' ? 'Desestimados' : 'Total_Alcance');
   const medida = suffix === 'Arq' ? 'Arquitectura' : 'Kyndryl';
   XLSX.writeFile(wb, `Kyndryl_Cobertura_${medida}_${alcance}.xlsx`);
 }
@@ -1912,17 +2188,50 @@ function renderCumplimientoPage() {
         entregados: 0,
         rollback: 0,
         reprogramados: 0,
-        rows: []
+        rows: [],
+        histRollbackRows: [],
+        histReprogramadosRows: []
       });
     }
     const s = semMap.get(t);
-    s.total += r.nComp;
+    // V42: Planificados representa el total operativo comprometido de la semana:
+    // Migrados + Rollback + Reprogramados (vigentes e historicos agregados mas abajo).
+    // Las barras Rollback/Reprogramados son el desglose del Planificado, no un universo adicional.
+    if (r.estatus === 'Migrado' || r.estatus === 'Rollback' || r.estatus === 'Reprogramado') s.total += r.nComp;
     if (r.estatus === 'Migrado') s.migrados += r.nComp;
     if (r.esEntregado && r.estatus === 'Migrado') s.entregados += r.nComp;
     if (r.estatus === 'Rollback') s.rollback += r.nComp;
     if (r.estatus === 'Reprogramado') s.reprogramados += r.nComp;
     s.rows.push(r);
   });
+  // V36 - Incorporar eventos historicos de Rollback/Reprogramado al grafico semanal.
+  // No modifica el universo oficial: Planificados/Migrados/Entregados siguen saliendo de state.view.
+  // Solo se agregan intentos ANTERIORES de historyView para trazabilidad operativa.
+  const histSemanal = state.historyView.filter(r => {
+    if (!r.semanaDate || (r.estatus !== 'Rollback' && r.estatus !== 'Reprogramado')) return false;
+    const esVigente = state.raw.some(v =>
+      norm(v.servidor) === norm(r.servidor) &&
+      norm(v.siglas) === norm(r.siglas) &&
+      Number(v.intentoNum || 1) === Number(r.intentoNum || 1)
+    );
+    return !esVigente;
+  });
+
+  histSemanal.forEach(r => {
+    const t = r.semanaDate.getTime();
+    if (!semMap.has(t)) {
+      const diaNum = String(r.semanaDate.getDate()).padStart(2, '0');
+      const mesCorto = MESES_CORTO_LOWER[r.semanaDate.getMonth()];
+      const labelFormat = `${diaNum}-${mesCorto.charAt(0).toUpperCase() + mesCorto.slice(1)}`;
+      semMap.set(t, { time:t, label:labelFormat, total:0, migrados:0, entregados:0, rollback:0, reprogramados:0, rows:[], histRollbackRows:[], histReprogramadosRows:[] });
+    }
+    const s = semMap.get(t);
+    if (!s.histRollbackRows) s.histRollbackRows = [];
+    if (!s.histReprogramadosRows) s.histReprogramadosRows = [];
+    if (r.estatus === 'Rollback') { s.rollback += r.nComp; s.total += r.nComp; s.histRollbackRows.push(r); }
+    if (r.estatus === 'Reprogramado') { s.reprogramados += r.nComp; s.total += r.nComp; s.histReprogramadosRows.push(r); }
+  });
+
   const semanasOrdenadas = Array.from(semMap.values()).sort((a, b) => a.time - b.time);
 
   $('#page').innerHTML = `
@@ -2022,7 +2331,7 @@ function renderCumplimientoPage() {
         <div class="th">
           <div>
             <h3>Estado de Migraciones por Semana Operativa (Planificado vs Ejecutado)</h3>
-            <div class="sb">Desglose de rendimiento semanal de componentes extraído de la "Semana de Planificación". Clic en la barra para auditar.</div>
+            <div class="sb">Planificados = Migrados + Rollback + Reprogramados de la semana. Rollback y Reprogramados incluyen también intentos históricos en la semana en que ocurrieron. Clic en la barra para auditar.</div>
           </div>
         </div>
         <div class="cbox" style="min-height: 280px;"><canvas id="cSemanalProgreso"></canvas></div>
@@ -2228,13 +2537,17 @@ function renderCumplimientoPage() {
         const el = activeEls[0];
         const sObj = semanasOrdenadas[el.index];
         const dsIdx = el.datasetIndex;
-        let filterRows = sObj.rows;
-        let titleExt = "Total Planificados";
+        let filterRows = [
+          ...sObj.rows.filter(r => r.estatus === 'Migrado' || r.estatus === 'Rollback' || r.estatus === 'Reprogramado'),
+          ...(sObj.histRollbackRows || []),
+          ...(sObj.histReprogramadosRows || [])
+        ];
+        let titleExt = "Total Planificados (Migrados + Rollback + Reprogramados)";
         
-        if (dsIdx === 1) { filterRows = filterRows.filter(r => r.estatus === 'Migrado'); titleExt = "Migrados"; }
-        if (dsIdx === 2) { filterRows = filterRows.filter(r => r.estatus === 'Rollback'); titleExt = "Rollbacks"; }
-        if (dsIdx === 3) { filterRows = filterRows.filter(r => r.esEntregado && r.estatus === 'Migrado'); titleExt = "Entregados"; }
-        if (dsIdx === 4) { filterRows = filterRows.filter(r => r.estatus === 'Reprogramado'); titleExt = "Reprogramados"; }
+        if (dsIdx === 1) { filterRows = sObj.rows.filter(r => r.estatus === 'Migrado'); titleExt = "Migrados"; }
+        if (dsIdx === 2) { filterRows = [...sObj.rows.filter(r => r.estatus === 'Rollback'), ...(sObj.histRollbackRows || [])]; titleExt = "Rollbacks (vigentes + históricos)"; }
+        if (dsIdx === 3) { filterRows = sObj.rows.filter(r => r.esEntregado && r.estatus === 'Migrado'); titleExt = "Entregados"; }
+        if (dsIdx === 4) { filterRows = [...sObj.rows.filter(r => r.estatus === 'Reprogramado'), ...(sObj.histReprogramadosRows || [])]; titleExt = "Reprogramados (vigentes + históricos)"; }
         
         if (filterRows.length > 0) drillGrupo(`Semana del ${sObj.label} - ${titleExt} (${filterRows.length} registros)`, filterRows);
       }
@@ -2371,16 +2684,37 @@ function renderCumplimientoArquitecturaPage() {
         entregados: 0,
         rollback: 0,
         reprogramados: 0,
-        rows: []
+        rows: [],
+        histRollbackRows: [],
+        histReprogramadosRows: []
       });
     }
     const s = semMap.get(t);
-    s.total += r.nCompArq;
-    if (r.estatus === 'Migrado') s.migrados += r.nCompArq;
+    // V43: Planificados Arquitectura representa el esfuerzo operativo de la semana:
+    // Migrados + Rollback + Reprogramados. Los historicos se agregan despues en la semana del evento.
+    if (r.estatus === 'Migrado') { s.migrados += r.nCompArq; s.total += r.nCompArq; }
     if (r.esEntregado && r.estatus === 'Migrado') s.entregados += r.nCompArq;
-    if (r.estatus === 'Rollback') s.rollback += r.nCompArq;
-    if (r.estatus === 'Reprogramado') s.reprogramados += r.nCompArq;
+    if (r.estatus === 'Rollback') { s.rollback += r.nCompArq; s.total += r.nCompArq; }
+    if (r.estatus === 'Reprogramado') { s.reprogramados += r.nCompArq; s.total += r.nCompArq; }
     s.rows.push(r);
+  });
+
+  const histSemanalArq = state.historyView.filter(r => {
+    if (!r.semanaDate || (r.estatus !== 'Rollback' && r.estatus !== 'Reprogramado')) return false;
+    const esVigente = state.raw.some(v => norm(v.servidor)===norm(r.servidor) && norm(v.siglas)===norm(r.siglas) && Number(v.intentoNum||1)===Number(r.intentoNum||1));
+    return !esVigente;
+  });
+  histSemanalArq.forEach(r => {
+    const t = r.semanaDate.getTime();
+    if (!semMap.has(t)) {
+      const diaNum=String(r.semanaDate.getDate()).padStart(2,'0');
+      const mesCorto=MESES_CORTO_LOWER[r.semanaDate.getMonth()];
+      semMap.set(t,{time:t,label:`${diaNum}-${mesCorto.charAt(0).toUpperCase()+mesCorto.slice(1)}`,total:0,migrados:0,entregados:0,rollback:0,reprogramados:0,rows:[],histRollbackRows:[],histReprogramadosRows:[]});
+    }
+    const s=semMap.get(t);
+    const n=Number(r.nCompArq)||0;
+    if(r.estatus==='Rollback'){s.rollback+=n;s.total+=n;s.histRollbackRows.push(r);}
+    if(r.estatus==='Reprogramado'){s.reprogramados+=n;s.total+=n;s.histReprogramadosRows.push(r);}
   });
   const semanasOrdenadas = Array.from(semMap.values()).sort((a, b) => a.time - b.time);
 
@@ -2481,7 +2815,7 @@ function renderCumplimientoArquitecturaPage() {
         <div class="th">
           <div>
             <h3>Estado Arquitectura por Semana Operativa (Planificado vs Ejecutado)</h3>
-            <div class="sb">Desglose de rendimiento semanal de componentes extraído de la "Semana de Planificación". Clic en la barra para auditar.</div>
+            <div class="sb">Planificados = Migrados + Rollback + Reprogramados. Rollback y Reprogramados incluyen también intentos históricos en la semana en que ocurrieron. Clic en la barra para auditar.</div>
           </div>
         </div>
         <div class="cbox" style="min-height: 280px;"><canvas id="cArqSemanalProgreso"></canvas></div>
@@ -2687,13 +3021,16 @@ function renderCumplimientoArquitecturaPage() {
         const el = activeEls[0];
         const sObj = semanasOrdenadas[el.index];
         const dsIdx = el.datasetIndex;
-        let filterRows = sObj.rows;
-        let titleExt = "Total Planificados";
+        let filterRows = [
+          ...sObj.rows.filter(r => r.estatus === 'Migrado' || r.estatus === 'Rollback' || r.estatus === 'Reprogramado'),
+          ...(sObj.histRollbackRows || []), ...(sObj.histReprogramadosRows || [])
+        ];
+        let titleExt = "Planificados (Migrados + Rollback + Reprogramados)";
         
-        if (dsIdx === 1) { filterRows = filterRows.filter(r => r.estatus === 'Migrado'); titleExt = "Migrados"; }
-        if (dsIdx === 2) { filterRows = filterRows.filter(r => r.estatus === 'Rollback'); titleExt = "Rollbacks"; }
-        if (dsIdx === 3) { filterRows = filterRows.filter(r => r.esEntregado && r.estatus === 'Migrado'); titleExt = "Entregados"; }
-        if (dsIdx === 4) { filterRows = filterRows.filter(r => r.estatus === 'Reprogramado'); titleExt = "Reprogramados"; }
+        if (dsIdx === 1) { filterRows = sObj.rows.filter(r => r.estatus === 'Migrado'); titleExt = "Migrados"; }
+        if (dsIdx === 2) { filterRows = [...sObj.rows.filter(r => r.estatus === 'Rollback'), ...(sObj.histRollbackRows || [])]; titleExt = "Rollbacks (vigentes + históricos)"; }
+        if (dsIdx === 3) { filterRows = sObj.rows.filter(r => r.esEntregado && r.estatus === 'Migrado'); titleExt = "Entregados"; }
+        if (dsIdx === 4) { filterRows = [...sObj.rows.filter(r => r.estatus === 'Reprogramado'), ...(sObj.histReprogramadosRows || [])]; titleExt = "Reprogramados (vigentes + históricos)"; }
         
         if (filterRows.length > 0) drillGrupo(`Semana del ${sObj.label} - ${titleExt} (${filterRows.length} registros)`, filterRows);
       }
@@ -3126,7 +3463,10 @@ function renderEntregasPage() {
             <h3 id="entregasDetalleTitle">Detalle de Entregas</h3>
             <div class="sb" id="entregasDetalleSub">Selecciona una tarjeta superior o una barra del gráfico para consultar el detalle aquí.</div>
           </div>
-          <button class="btn ghost sm" id="btnLimpiarDetalleEntregas">Limpiar detalle</button>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button class="btn green sm hide" id="btnExportDetalleEntregas" onclick="exportarDetalleEntregas()">Exportar Excel</button>
+            <button class="btn ghost sm" id="btnLimpiarDetalleEntregas">Limpiar detalle</button>
+          </div>
         </div>
         <div id="entregasDetalleContent" style="padding:10px 0;color:var(--k-text-muted);">
           <div style="padding:28px;text-align:center;background:#F8FAFC;border:1px dashed var(--k-border);border-radius:8px;">
@@ -3233,6 +3573,8 @@ function renderEntregasPage() {
     $('#entregasDetalleTitle').textContent = 'Detalle de Entregas';
     $('#entregasDetalleSub').textContent = 'Selecciona una tarjeta superior o una barra del gráfico para consultar el detalle aquí.';
     $('#entregasDetalleContent').innerHTML = `<div style="padding:28px;text-align:center;background:#F8FAFC;border:1px dashed var(--k-border);border-radius:8px;">El detalle seleccionado aparecerá en esta sección sin abrir ventanas emergentes.</div>`;
+    window.entregasDetalleRows = [];
+    const btnExp = $('#btnExportDetalleEntregas'); if (btnExp) btnExp.classList.add('hide');
   };
 }
 
@@ -3243,9 +3585,16 @@ function mostrarDetalleEntregas(titulo, rows) {
   const ticketSet = new Set(rows.map(r => String(r.ticketAprov || '').trim()).filter(t => t && t !== 'Sin Ticket' && t !== '-' && !t.toLowerCase().includes('no aplica')));
   const ticketCount = ticketSet.size;
 
-  $('#entregasDetalleTitle').textContent = titulo;
-  $('#entregasDetalleSub').innerHTML = `<b>${fmt(srvCount)}</b> servidores · <b>${fmt(compCount)}</b> componentes · <b>${fmt(ticketCount)}</b> tickets de aprovisionamiento únicos · ${fmt(rows.length)} relaciones`;
+  window.entregasDetalleRows = rows.slice();
+  window.entregasDetalleTitulo = titulo;
+  if (typeof window.entregasSortCol === 'undefined') window.entregasSortCol = 'servidor';
+  if (typeof window.entregasSortAsc === 'undefined') window.entregasSortAsc = true;
+  const btnExp = $('#btnExportDetalleEntregas'); if (btnExp) btnExp.classList.toggle('hide', rows.length === 0);
 
+  $('#entregasDetalleTitle').textContent = titulo;
+  $('#entregasDetalleSub').innerHTML = `<b>${fmt(srvCount)}</b> servidores · <b>${fmt(compCount)}</b> componentes · <b>${fmt(ticketCount)}</b> tickets de aprovisionamiento únicos · ${fmt(rows.length)} relaciones · <b>Clic en las cabeceras para ordenar</b>`;
+
+  const thEnt = (label, col, left=true) => `<th class="${left?'l ':''}sortable" onclick="setEntregasSort('${col}')" title="Clic para ordenar">${label} <span id="se_${col}" class="sort-icon"></span></th>`;
   const content = rows.length ? `
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
       <span class="stat-pill all">Servidores: ${fmt(srvCount)}</span>
@@ -3255,27 +3604,94 @@ function mostrarDetalleEntregas(titulo, rows) {
     <div class="tw" style="max-height:520px;">
       <table class="dt">
         <thead><tr>
-          <th class="l">Servidor</th><th class="l">Sigla</th><th class="l">Aplicación</th>
-          <th>Componentes</th><th class="l">Ticket Aprovisionamiento</th><th class="l">Estado Aprov.</th>
-          <th class="l">Owner Kyndryl</th><th class="l">Estado Entrega</th><th class="l">Estatus Migración</th>
+          ${thEnt('Servidor','servidor')}${thEnt('Sigla','siglas')}${thEnt('Aplicación','app')}
+          ${thEnt('Componentes','nComp',false)}${thEnt('Ticket Aprovisionamiento','ticketAprov')}${thEnt('Estado Aprov.','estadoAprov')}
+          ${thEnt('OC Migración','oc')}${thEnt('Estado OC','estadoOC')}${thEnt('Intento Vigente','intentoNum')}
+          ${thEnt('Owner Kyndryl','ownerKyndryl')}${thEnt('Estado Entrega','esEntregado')}${thEnt('Estatus Migración','estatus')}
         </tr></thead>
-        <tbody>${rows.map(r => `
-          <tr>
-            <td class="l mono"><b>${esc(r.servidor)}</b></td>
-            <td class="l mono">${esc(r.siglas)}</td>
-            <td class="l">${esc(r.app)}</td>
-            <td class="num"><b>${fmt(r.nComp)}</b></td>
-            <td class="l mono" style="color:var(--k-navy);font-weight:700;">${esc(r.ticketAprov)}</td>
-            <td class="l">${esc(r.estadoAprov)}</td>
-            <td class="l"><b>${esc(r.ownerKyndryl)}</b></td>
-            <td class="l"><span class="tag ${r.esEntregado ? 'mig' : 'pend'}">${r.esEntregado ? 'Entregado' : 'Pendiente'}</span></td>
-            <td class="l"><span class="tag ${r.estatus === 'Migrado' ? 'mig' : (r.estatus === 'Desestimado' ? 'des' : 'plan')}">${esc(r.estatus)}</span></td>
-          </tr>`).join('')}</tbody>
+        <tbody id="tbBodyEntregasDetalle"></tbody>
       </table>
     </div>` : `<div style="padding:24px;text-align:center;color:var(--k-text-muted);">No hay registros para esta selección.</div>`;
   $('#entregasDetalleContent').innerHTML = content;
+
+  window.paintEntregasDetalleTable = () => {
+    const sorted = (window.entregasDetalleRows || []).slice().sort((a,b) => {
+      let va = window.entregasSortCol === 'esEntregado' ? (a.esEntregado ? 1 : 0) : a[window.entregasSortCol];
+      let vb = window.entregasSortCol === 'esEntregado' ? (b.esEntregado ? 1 : 0) : b[window.entregasSortCol];
+      if (window.entregasSortCol === 'intentoNum' || window.entregasSortCol === 'nComp') { va = Number(va)||0; vb = Number(vb)||0; }
+      if (typeof va === 'string') va = norm(va);
+      if (typeof vb === 'string') vb = norm(vb);
+      if (va == null) va = ''; if (vb == null) vb = '';
+      if (va < vb) return window.entregasSortAsc ? -1 : 1;
+      if (va > vb) return window.entregasSortAsc ? 1 : -1;
+      return norm(a.servidor).localeCompare(norm(b.servidor));
+    });
+    window.entregasDetalleRowsOrdenadas = sorted;
+    const body = $('#tbBodyEntregasDetalle');
+    if (body) body.innerHTML = sorted.map(r => `
+      <tr>
+        <td class="l mono"><b>${esc(r.servidor)}</b></td>
+        <td class="l mono">${esc(r.siglas)}</td>
+        <td class="l">${esc(r.app)}</td>
+        <td class="num"><b>${fmt(r.nComp)}</b></td>
+        <td class="l mono" style="color:var(--k-navy);font-weight:700;">${esc(r.ticketAprov)}</td>
+        <td class="l">${esc(r.estadoAprov)}</td>
+        <td class="l mono" style="font-weight:800;color:var(--k-navy);">${esc(r.oc)}</td>
+        <td class="l"><span class="tag ${getEstadoOCClass(r.estadoOC)}">${esc(r.estadoOC)}</span></td>
+        <td class="l"><b>${esc(r.intento || '1ER INTENTO')}</b></td>
+        <td class="l"><b>${esc(r.ownerKyndryl)}</b></td>
+        <td class="l"><span class="tag ${r.esEntregado ? 'mig' : 'pend'}">${r.esEntregado ? 'Entregado' : 'Pendiente'}</span></td>
+        <td class="l"><span class="tag ${r.estatus === 'Migrado' ? 'mig' : (r.estatus === 'Desestimado' ? 'des' : 'plan')}">${esc(r.estatus)}</span></td>
+      </tr>`).join('');
+    $$('.sort-icon').forEach(el => { if (el.id && el.id.startsWith('se_')) el.textContent = ''; });
+    const activeIcon = $('#se_' + window.entregasSortCol);
+    if (activeIcon) activeIcon.textContent = window.entregasSortAsc ? '▲' : '▼';
+  };
+
+  window.setEntregasSort = (col) => {
+    if (window.entregasSortCol === col) window.entregasSortAsc = !window.entregasSortAsc;
+    else {
+      window.entregasSortCol = col;
+      window.entregasSortAsc = !['nComp','intentoNum'].includes(col);
+    }
+    if (typeof window.paintEntregasDetalleTable === 'function') window.paintEntregasDetalleTable();
+  };
+
+  if (rows.length) window.paintEntregasDetalleTable();
   const sec = $('#entregasDetalleSection');
   if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function exportarDetalleEntregas() {
+  const rows = window.entregasDetalleRows || [];
+  if (!rows.length) return;
+  const wb = XLSX.utils.book_new();
+  const exportRows = rows.map(r => ({
+    'Servidor Origen': r.servidor,
+    'Servidor Destino': r.servidorDestino,
+    'SIGLA': r.siglas,
+    'Aplicación': r.app,
+    'Componentes Kyndryl': Number(r.nComp) || 0,
+    'Componentes Arquitectura': Number(r.nCompArq) || 0,
+    'Intento Vigente': r.intento || '1ER INTENTO',
+    'Ticket Aprovisionamiento': r.ticketAprov,
+    'Estado Aprovisionamiento': r.estadoAprov,
+    'OC(3) Migracion': r.oc,
+    'Estado OC': r.estadoOC,
+    'Owner Kyndryl': r.ownerKyndryl,
+    'Estado Entrega': r.esEntregado ? 'Entregado' : 'Pendiente',
+    'Motivo No Entrega': r.motivoNoEntrega,
+    'Estatus Migración': r.estatus,
+    'Priorizado Q': r.priorizadoQ,
+    'Trimestre': r.qIbk,
+    'Mes': r.mes,
+    'Ambiente': r.ambiente
+  }));
+  const ws = XLSX.utils.json_to_sheet(exportRows);
+  ws['!cols'] = [{wch:22},{wch:22},{wch:14},{wch:36},{wch:20},{wch:24},{wch:18},{wch:24},{wch:24},{wch:20},{wch:20},{wch:24},{wch:18},{wch:36},{wch:20},{wch:24},{wch:16},{wch:14},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Detalle_Entregas');
+  const titulo = String(window.entregasDetalleTitulo || 'Detalle_Entregas').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,60);
+  XLSX.writeFile(wb, `Kyndryl_${titulo || 'Detalle_Entregas'}.xlsx`);
 }
 
 function drillKpiServidoresEntregados() {
@@ -3705,6 +4121,12 @@ function drillKpiTicketsPendientes() {
 ------------------------------------------------------------- */
 function renderCalendarioPage() {
   let calRows = state.view.slice();
+  // V19: eventos historicos de intentos anteriores, solo para trazabilidad visual.
+  // Nunca sustituyen ni se suman a calRows (universo oficial vigente).
+  let calHistRows = state.historyView.filter(r => {
+    const vigente = state.raw.some(v => norm(v.servidor) === norm(r.servidor) && norm(v.siglas) === norm(r.siglas) && Number(v.intentoNum||1) === Number(r.intentoNum||1));
+    return !vigente && (r.estatus === 'Reprogramado' || r.estatus === 'Rollback');
+  });
 
   const calRowsConSemana = calRows.filter(r => r.semanaDate != null);
   const aniosDisponibles = Array.from(new Set(calRowsConSemana.map(r => r.semanaDate.getFullYear()))).sort();
@@ -3713,9 +4135,11 @@ function renderCalendarioPage() {
 
   if (state.calFiltroAnio !== '__ALL__') {
     calRows = calRows.filter(r => r.semanaDate && String(r.semanaDate.getFullYear()) === String(state.calFiltroAnio));
+    calHistRows = calHistRows.filter(r => r.semanaDate && String(r.semanaDate.getFullYear()) === String(state.calFiltroAnio));
   }
   if (state.calFiltroMes !== '__ALL__') {
     calRows = calRows.filter(r => r.semanaDate && MESES_ES[r.semanaDate.getMonth()] === state.calFiltroMes);
+    calHistRows = calHistRows.filter(r => r.semanaDate && MESES_ES[r.semanaDate.getMonth()] === state.calFiltroMes);
   }
 
   const semMap = new Map();
@@ -3834,9 +4258,25 @@ function renderCalendarioPage() {
     tituloInferior = `Total de todos los días: ${state.calSeleccionDia}`;
   }
 
+  // Seleccion historica equivalente a la semana/dia elegidos. Solo informativa.
+  let rowsHistInferior = calHistRows.slice();
+  if (state.calSeleccionSemanaIdx != null && semanas[state.calSeleccionSemanaIdx]) {
+    const semSelected = semanas[state.calSeleccionSemanaIdx];
+    rowsHistInferior = rowsHistInferior.filter(r => r.semanaDate && r.semanaDate.getTime() === semSelected.time);
+    if (state.calSeleccionDia) rowsHistInferior = rowsHistInferior.filter(r => r.dia === state.calSeleccionDia);
+  } else if (state.calSeleccionDia) {
+    rowsHistInferior = rowsHistInferior.filter(r => r.dia === state.calSeleccionDia);
+  } else if (state.calFiltroSemana !== '__ALL__') {
+    rowsHistInferior = rowsHistInferior.filter(r => r.semanaDate && String(r.semanaDate.getTime()) === String(state.calFiltroSemana));
+  }
+  const histRbComp = rowsHistInferior.filter(r=>r.estatus==='Rollback').reduce((a,b)=>a+b.nComp,0);
+  const histReprogComp = rowsHistInferior.filter(r=>r.estatus==='Reprogramado').reduce((a,b)=>a+b.nComp,0);
+  const histTotalComp = histRbComp + histReprogComp;
+
   const totInferiorComp = rowsOCInferior.reduce((a, b) => a + b.nComp, 0);
   const planComp = rowsOCInferior.filter(r => r.estatus === 'Planificado').reduce((a, b) => a + b.nComp, 0);
   const migComp = rowsOCInferior.filter(r => r.estatus === 'Migrado').reduce((a, b) => a + b.nComp, 0);
+  const propComp = rowsOCInferior.filter(r => r.estatus === 'Propuesto').reduce((a, b) => a + b.nComp, 0);
   const pendComp = rowsOCInferior.filter(r => r.estatus === 'Por Definir').reduce((a, b) => a + b.nComp, 0);
   const rbComp = rowsOCInferior.filter(r => r.estatus === 'Rollback').reduce((a, b) => a + b.nComp, 0);
   const reprogComp = rowsOCInferior.filter(r => r.estatus === 'Reprogramado').reduce((a, b) => a + b.nComp, 0);
@@ -3862,6 +4302,7 @@ function renderCalendarioPage() {
         ambientesSet: new Set(),
         minFechaNum: r.fechaDate ? r.fechaDate.getTime() : (r.semanaDate ? r.semanaDate.getTime() : Infinity),
         totalComp: 0,
+        comentariosSet: new Set(),
         rows: []
       });
     }
@@ -3871,6 +4312,7 @@ function renderCalendarioPage() {
     if (r.fechaLbl && r.fechaLbl !== 'Sin fecha') item.fechasSet.add(r.fechaLbl);
     if (r.siglas && r.siglas !== 'S/S') item.appSet.add(r.siglas);
     if (r.ambiente && r.ambiente !== '—') item.ambientesSet.add(r.ambiente);
+    if (r.comentarios && String(r.comentarios).trim()) item.comentariosSet.add(String(r.comentarios).trim());
     
     const curTime = r.fechaDate ? r.fechaDate.getTime() : (r.semanaDate ? r.semanaDate.getTime() : Infinity);
     if(curTime < item.minFechaNum) item.minFechaNum = curTime;
@@ -3883,7 +4325,8 @@ function renderCalendarioPage() {
       ambientesStr: Array.from(item.ambientesSet).join(', ') || '—',
       appsStr: Array.from(item.appSet).join(', ') || 'S/S',
       fechasStr: Array.from(item.fechasSet).join('<br>') || 'Sin fecha',
-      srvCount: item.srvSet.size
+      srvCount: item.srvSet.size,
+      comentariosStr: Array.from(item.comentariosSet || []).join(' | ') || '—'
   }));
 
   const compMostradosInferior = ocsInferiorList.reduce((a, b) => a + b.totalComp, 0);
@@ -3897,6 +4340,7 @@ function renderCalendarioPage() {
   `;
   if (planComp > 0) pillsInferiorHtml += `<span class="stat-pill plan ${state.calFiltroPillEstatus === 'Planificado' ? 'active' : ''}" onclick="seleccionarPillCalInferior('Planificado')">Planificados: ${planComp}</span>`;
   if (migComp > 0) pillsInferiorHtml += `<span class="stat-pill mig ${state.calFiltroPillEstatus === 'Migrado' ? 'active' : ''}" onclick="seleccionarPillCalInferior('Migrado')">Migrados: ${migComp}</span>`;
+  if (propComp > 0) pillsInferiorHtml += `<span class="stat-pill purple ${state.calFiltroPillEstatus === 'Propuesto' ? 'active' : ''}" onclick="seleccionarPillCalInferior('Propuesto')">Propuestos: ${propComp}</span>`;
   if (pendComp > 0) pillsInferiorHtml += `<span class="stat-pill pend ${state.calFiltroPillEstatus === 'Por Definir' ? 'active' : ''}" onclick="seleccionarPillCalInferior('Por Definir')">Por Definir: ${pendComp}</span>`;
   if (rbComp > 0) pillsInferiorHtml += `<span class="stat-pill rb ${state.calFiltroPillEstatus === 'Rollback' ? 'active' : ''}" onclick="seleccionarPillCalInferior('Rollback')">Rollback: ${rbComp}</span>`;
   if (reprogComp > 0) pillsInferiorHtml += `<span class="stat-pill reprog ${state.calFiltroPillEstatus === 'Reprogramado' ? 'active' : ''}" onclick="seleccionarPillCalInferior('Reprogramado')">Reprogramados: ${reprogComp}</span>`;
@@ -3975,11 +4419,52 @@ function renderCalendarioPage() {
               <th class="sortable" onclick="setCalSort('totalComp')" title="Clic para ordenar">Componentes <span id="sc_totalComp" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setCalSort('minFechaNum')" title="Clic para ordenar">Fecha Migración <span id="sc_minFechaNum" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setCalSort('appsStr')" title="Clic para ordenar">Aplicaciones Involucradas <span id="sc_appsStr" class="sort-icon"></span></th>
+              <th class="l">Motivo / Comentario</th>
               <th class="l">Acción</th>
             </tr>
           </thead>
           <tbody id="tbBodyCalInferior"></tbody>
         </table>
+      </div>
+    </div>
+
+    <div class="tile" style="overflow:visible;margin-top:20px;border:1.5px solid #F59E0B;">
+      <div class="th" style="align-items:center;margin-bottom:10px;">
+        <div>
+          <h3>🕘 Historial de Intentos — No contabiliza en totales oficiales</h3>
+          <div class="sb">Muestra Reprogramados y Rollback de intentos anteriores. El alcance, matriz y KPIs continúan usando exclusivamente el último intento vigente.</div>
+        </div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;">
+          <span class="stat-pill all">Todos históricos: ${fmt(histTotalComp)}</span>
+          <span class="stat-pill reprog">Reprogramados históricos: ${fmt(histReprogComp)}</span>
+          <span class="stat-pill rb">Rollback históricos: ${fmt(histRbComp)}</span>
+        </div>
+      </div>
+      <div class="tw" style="max-height:360px;"><table class="dt"><thead><tr>
+        <th class="l">Fecha del Evento Histórico</th><th class="l">Servidor</th><th class="l">SIGLA</th><th class="l">Intento Histórico</th><th class="l">Estado Histórico</th><th>Componentes</th><th class="l">OC Migración</th><th class="l">Motivo / Comentario Histórico</th><th class="l">Último Intento</th><th class="l">Estado del Último Intento</th><th class="l">Fecha del Último Intento</th>
+      </tr></thead><tbody>
+        ${rowsHistInferior.sort((a,b)=>(a.semanaDate?.getTime()||0)-(b.semanaDate?.getTime()||0)).map(r=>{
+          const vigentesUnidad=state.raw.filter(v=>norm(v.servidor)===norm(r.servidor)&&norm(v.siglas)===norm(r.siglas));
+          const vig=vigentesUnidad.sort((a,b)=>(Number(b.intentoNum)||1)-(Number(a.intentoNum)||1) || ((b.fechaDate?.getTime()||0)-(a.fechaDate?.getTime()||0)))[0];
+          const fechaHistorica=r.fechaDate ? formatFechaVisual(r.fechaDate) : (r.fechaLbl || 'Sin fecha');
+          const fechaVigente=vig ? (vig.fechaDate ? formatFechaVisual(vig.fechaDate) : (vig.fechaLbl || 'Sin fecha')) : '—';
+          return `<tr><td class="l mono"><b>${esc(fechaHistorica)}</b></td><td class="l mono"><b>${esc(r.servidor)}</b></td><td class="l mono">${esc(r.siglas)}</td><td class="l"><span class="tag plan">${esc(r.intento)}</span></td><td class="l"><span class="tag ${r.estatus==='Rollback'?'rb':'pend'}">${esc(r.estatus)}</span></td><td class="num"><b>${fmt(r.nComp)}</b></td><td class="l mono">${esc(r.oc)}</td><td class="l" style="max-width:360px;white-space:normal;">${esc(r.comentarios||'—')}</td><td class="l">${esc(vig?.intento||'—')}</td><td class="l"><span class="tag ${vig?.estatus==='Migrado'?'mig':(vig?.estatus==='Rollback'?'rb':(vig?.estatus==='Desestimado'?'des':(vig?.estatus==='Planificado'?'plan':'pend')))}">${esc(vig?.estatus||'—')}</span></td><td class="l mono"><b>${esc(fechaVigente)}</b></td></tr>`;
+        }).join('') || `<tr><td colspan="11" class="l" style="text-align:center;padding:20px;color:#888;">No hay Reprogramados/Rollback históricos para la selección actual.</td></tr>`}
+      </tbody></table></div>
+    </div>
+
+    <div class="tile" style="margin-top:14px;border:1.5px solid #CBD5E1;background:#F8FAFC;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--k-text-muted);">Conciliación de actividad operativa</div>
+          <div style="font-size:18px;font-weight:800;color:var(--k-charcoal);margin-top:3px;">Actividad Operativa de la Semana: ${fmt(totInferiorComp + histTotalComp)} componentes-evento</div>
+          <div style="font-size:11.5px;color:var(--k-text-muted);margin-top:4px;"><b>${fmt(totInferiorComp)} vigentes + ${fmt(histTotalComp)} históricos = ${fmt(totInferiorComp + histTotalComp)}</b>. Los históricos son informativos y no incrementan el alcance ni los KPIs oficiales.</div>
+        </div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;">
+          <span class="stat-pill all">Oficial vigente: ${fmt(totInferiorComp)}</span>
+          <span class="stat-pill reprog">Histórico: ${fmt(histTotalComp)}</span>
+          <span class="stat-pill plan">Actividad: ${fmt(totInferiorComp + histTotalComp)}</span>
+        </div>
       </div>
     </div>
   `;
@@ -4034,12 +4519,13 @@ function renderCalendarioPage() {
             <td class="num" style="color:var(--k-red);font-weight:700;font-size:13.5px;">${fmt(item.totalComp)}</td>
             <td class="l mono" style="font-weight:700;color:var(--k-navy);line-height:1.2;">${item.fechasStr}</td>
             <td class="l mono" style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(item.appsStr)}</td>
+            <td class="l" style="min-width:300px;max-width:460px;white-space:normal;word-break:break-word;line-height:1.35;">${esc(item.comentariosStr || '—')}</td>
             <td class="l">
               <button class="btn sm ghost" onclick="drillOCInferiorPorIdx(${idx})">Ver servidores</button>
             </td>
           </tr>
         `;
-     }).join('') || `<tr><td colspan="10" class="l" style="text-align:center;padding:24px;color:#888;">No hay órdenes de cambio bajo la selección actual.</td></tr>`;
+     }).join('') || `<tr><td colspan="11" class="l" style="text-align:center;padding:24px;color:#888;">No hay órdenes de cambio bajo la selección actual.</td></tr>`;
 
      $$('.sort-icon').forEach(el => {
         if (el.id && el.id.startsWith('sc_')) el.textContent = '';
@@ -4189,7 +4675,7 @@ function drillGrupo(titulo, rows) {
     return 'pend';
   };
 
-  const estatusPosibles = ['Planificado', 'Por Definir', 'Rollback', 'Migrado', 'Reprogramado', 'Desestimado'];
+  const estatusPosibles = ['Planificado', 'Propuesto', 'Por Definir', 'Rollback', 'Migrado', 'Reprogramado', 'Desestimado'];
 
   const chipsHtml = `
     <span class="tag modal-chip active all" id="chipModal_ALL" onclick="filterModalByEstatus('__ALL__')" title="Ver todos los componentes">
@@ -4223,11 +4709,13 @@ function drillGrupo(titulo, rows) {
             <th class="sortable" onclick="sortModal('nCompArq')" title="Clic para ordenar">Comp. Arq <span id="ms_nCompArq" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('ambiente')" title="Clic para ordenar">Ambiente <span id="ms_ambiente" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('priorizadoQ')" title="Clic para ordenar">Priorizado Q <span id="ms_priorizadoQ" class="sort-icon modal-sort-icon"></span></th>
-            <th class="l sortable" onclick="sortModal('ownerKyndryl')" title="Clic para ordenar">Owner Kyndryl <span id="ms_ownerKyndryl" class="sort-icon modal-sort-icon"></span></th>
+            <th class="l sortable" onclick="sortModal('intentoNum')" title="Clic para ordenar">Intento Vigente <span id="ms_intentoNum" class="sort-icon modal-sort-icon"></span></th>
+             <th class="l sortable" onclick="sortModal('ownerKyndryl')" title="Clic para ordenar">Owner Kyndryl <span id="ms_ownerKyndryl" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('esEntregado')" title="Clic para ordenar">Estado Entrega <span id="ms_esEntregado" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('motivoNoEntrega')" title="Clic para ordenar">Motivo No Entrega <span id="ms_motivoNoEntrega" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('oc')" title="Clic para ordenar">OC Migración <span id="ms_oc" class="sort-icon modal-sort-icon"></span></th>
             <th class="l sortable" onclick="sortModal('estadoOC')" title="Clic para ordenar">Estado OC <span id="ms_estadoOC" class="sort-icon modal-sort-icon"></span></th>
+            <th class="l sortable" onclick="sortModal('comentarios')" title="Clic para ordenar">Motivo / Comentario <span id="ms_comentarios" class="sort-icon modal-sort-icon"></span></th>
             <th class="l" style="background:#0F3A70;">S.O Origen</th>
             <th class="l" style="background:#0F3A70;">Subsistema Origen</th>
             <th class="l" style="background:#047857;">S.O Destino</th>
@@ -4258,11 +4746,13 @@ function renderModalRows(rows) {
       <td class="num" style="font-weight:700;color:var(--k-blue);">${r.nCompArq || 0}</td>
       <td class="l">${esc(r.ambiente)}</td>
       <td class="l" style="font-size:12px;font-weight:600;color:var(--k-navy);">${esc(r.priorizadoQ)}</td>
+      <td class="l"><span class="tag plan">${esc(r.intento || '1ER INTENTO')}</span></td>
       <td class="l"><b>${esc(r.ownerKyndryl)}</b></td>
       <td class="l"><span class="tag ${r.esEntregado ? 'mig' : 'pend'}">${r.esEntregado ? 'Entregado' : 'Pendiente'}</span></td>
       <td class="l" style="font-size:12px;font-weight:600;color:${r.esEntregado ? 'var(--k-green)' : 'var(--k-alert)'}; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.motivoNoEntrega)}</td>
       <td class="l mono">${esc(r.oc)}</td>
       <td class="l"><span class="tag ${getEstadoOCClass(r.estadoOC)}">${esc(r.estadoOC)}</span></td>
+      <td class="l" style="font-size:12px;min-width:320px;max-width:520px;white-space:normal;word-break:break-word;line-height:1.4;">${esc(r.comentarios || '—')}</td>
       <td class="l" style="font-size:12px; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.soOrigen)}</td>
       <td class="l" style="font-size:12px; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.subOrigen)}</td>
       <td class="l" style="font-size:12px; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.soDestino)}</td>
@@ -4333,6 +4823,7 @@ function openModal(title, sub, bodyHtml, exportData) {
     const ws = XLSX.utils.json_to_sheet(dataToExport.map(r => ({
       'Equipo': r.equipoSO,
       'Priorizado Q': r.priorizadoQ,
+      'Prioridad': r.prioridad,
       'Trimestre': r.qIbk, 'Mes': r.mes, 'Sigla': r.siglas, 'Aplicación': r.app, 
       'Servidor Origen': r.servidor, 'Servidor Destino': r.servidorDestino,
       '# Componentes Kyndryl': r.nComp, '# Componentes Arquitectura': r.nCompArq, 
@@ -4367,6 +4858,7 @@ function renderDetallePage() {
   const totComp = rows.reduce((a, b) => a + b.nComp, 0);
   const planComp = rows.filter(r => r.estatus === 'Planificado').reduce((a, b) => a + b.nComp, 0);
   const migComp = rows.filter(r => r.estatus === 'Migrado').reduce((a, b) => a + b.nComp, 0);
+  const propComp = rows.filter(r => r.estatus === 'Propuesto').reduce((a, b) => a + b.nComp, 0);
   const pendComp = rows.filter(r => r.estatus === 'Por Definir').reduce((a, b) => a + b.nComp, 0);
   const rbComp = rows.filter(r => r.estatus === 'Rollback').reduce((a, b) => a + b.nComp, 0);
   const reprogComp = rows.filter(r => r.estatus === 'Reprogramado').reduce((a, b) => a + b.nComp, 0);
@@ -4375,6 +4867,7 @@ function renderDetallePage() {
   let pillsInvHtml = `<span class="stat-pill all ${window.invFiltroPill === '__ALL__' ? 'active' : ''}" onclick="setInvPill('__ALL__')">Todos: ${totComp}</span>`;
   if (planComp > 0) pillsInvHtml += `<span class="stat-pill plan ${window.invFiltroPill === 'Planificado' ? 'active' : ''}" onclick="setInvPill('Planificado')">Planificados: ${planComp}</span>`;
   if (migComp > 0) pillsInvHtml += `<span class="stat-pill mig ${window.invFiltroPill === 'Migrado' ? 'active' : ''}" onclick="setInvPill('Migrado')">Migrados: ${migComp}</span>`;
+  if (propComp > 0) pillsInvHtml += `<span class="stat-pill purple ${window.invFiltroPill === 'Propuesto' ? 'active' : ''}" onclick="setInvPill('Propuesto')">Propuestos: ${propComp}</span>`;
   if (pendComp > 0) pillsInvHtml += `<span class="stat-pill pend ${window.invFiltroPill === 'Por Definir' ? 'active' : ''}" onclick="setInvPill('Por Definir')">Por Definir: ${pendComp}</span>`;
   if (rbComp > 0) pillsInvHtml += `<span class="stat-pill rb ${window.invFiltroPill === 'Rollback' ? 'active' : ''}" onclick="setInvPill('Rollback')">Rollback: ${rbComp}</span>`;
   if (reprogComp > 0) pillsInvHtml += `<span class="stat-pill reprog ${window.invFiltroPill === 'Reprogramado' ? 'active' : ''}" onclick="setInvPill('Reprogramado')">Reprogramados: ${reprogComp}</span>`;
@@ -4390,6 +4883,14 @@ function renderDetallePage() {
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
           <div class="sl">
             <input type="text" id="tbSearchInv" placeholder="🔍 Buscar servidor, app u owner..." value="${esc(state.searchInvQuery || '')}" style="min-width: 250px;">
+          </div>
+          <div class="sl">
+            <label>Prioridad</label>
+            <select id="selInvPrioridad" style="min-width:155px;">
+              <option value="__ALL__" ${state.invFiltroPrioridad === '__ALL__' ? 'selected' : ''}>Todos</option>
+              <option value="PRIORITARIO" ${state.invFiltroPrioridad === 'PRIORITARIO' ? 'selected' : ''}>🔴 Prioritarios</option>
+              <option value="NO PRIORITARIO" ${state.invFiltroPrioridad === 'NO PRIORITARIO' ? 'selected' : ''}>No prioritarios</option>
+            </select>
           </div>
           ${pillsInvHtml}
         </div>
@@ -4408,7 +4909,9 @@ function renderDetallePage() {
               <th class="sortable" onclick="setInvSort('nCompArq')">Comp. Arq <span id="si_nCompArq" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('ambiente')">Ambiente <span id="si_ambiente" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('priorizadoQ')">Priorizado Q <span id="si_priorizadoQ" class="sort-icon"></span></th>
-              <th class="l sortable" onclick="setInvSort('ownerKyndryl')">Owner <span id="si_ownerKyndryl" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setInvSort('prioridad')">Prioridad <span id="si_prioridad" class="sort-icon"></span></th>
+              <th class="l sortable" onclick="setInvSort('intentoNum')">Intento Vigente <span id="si_intentoNum" class="sort-icon"></span></th>
+               <th class="l sortable" onclick="setInvSort('ownerKyndryl')">Owner <span id="si_ownerKyndryl" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('oc')">OC Migración <span id="si_oc" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('estadoOC')">Estado OC <span id="si_estadoOC" class="sort-icon"></span></th>
               <th class="l sortable" onclick="setInvSort('fechaNum')">Fecha Plan. <span id="si_fechaNum" class="sort-icon"></span></th>
@@ -4443,9 +4946,12 @@ function renderDetallePage() {
     if (window.invFiltroPill !== '__ALL__') {
       filtrados = filtrados.filter(r => r.estatus === window.invFiltroPill);
     }
+    if (state.invFiltroPrioridad !== '__ALL__') {
+      filtrados = filtrados.filter(r => r.prioridad === state.invFiltroPrioridad);
+    }
 
     if (qText) {
-      filtrados = filtrados.filter(r => norm(`${r.siglas} ${r.app} ${r.servidor} ${r.servidorDestino} ${r.ownerKyndryl} ${r.oc} ${r.estadoOC} ${r.soOrigen} ${r.soDestino} ${r.priorizadoQ}`).includes(qText));
+      filtrados = filtrados.filter(r => norm(`${r.siglas} ${r.app} ${r.servidor} ${r.servidorDestino} ${r.ownerKyndryl} ${r.oc} ${r.estadoOC} ${r.soOrigen} ${r.soDestino} ${r.priorizadoQ} ${r.prioridad} ${r.intento}`).includes(qText));
     }
 
     filtrados.sort((a, b) => {
@@ -4477,6 +4983,8 @@ function renderDetallePage() {
         <td class="num" style="font-weight:700;color:var(--k-blue);">${r.nCompArq || 0}</td>
         <td class="l">${esc(r.ambiente)}</td>
         <td class="l" style="font-size:12px;font-weight:600;color:var(--k-navy);">${esc(r.priorizadoQ)}</td>
+        <td class="l"><span class="priority-badge ${r.esPrioritario ? 'yes' : 'no'}">${r.esPrioritario ? '🔴 PRIORITARIO' : 'NO PRIORITARIO'}</span></td>
+        <td class="l"><span class="tag plan">${esc(r.intento || '1ER INTENTO')}</span></td>
         <td class="l"><b>${esc(r.ownerKyndryl)}</b></td>
         <td class="l mono">${esc(r.oc)}</td>
         <td class="l"><span class="tag ${getEstadoOCClass(r.estadoOC)}">${esc(r.estadoOC)}</span></td>
@@ -4487,7 +4995,7 @@ function renderDetallePage() {
         <td class="l" style="font-size:12px; min-width:140px; white-space: normal; word-wrap: break-word;">${esc(r.subDestino)}</td>
         <td class="l"><span class="tag ${r.estatus === 'Migrado' ? 'mig' : (r.estatus === 'Planificado' ? 'plan' : (r.estatus === 'Desestimado' ? 'des' : (r.estatus === 'Rollback' ? 'rb' : 'pend')))}">${esc(r.estatus)}</span></td>
       </tr>
-    `).join('') + (filtrados.length > 300 ? '<tr><td colspan="18" class="l" style="text-align:center;color:#888;">Mostrando los primeros 300 registros... Exportar para ver completo.</td></tr>' : '');
+    `).join('') + (filtrados.length > 300 ? '<tr><td colspan="19" class="l" style="text-align:center;color:#888;">Mostrando los primeros 300 registros... Exportar para ver completo.</td></tr>' : '');
 
     $$('.sort-icon').forEach(el => { if(el.id && el.id.startsWith('si_')) el.textContent = ''; });
     const activeIcon = $('#si_' + window.invSortCol);
@@ -4500,6 +5008,263 @@ function renderDetallePage() {
     state.searchInvQuery = e.target.value;
     window.paintInvTable();
   };
+  $('#selInvPrioridad').onchange = e => {
+    state.invFiltroPrioridad = e.target.value;
+    window.paintInvTable();
+  };
+}
+
+
+/* -------------------------------------------------------------
+   V46: ANALISIS DE ROLLBACK Y REPROGRAMACIONES
+   Incluye vigentes + intentos historicos, sin alterar alcance oficial.
+------------------------------------------------------------- */
+function getEventosRbRpFiltrados(){
+  const vigentesKeys = new Set(state.view.map(r=>`${norm(r.servidor)}___${norm(r.siglas)}___${Number(r.intentoNum||1)}___${r.estatus}___${r.fechaDate?.getTime()||r.semanaDate?.getTime()||0}___${r.oc}___${Number(r.nComp)||0}`));
+  const base = [];
+  state.view.filter(r=>r.estatus==='Rollback'||r.estatus==='Reprogramado').forEach(r=>base.push({...r, origenEvento:'Vigente'}));
+  state.historyView.filter(r=>r.estatus==='Rollback'||r.estatus==='Reprogramado').forEach(r=>{
+    const k=`${norm(r.servidor)}___${norm(r.siglas)}___${Number(r.intentoNum||1)}___${r.estatus}___${r.fechaDate?.getTime()||r.semanaDate?.getTime()||0}___${r.oc}___${Number(r.nComp)||0}`;
+    if(!vigentesKeys.has(k)) base.push({...r, origenEvento:'Histórico'});
+  });
+  const m=new Map();
+  base.forEach(r=>{
+    const k=`${norm(r.servidor)}___${norm(r.siglas)}___${Number(r.intentoNum||1)}___${r.estatus}___${r.fechaDate?.getTime()||r.semanaDate?.getTime()||0}___${r.oc}___${Number(r.nComp)||0}`;
+    if(!m.has(k))m.set(k,r);
+  });
+  return Array.from(m.values());
+}
+function renderAnalisisRbRpPage(){
+  const eventos=getEventosRbRpFiltrados();
+  const rb=eventos.filter(r=>r.estatus==='Rollback');
+  const rp=eventos.filter(r=>r.estatus==='Reprogramado');
+  const sum=rs=>rs.reduce((a,r)=>a+(Number(r.nComp)||0),0);
+  const srv=rs=>new Set(rs.map(r=>norm(r.servidor)).filter(Boolean)).size;
+  const ocs=rs=>new Set(rs.map(r=>String(r.oc||'').trim()).filter(x=>x&&x!=='Sin OC')).size;
+
+  // Base oficial vigente para denominadores. Los eventos historicos solo alimentan RB/RP.
+  const vig=state.view.slice();
+  const migComp=sum(vig.filter(r=>r.estatus==='Migrado'));
+  const rbComp=sum(rb), rpComp=sum(rp);
+  const ejecutadosComp=migComp+rbComp;
+  const planificadosComp=migComp+rbComp+rpComp;
+  const tasaRbGlobal=ejecutadosComp?rbComp/ejecutadosComp*100:0;
+  const tasaRpGlobal=planificadosComp?rpComp/planificadosComp*100:0;
+
+  const semMap=new Map();
+  const ensureSem=(r)=>{if(!r.semanaDate)return null;const t=r.semanaDate.getTime();if(!semMap.has(t))semMap.set(t,{time:t,label:`${String(r.semanaDate.getDate()).padStart(2,'0')}-${MESES_CORTO[r.semanaDate.getMonth()]}`,vig:[],rb:[],rp:[]});return semMap.get(t);};
+  vig.forEach(r=>{const s=ensureSem(r);if(s)s.vig.push(r);});
+  eventos.forEach(r=>{const s=ensureSem(r);if(s)s[r.estatus==='Rollback'?'rb':'rp'].push(r);});
+  const sems=Array.from(semMap.values()).sort((a,b)=>a.time-b.time).map(s=>{
+    const mig=sum(s.vig.filter(r=>r.estatus==='Migrado'));
+    const rbN=sum(s.rb), rpN=sum(s.rp);
+    const ejecutados=mig+rbN;
+    const planificados=mig+rbN+rpN;
+    return {...s,mig,rbN,rpN,ejecutados,planificados,tasaRb:ejecutados?rbN/ejecutados*100:0,tasaRp:planificados?rpN/planificados*100:0};
+  });
+  const picoRb=sems.reduce((best,x)=>x.tasaRb>(best?.tasaRb??-1)?x:best,null);
+  const picoRp=sems.reduce((best,x)=>x.tasaRp>(best?.tasaRp??-1)?x:best,null);
+
+  const monthMap=new Map();
+  const ensureMonth=(r)=>{if(!r.mes||r.mes==='Sin Mes')return null;const idx=MESES_ES.indexOf(r.mes);const key=`${r.anio}-${String(idx).padStart(2,'0')}`;if(!monthMap.has(key))monthMap.set(key,{key,label:r.mes,vig:[],rb:[],rp:[]});return monthMap.get(key);};
+  vig.forEach(r=>{const m=ensureMonth(r);if(m)m.vig.push(r);});
+  eventos.forEach(r=>{const m=ensureMonth(r);if(m)m[r.estatus==='Rollback'?'rb':'rp'].push(r);});
+  const months=Array.from(monthMap.values()).sort((a,b)=>a.key.localeCompare(b.key)).map(m=>{
+    const mig=sum(m.vig.filter(r=>r.estatus==='Migrado'));
+    const rbN=sum(m.rb), rpN=sum(m.rp);
+    const ejecutados=mig+rbN;
+    const planificados=mig+rbN+rpN;
+    return {...m,mig,rbN,rpN,ejecutados,planificados,satRb:Math.max(0,ejecutados-rbN),baseRp:Math.max(0,planificados-rpN),tasaRb:ejecutados?rbN/ejecutados*100:0,tasaRp:planificados?rpN/planificados*100:0};
+  });
+
+  window.rbRpEventos=eventos; window.rbRpDetalle=eventos;
+  $('#page').innerHTML=`
+    <div class="section-label-bar">📈 Indicadores de Rollback y Reprogramaciones</div>
+    <div class="row r-4">
+      <div class="tile kpi alert kpi-clickable" onclick="mostrarDetalleRbRp('Rollback')"><div class="lbl">Rollback</div><div class="val">${fmt(rbComp)} <span style="font-size:15px;color:var(--k-text-muted)">componentes</span></div><div class="sub">${fmt(srv(rb))} servidores · ${fmt(ocs(rb))} OC únicas · Tasa: <b>${pct1(tasaRbGlobal)}</b></div></div>
+      <div class="tile kpi amber kpi-clickable" onclick="mostrarDetalleRbRp('Reprogramado')"><div class="lbl">Reprogramados</div><div class="val">${fmt(rpComp)} <span style="font-size:15px;color:var(--k-text-muted)">componentes</span></div><div class="sub">${fmt(srv(rp))} servidores · ${fmt(ocs(rp))} OC únicas · Tasa: <b>${pct1(tasaRpGlobal)}</b></div></div>
+      <div class="tile kpi alert"><div class="lbl">Pico Tasa Rollback</div><div class="val" style="font-size:22px">${picoRb?pct1(picoRb.tasaRb):'0,0%'}</div><div class="sub">${picoRb?`Semana ${esc(picoRb.label)} · ${fmt(picoRb.rbN)} comp. · ${fmt(ocs(picoRb.rb))} OC`:'Sin eventos'}</div></div>
+      <div class="tile kpi amber"><div class="lbl">Pico Tasa Reprogramación</div><div class="val" style="font-size:22px">${picoRp?pct1(picoRp.tasaRp):'0,0%'}</div><div class="sub">${picoRp?`Semana ${esc(picoRp.label)} · ${fmt(picoRp.rpN)} comp. · ${fmt(ocs(picoRp.rp))} OC`:'Sin eventos'}</div></div>
+    </div>
+
+    <div class="row r-2">
+      <div class="tile kpi alert"><div class="lbl">Tasa de Rollback del período</div><div class="val" style="font-size:28px">${pct1(tasaRbGlobal)}</div><div class="sub"><b>${fmt(rbComp)} Rollback / ${fmt(ejecutadosComp)} Ejecutados</b> · ${fmt(Math.max(0,ejecutadosComp-rbComp))} satisfactorios (${pct1(ejecutadosComp?Math.max(0,ejecutadosComp-rbComp)/ejecutadosComp*100:0)})</div></div>
+      <div class="tile kpi amber"><div class="lbl">Tasa de Reprogramación del período</div><div class="val" style="font-size:28px">${pct1(tasaRpGlobal)}</div><div class="sub"><b>${fmt(rpComp)} Reprogramados / ${fmt(planificadosComp)} Planificados</b> · Planificados = Migrados + Rollback + Reprogramados</div></div>
+    </div>
+
+    <div class="row r-2">
+      <div class="tile"><div class="th"><div><h3>Rollback Mensual — Satisfactorios vs Rollback</h3><div class="sb">Vista ejecutiva tipo “pases”: Ejecutados = Migrados + Rollback. El porcentaje naranja es la tasa mensual de Rollback.</div></div></div><div class="cbox" style="min-height:300px"><canvas id="cRbMensualStack"></canvas></div></div>
+      <div class="tile"><div class="th"><div><h3>Reprogramación Mensual — Cumplidos vs Reprogramados</h3><div class="sb">Planificados oficiales vs eventos Reprogramados. El porcentaje naranja es Reprogramados / Planificados.</div></div></div><div class="cbox" style="min-height:300px"><canvas id="cRpMensualStack"></canvas></div></div>
+    </div>
+    <div class="row r-2">
+      <div class="tile"><div class="th"><div><h3>Tasa de Rollback — Tendencia Semanal</h3><div class="sb">Rollback / Ejecutados por semana. Tooltip incluye numerador, denominador, servidores y OC.</div></div></div><div class="cbox" style="min-height:310px"><canvas id="cRbTasaSemanal"></canvas></div></div>
+      <div class="tile"><div class="th"><div><h3>Tasa de Reprogramación — Tendencia Semanal</h3><div class="sb">Reprogramados / Planificados por semana. Permite identificar picos y semanas de riesgo.</div></div></div><div class="cbox" style="min-height:310px"><canvas id="cRpTasaSemanal"></canvas></div></div>
+    </div>
+
+    <div class="row r-2">
+      <div class="tile"><div class="th"><div><h3>Rollback por Semana Operativa — Componentes</h3><div class="sb">Gráfico auditable original. Tooltip = componentes, servidores y OC. Clic para detalle.</div></div></div><div class="cbox" style="min-height:260px"><canvas id="cAnalisisRb"></canvas></div></div>
+      <div class="tile"><div class="th"><div><h3>Reprogramaciones por Semana Operativa — Componentes</h3><div class="sb">Incluye vigentes + históricos del evento, sin incrementar el alcance oficial.</div></div></div><div class="cbox" style="min-height:260px"><canvas id="cAnalisisRp"></canvas></div></div>
+    </div>
+    <div class="row r-1" id="rbRpDetalleSec"><div class="tile"><div class="th"><div><h3 id="rbRpDetalleTitle">Detalle auditable</h3><div class="sb" id="rbRpDetalleSub">Selecciona una tarjeta o una barra.</div></div><button class="btn green sm" onclick="exportRbRp()">Exportar Excel</button></div><div id="rbRpDetalleBody"></div></div></div>
+    <div class="row r-1"><div class="tile" style="border:1.5px solid #8B5CF6"><div class="th"><div><h3>🧩 Análisis 5 Why por OC / Evento</h3><div class="sb">Selecciona “5 Why” en el detalle. El motivo del Excel se conserva como evidencia; los Why son campos de análisis editables y se guardan localmente en este navegador.</div></div></div><div id="fiveWhyPanel" style="color:var(--k-text-muted)">Selecciona un evento para iniciar el análisis.</div></div></div>`;
+
+  const stackChart=(id,baseKey,eventKey,eventLabel,eventColor,rateKey)=>{const ctx=$('#'+id).getContext('2d');state.charts[id]=new Chart(ctx,{type:'bar',data:{labels:months.map(m=>m.label),datasets:[{label:eventLabel==='Rollback'?'Satisfactorios':'Sin reprogramación',data:months.map(m=>m[baseKey]),backgroundColor:'#059669',borderRadius:3},{label:eventLabel,data:months.map(m=>m[eventKey]),backgroundColor:eventColor,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{afterBody:(items)=>{const m=months[items[0].dataIndex];return [`Tasa ${eventLabel}: ${pct1(m[rateKey])}`,eventLabel==='Rollback'?`Ejecutados: ${fmt(m.ejecutados)}`:`Planificados: ${fmt(m.planificados)}`,`OC ${eventLabel}: ${fmt(ocs(m[eventLabel==='Rollback'?'rb':'rp']))}`];}}}},scales:{x:{stacked:true,beginAtZero:true,grid:{color:'#EDF2F9'}},y:{stacked:true,grid:{display:false}}},onClick:(e,a)=>{if(!a.length)return;const m=months[a[0].index];mostrarDetalleRbRp(eventLabel==='Rollback'?'Rollback':'Reprogramado',m[eventLabel==='Rollback'?'rb':'rp']);}}});};
+  stackChart('cRbMensualStack','satRb','rbN','Rollback','#E05A2A','tasaRb');
+  stackChart('cRpMensualStack','baseRp','rpN','Reprogramado','#D97706','tasaRp');
+
+  const lineChart=(id,rateKey,eventKey,eventLabel,color,denKey)=>{const ctx=$('#'+id).getContext('2d');state.charts[id]=new Chart(ctx,{type:'line',data:{labels:sems.map(s=>s.label),datasets:[{label:`Tasa ${eventLabel}`,data:sems.map(s=>s[rateKey]),integerPercentLabels:true,borderColor:color,backgroundColor:color,borderWidth:2.5,pointRadius:sems.map(s=>s[eventKey]>0?5:3),pointBackgroundColor:sems.map(s=>s[eventKey]>0?'#E11D48':color),tension:0.15}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:18}},plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>{const x=sems[c.dataIndex],rs=x[eventLabel==='Rollback'?'rb':'rp'];return [`Tasa: ${pct1(c.raw)}`,`${eventLabel}: ${fmt(x[eventKey])} componentes`,`${denKey==='ejecutados'?'Ejecutados':'Planificados'}: ${fmt(x[denKey])}`,`${srv(rs)} servidores · ${ocs(rs)} OC`];}}}},scales:{y:{beginAtZero:true,ticks:{callback:v=>v+'%'},grid:{color:'#EDF2F9'}},x:{grid:{display:false}}},onClick:(e,a)=>{if(!a.length)return;const x=sems[a[0].index];mostrarDetalleRbRp(eventLabel==='Rollback'?'Rollback':'Reprogramado',x[eventLabel==='Rollback'?'rb':'rp']);}}});};
+  lineChart('cRbTasaSemanal','tasaRb','rbN','Rollback','#0E5A84','ejecutados');
+  lineChart('cRpTasaSemanal','tasaRp','rpN','Reprogramación','#D97706','planificados');
+
+  const makeChart=(id,key,label,color)=>{const ctx=$('#'+id).getContext('2d'); state.charts[id]=new Chart(ctx,{type:'bar',data:{labels:sems.map(s=>s.label),datasets:[{label,data:sems.map(s=>s[key==='rb'?'rbN':'rpN']),backgroundColor:color,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const rs=sems[c.dataIndex][key];return [`${c.raw} componentes`,`${srv(rs)} servidores`,`${ocs(rs)} OC únicas`];}}}},scales:{y:{beginAtZero:true,grid:{color:'#EDF2F9'}},x:{grid:{display:false}}},onClick:(e,a)=>{if(!a.length)return; mostrarDetalleRbRp(label,sems[a[0].index][key]);}}});};
+  makeChart('cAnalisisRb','rb','Rollback','#E11D48'); makeChart('cAnalisisRp','rp','Reprogramado','#D97706');
+  mostrarDetalleRbRp('__ALL__',eventos,false);
+}
+function mostrarDetalleRbRp(tipo,rows=null,scroll=true){
+  let data=rows||window.rbRpEventos||[]; if(!rows&&tipo!=='__ALL__')data=data.filter(r=>r.estatus===tipo); window.rbRpDetalle=data.slice();
+  const sum=data.reduce((a,r)=>a+(Number(r.nComp)||0),0), sr=new Set(data.map(r=>r.servidor)).size, oc=new Set(data.map(r=>r.oc).filter(x=>x&&x!=='Sin OC')).size;
+  const title=tipo==='__ALL__'?'Todos los eventos Rollback / Reprogramado':tipo;
+  $('#rbRpDetalleTitle').textContent=`Detalle — ${title}`; $('#rbRpDetalleSub').innerHTML=`<b>${fmt(sum)}</b> componentes · <b>${fmt(sr)}</b> servidores · <b>${fmt(oc)}</b> OC únicas · ${fmt(data.length)} relaciones-evento`;
+  $('#rbRpDetalleBody').innerHTML=`<div class="tw" style="max-height:500px"><table class="dt"><thead><tr><th class="l">Evento</th><th class="l">Fecha</th><th class="l">Servidor</th><th class="l">SIGLA</th><th>Componentes</th><th class="l">OC</th><th class="l">Intento</th><th class="l">Owner</th><th class="l">Origen</th><th class="l">Motivo / Comentario</th><th class="l">Acción</th></tr></thead><tbody>${data.map((r,i)=>`<tr><td class="l"><span class="tag ${r.estatus==='Rollback'?'rb':'pend'}">${esc(r.estatus)}</span></td><td class="l mono">${esc(r.fechaLbl||'Sin fecha')}</td><td class="l mono"><b>${esc(r.servidor)}</b></td><td class="l mono">${esc(r.siglas)}</td><td class="num"><b>${fmt(r.nComp)}</b></td><td class="l mono"><b>${esc(r.oc)}</b></td><td class="l">${esc(r.intento)}</td><td class="l">${esc(r.ownerKyndryl)}</td><td class="l">${esc(r.origenEvento||'—')}</td><td class="l" style="min-width:340px;white-space:normal">${esc(r.comentarios||'—')}</td><td class="l"><button class="btn sm ghost" onclick="abrirFiveWhy(${i})">5 Why</button></td></tr>`).join('')||'<tr><td colspan="11" class="l" style="text-align:center;padding:20px">Sin eventos.</td></tr>'}</tbody></table></div>`;
+  if(scroll){const e=$('#rbRpDetalleSec');if(e)e.scrollIntoView({behavior:'smooth',block:'start'});}
+}
+function fiveWhyKey(r){return `fivewhy___${norm(r.servidor)}___${norm(r.siglas)}___${r.oc}___${r.estatus}___${Number(r.intentoNum||1)}___${r.fechaDate?.getTime()||r.semanaDate?.getTime()||0}`;}
+function abrirFiveWhy(idx){const r=(window.rbRpDetalle||[])[idx];if(!r)return;const key=fiveWhyKey(r);let d={};try{d=JSON.parse(localStorage.getItem(key)||'{}')}catch(e){};const field=(n,label)=>`<div class="sl" style="flex:1 1 45%;min-width:300px"><label>${label}</label><textarea id="fw_${n}" style="width:100%;min-height:64px;border:1px solid var(--k-border);border-radius:6px;padding:8px;font-family:inherit">${esc(d[n]||'')}</textarea></div>`;$('#fiveWhyPanel').innerHTML=`<div style="background:#F8FAFC;border:1px solid var(--k-border);border-radius:8px;padding:12px;margin-bottom:12px"><b>${esc(r.estatus)} · OC ${esc(r.oc)} · ${esc(r.servidor)} / ${esc(r.siglas)}</b><div style="margin-top:5px"><b>Motivo registrado:</b> ${esc(r.comentarios||'—')}</div></div><div style="display:flex;gap:12px;flex-wrap:wrap">${field('why1','Why 1')}${field('why2','Why 2')}${field('why3','Why 3')}${field('why4','Why 4')}${field('why5','Why 5')}${field('causa','Causa raíz')}${field('accion','Acción correctiva')}${field('responsable','Responsable / Owner')}${field('estado','Estado de la acción')}</div><div style="margin-top:12px"><button class="btn" onclick="guardarFiveWhy('${esc(key)}')">Guardar análisis</button></div>`;window.fiveWhyCurrentKey=key;}
+function guardarFiveWhy(key){const d={};['why1','why2','why3','why4','why5','causa','accion','responsable','estado'].forEach(n=>d[n]=$('#fw_'+n)?.value||'');localStorage.setItem(key,JSON.stringify(d));alert('Análisis 5 Why guardado localmente.');}
+function exportRbRp(){const rows=window.rbRpDetalle||[];const wb=XLSX.utils.book_new();const out=rows.map(r=>{let d={};try{d=JSON.parse(localStorage.getItem(fiveWhyKey(r))||'{}')}catch(e){};return {'Evento':r.estatus,'Fecha':r.fechaLbl,'Semana':r.semanaRangoLbl,'Servidor':r.servidor,'SIGLA':r.siglas,'Aplicación':r.app,'Componentes':Number(r.nComp)||0,'OC(3) Migracion':r.oc,'Estado OC':r.estadoOC,'Intento':r.intento,'Owner Kyndryl':r.ownerKyndryl,'Origen Evento':r.origenEvento,'Comentarios de Migracion/Desestimacion':r.comentarios||'','Why 1':d.why1||'','Why 2':d.why2||'','Why 3':d.why3||'','Why 4':d.why4||'','Why 5':d.why5||'','Causa Raíz':d.causa||'','Acción Correctiva':d.accion||'','Responsable':d.responsable||'','Estado Acción':d.estado||''};});const ws=XLSX.utils.json_to_sheet(out);ws['!cols']=[{wch:18},{wch:16},{wch:30},{wch:20},{wch:12},{wch:35},{wch:14},{wch:18},{wch:18},{wch:16},{wch:24},{wch:14},{wch:60},{wch:40},{wch:40},{wch:40},{wch:40},{wch:40},{wch:40},{wch:40},{wch:28},{wch:22}];XLSX.utils.book_append_sheet(wb,ws,'Rollback_Reprogramados');XLSX.writeFile(wb,'Kyndryl_Analisis_Rollback_Reprogramaciones.xlsx');}
+
+/* -------------------------------------------------------------
+   V31: REPORTE KMN MENSUAL — LEAD TIME + CUMPLIMIENTO
+------------------------------------------------------------- */
+function excelSerialToDate(v){
+  if(v instanceof Date && !isNaN(v)) return v;
+  if(typeof v==='number' && isFinite(v)){ const d=new Date(1899,11,30); d.setDate(d.getDate()+Math.floor(v)); return d; }
+  return parseFecha(v);
+}
+function monthYearForKMN(){
+  let year = state.selectedAnio !== '__ALL__' ? Number(state.selectedAnio) : 2026;
+  let monthName = state.selectedMeses.size===1 && !state.selectedMeses.has('__NONE__') ? Array.from(state.selectedMeses)[0] : null;
+  if(!monthName){
+    const months=Array.from(new Set(state.view.map(r=>r.mes))).filter(m=>MESES_ES.includes(m));
+    monthName=months.length===1?months[0]:null;
+  }
+  return {year, monthName, monthIdx: monthName?MESES_ES.indexOf(monthName):-1};
+}
+async function processLeadTimeWorkbook(file){
+  const buffer=await file.arrayBuffer();
+  const wb=XLSX.read(new Uint8Array(buffer),{type:'array',cellDates:true});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const data=XLSX.utils.sheet_to_json(ws,{defval:null,raw:true});
+  state.leadTimeRaw=data;
+  state.leadTimeHeaders=data.length?Object.keys(data[0]):[];
+  state.leadTimeFileName=file.name||'Lead Time';
+  if(state.page==='reporte-kmn') renderReporteKMNPage();
+}
+function getLeadTimeMonthlyRows(year,monthIdx){
+  if(monthIdx<0) return [];
+  return state.leadTimeRaw.filter(r=>{
+    const d=excelSerialToDate(r['Fecha_de_Cierre']);
+    return d && d.getFullYear()===year && d.getMonth()===monthIdx;
+  }).map(r=>{
+    const hrs=Number(r['Tiempo_Solucion_en_Horas']);
+    const dias=Number.isFinite(hrs)?hrs/24:null;
+    return {...r, DIAS:dias, Etiqueta:(dias!=null?(dias<90?'Cumple':'No Cumple'):'Sin dato')};
+  });
+}
+function getCumplimientoMonthlyRows(year,monthName){
+  if(!monthName) return [];
+  return state.view.filter(r=>Number(r.anio)===year && r.mes===monthName);
+}
+function getKMNMonthlyMetrics(year, monthName){
+  if(!monthName) return null;
+  const vig = state.raw.filter(r => Number(r.anio)===year && r.mes===monthName);
+  const hist = state.historyRaw.filter(r => Number(r.anio)===year && r.mes===monthName);
+
+  // Planificados: universo oficial del mes, excluyendo desestimados.
+  const planificados = vig.filter(r=>r.estatus!=='Desestimado').reduce((a,r)=>a+(Number(r.nComp)||0),0);
+  const migrados = vig.filter(r=>r.estatus==='Migrado').reduce((a,r)=>a+(Number(r.nComp)||0),0);
+  const entregados = vig.filter(r=>r.estatus==='Migrado' && r.esEntregado).reduce((a,r)=>a+(Number(r.nComp)||0),0);
+
+  // Rollback/Reprogramado: eventos del mes, vigentes + intentos historicos, sin contar dos veces la misma fila vigente.
+  const vigenteKeys = new Set(vig.map(r=>`${norm(r.servidor)}___${norm(r.siglas)}___${Number(r.intentoNum||1)}___${r.estatus}___${Number(r.nComp)||0}`));
+  const eventos = hist.filter(r=>r.estatus==='Rollback'||r.estatus==='Reprogramado').filter(r=>{
+    const k=`${norm(r.servidor)}___${norm(r.siglas)}___${Number(r.intentoNum||1)}___${r.estatus}___${Number(r.nComp)||0}`;
+    return !vigenteKeys.has(k) || vig.some(v=>v===r);
+  });
+  // historyRaw contiene tambien vigentes; deduplicar por identidad operativa basica.
+  const evMap=new Map();
+  eventos.forEach(r=>{
+    const k=`${norm(r.servidor)}___${norm(r.siglas)}___${Number(r.intentoNum||1)}___${r.estatus}___${r.fechaDate?.getTime()||r.semanaDate?.getTime()||0}___${r.oc}___${Number(r.nComp)||0}`;
+    if(!evMap.has(k)) evMap.set(k,r);
+  });
+  const ev=Array.from(evMap.values());
+  const rollbacks=ev.filter(r=>r.estatus==='Rollback').reduce((a,r)=>a+(Number(r.nComp)||0),0);
+  const reprogramados=ev.filter(r=>r.estatus==='Reprogramado').reduce((a,r)=>a+(Number(r.nComp)||0),0);
+  const ejecutados=migrados+rollbacks;
+
+  // V40 - Equivalencia ejecutiva en tickets de aprovisionamiento unicos.
+  // Los porcentajes KMN oficiales se mantienen calculados por componentes.
+  const ticketSet = rows => getTicketsAprovUnicos(rows);
+  const planificadosRows = vig.filter(r=>r.estatus!=='Desestimado');
+  const migradosRows = vig.filter(r=>r.estatus==='Migrado');
+  const entregadosRows = vig.filter(r=>r.estatus==='Migrado' && r.esEntregado);
+  const rollbackRows = ev.filter(r=>r.estatus==='Rollback');
+  const reprogramadosRows = ev.filter(r=>r.estatus==='Reprogramado');
+  const ejecutadosRows = [...migradosRows, ...rollbackRows];
+  const ticketsPlanificados = ticketSet(planificadosRows).size;
+  const ticketsMigrados = ticketSet(migradosRows).size;
+  const ticketsEntregados = ticketSet(entregadosRows).size;
+  const ticketsRollback = ticketSet(rollbackRows).size;
+  const ticketsReprogramados = ticketSet(reprogramadosRows).size;
+  const ticketsEjecutados = ticketSet(ejecutadosRows).size;
+
+  return {vig, planificados, migrados, entregados, rollbacks, reprogramados, ejecutados,
+    ticketsPlanificados, ticketsMigrados, ticketsEntregados, ticketsRollback, ticketsReprogramados, ticketsEjecutados,
+    tasaRollback: ejecutados?rollbacks/ejecutados:0,
+    estabilidad: planificados?reprogramados/planificados:0,
+    metaComprometida: getMetaMensual(year, MESES_ES.findIndex(x => x === monthName)),
+    cumplimientoComprometido: getMetaMensual(year, MESES_ES.findIndex(x => x === monthName)) ? ejecutados/getMetaMensual(year, MESES_ES.findIndex(x => x === monthName)) : 0,
+    cumplimientoEntregas: migrados?entregados/migrados:0};
+}
+
+function renderReporteKMNPage(){
+  const sel=monthYearForKMN();
+  const m=sel.monthName?getKMNMonthlyMetrics(sel.year,sel.monthName):null;
+  const ready=!!m;
+  const pc=v=>pct1((Number(v)||0)*100);
+  $('#page').innerHTML=`
+    <div class="section-label-bar">📑 Reporte KMN Mensual</div>
+    <div class="row r-2">
+      <div class="tile kpi ${state.raw.length?'green':'alert'}"><div class="lbl">Fuente del Reporte</div><div class="val" style="font-size:21px;">${state.raw.length?'✓ Consolidado cargado':'Falta consolidado'}</div><div class="sub">Todos los indicadores se calculan desde el Consolidado principal.</div></div>
+      <div class="tile kpi ${ready?'blue':'amber'}"><div class="lbl">Periodo del Reporte</div><div class="val" style="font-size:21px;">${sel.monthName?esc(sel.monthName+' '+sel.year):'Selecciona 1 mes'}</div><div class="sub">El reporte requiere exactamente un mes seleccionado.</div></div>
+    </div>
+    ${m?`<div class="row r-4">
+      <div class="tile kpi alert"><div class="lbl">Tasa de Rollback Mensual</div><div class="val">${pc(m.tasaRollback)}</div><div class="sub"><b>Componentes:</b> ${fmt(m.rollbacks)} Rollback / ${fmt(m.ejecutados)} Ejecutados<br><b>Tickets:</b> ${fmt(m.ticketsRollback)} Rollback / ${fmt(m.ticketsEjecutados)} Ejecutados</div></div>
+      <div class="tile kpi amber"><div class="lbl">Estabilidad de la Planificación</div><div class="val">${pc(m.estabilidad)}</div><div class="sub"><b>Componentes:</b> ${fmt(m.reprogramados)} Reprogramados / ${fmt(m.planificados)} Planificados<br><b>Tickets:</b> ${fmt(m.ticketsReprogramados)} Reprogramados / ${fmt(m.ticketsPlanificados)} Planificados</div></div>
+      <div class="tile kpi green"><div class="lbl">Cumplimiento de lo Comprometido</div><div class="val">${pc(m.cumplimientoComprometido)}</div><div class="sub"><b>Ejecutados:</b> ${fmt(m.ejecutados)} componentes / <b>Meta:</b> ${fmt(m.metaComprometida)} componentes<br><b>Brecha:</b> ${fmt(Math.max(0,m.metaComprometida-m.ejecutados))} componentes · Ejecutados = Migrados + Rollback</div></div>
+      <div class="tile kpi blue"><div class="lbl">Cumplimiento de Entregas</div><div class="val">${pc(m.cumplimientoEntregas)}</div><div class="sub"><b>Componentes:</b> ${fmt(m.entregados)} Entregados / ${fmt(m.migrados)} Migrados<br><b>Tickets:</b> ${fmt(m.ticketsEntregados)} Entregados / ${fmt(m.ticketsMigrados)} Migrados</div></div>
+    </div>
+    <div class="tile" style="margin-bottom:16px;"><div class="th"><div><h3>Base de cálculo mensual</h3><div class="sb">Rollback y Reprogramados incluyen eventos históricos del mes. Migrados y Entregados usan el universo vigente para evitar doble conteo por intentos.</div></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;"><span class="stat-pill all">Planificados: ${fmt(m.planificados)} comp. / ${fmt(m.ticketsPlanificados)} tickets</span><span class="stat-pill mig">Migrados: ${fmt(m.migrados)} comp. / ${fmt(m.ticketsMigrados)} tickets</span><span class="stat-pill plan">Entregados: ${fmt(m.entregados)} comp. / ${fmt(m.ticketsEntregados)} tickets</span><span class="stat-pill rb">Rollback: ${fmt(m.rollbacks)} comp. / ${fmt(m.ticketsRollback)} tickets</span><span class="stat-pill reprog">Reprogramados: ${fmt(m.reprogramados)} comp. / ${fmt(m.ticketsReprogramados)} tickets</span><span class="stat-pill all">Ejecutados: ${fmt(m.ejecutados)} comp. / ${fmt(m.ticketsEjecutados)} tickets</span><span class="stat-pill mig">Meta: ${fmt(m.metaComprometida)} comp.</span><span class="stat-pill ${m.ejecutados>=m.metaComprometida?'mig':'pend'}">Brecha: ${fmt(Math.max(0,m.metaComprometida-m.ejecutados))} comp.</span></div></div>`:''}
+    <div class="tile" style="border:1.5px solid ${ready?'#059669':'#D97706'};"><div class="th" style="margin-bottom:0;align-items:center;"><div><h3>${ready?'✅ Reporte KMN listo para generar':'⚠️ Selecciona un único mes'}</h3><div class="sb">${ready?'Se generará un Excel con el detalle mensual y los cuatro indicadores KMN.':'Selecciona exactamente un Mes en la cabecera.'}</div></div><button class="btn green" ${ready?'':'disabled'} id="btnGenerarKMN">📥 Generar Reporte KMN Excel</button></div></div>`;
+  const b=$('#btnGenerarKMN'); if(b&&ready) b.onclick=exportReporteKMN;
+}
+
+async function exportReporteKMN(){
+  const sel=monthYearForKMN(); const m=sel.monthName?getKMNMonthlyMetrics(sel.year,sel.monthName):null; if(!m)return;
+  const wb=XLSX.utils.book_new();
+  const resumen=[
+    ['REPORTE KMN MENSUAL', `${sel.monthName} ${sel.year}`],[],
+    ['Indicador','Numerador Componentes','Denominador Componentes','Resultado','Numerador Tickets','Denominador Tickets'],
+    ['Tasa de Rollback Mensual',m.rollbacks,m.ejecutados,m.tasaRollback,m.ticketsRollback,m.ticketsEjecutados],
+    ['Estabilidad de la Planificación',m.reprogramados,m.planificados,m.estabilidad,m.ticketsReprogramados,m.ticketsPlanificados],
+    ['Cumplimiento de lo Comprometido',m.ejecutados,m.metaComprometida,m.cumplimientoComprometido,m.ticketsEjecutados,'Meta mensual'],
+    ['Cumplimiento de Entregas',m.entregados,m.migrados,m.cumplimientoEntregas,m.ticketsEntregados,m.ticketsMigrados],[],
+    ['Base','Componentes','Tickets'],['Meta mensual',m.metaComprometida,'—'],['Brecha vs meta',Math.max(0,m.metaComprometida-m.ejecutados),'—'],['Planificados',m.planificados,m.ticketsPlanificados],['Ejecutados',m.ejecutados,m.ticketsEjecutados],['Migrados',m.migrados,m.ticketsMigrados],['Entregados',m.entregados,m.ticketsEntregados],['Rollback',m.rollbacks,m.ticketsRollback],['Reprogramados',m.reprogramados,m.ticketsReprogramados]
+  ];
+  const wsR=XLSX.utils.aoa_to_sheet(resumen); ['D5','D6','D7','D8'].forEach(c=>{if(wsR[c])wsR[c].z='0.00%';}); wsR['!cols']=[{wch:36},{wch:24},{wch:26},{wch:18},{wch:20},{wch:22}]; XLSX.utils.book_append_sheet(wb,wsR,'Indicadores KMN');
+  const detail=m.vig.map(r=>({'Trimestre':r.qIbk,'Mes':r.mes,'Servidor':r.servidor,'SIGLA':r.siglas,'Aplicación':r.app,'Componentes Kyndryl':Number(r.nComp)||0,'Intento Vigente':r.intento,'Forecast - Estado':r.estatus,'Entregado':r.esEntregado?'Sí':'No','Owner Kyndryl':r.ownerKyndryl,'OC(3) Migracion':r.oc,'Estado OC':r.estadoOC,'Comentarios de Migracion/Desestimacion':r.comentarios||''}));
+  const wsD=XLSX.utils.json_to_sheet(detail); wsD['!cols']=[{wch:14},{wch:14},{wch:20},{wch:12},{wch:35},{wch:20},{wch:18},{wch:20},{wch:14},{wch:24},{wch:18},{wch:18},{wch:55}]; XLSX.utils.book_append_sheet(wb,wsD,'Detalle Mensual');
+  XLSX.writeFile(wb,`Reporte KMN - Backlevel-${sel.monthName} ${sel.year}.xlsx`);
 }
 
 /* -------------------------------------------------------------
@@ -4529,7 +5294,10 @@ function initEvents() {
       'cierre-aprov': '🎯 Gestión de Entregables (Tickets Cerrados)',
       calendario: '📅 Plan de Ejecución de Migraciones y Control de OC',
       detalle: '🖥️ Inventario Completo de Componentes y Servidores',
-      'resumen-comp': '📦 Resumen Global de Componentes (Kyndryl vs Arquitectura)'
+      'resumen-comp': '📦 Resumen Global de Componentes (Kyndryl vs Arquitectura)',
+      'reporte-kmn': '📑 Reporte KMN Mensual',
+      'analisis-rb-rp': '📈 Análisis de Rollback y Reprogramaciones',
+      'tres-frentes': '🔗 Impacto Backlevel en los 3 frentes'
     };
     $('#pgTitle').textContent = titles[state.page];
     renderApp();
@@ -4549,6 +5317,7 @@ function initEvents() {
     state.searchFlujoQuery = '';
     state.searchAprovQuery = '';
     state.searchInvQuery = '';
+    state.invFiltroPrioridad = '__ALL__';
     state.filtroAlertaFlujo = '__ALL__';
     state.filtroSemanaEntregas = '__ALL__';
     state.filtroEstadoCierreAprov = '__ALL__';
@@ -4596,6 +5365,7 @@ function initEvents() {
     const ws = XLSX.utils.json_to_sheet(state.view.map(r => ({
       'Equipo': r.equipoSO,
       'Priorizado Q': r.priorizadoQ,
+      'Prioridad': r.prioridad,
       'Trimestre': r.qIbk, 'Mes': r.mes, 'Sigla': r.siglas, 'Aplicación': r.app, 
       'Servidor Origen': r.servidor, 'Servidor Destino': r.servidorDestino,
       '# Componentes Kyndryl': r.nComp, '# Componentes Arquitectura': r.nCompArq, 
